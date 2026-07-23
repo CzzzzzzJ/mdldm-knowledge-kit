@@ -22,6 +22,12 @@ export function SiteHeader({ site }: { site: SiteConfig }) {
         </Link>
 
         <nav aria-label="主导航" className="flex items-center gap-5 text-sm">
+          <Link
+            className="focus-ring rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            href="/courses"
+          >
+            课程
+          </Link>
           <a
             className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] sm:block"
             href="#architecture"
@@ -39,6 +45,12 @@ export function SiteHeader({ site }: { site: SiteConfig }) {
             href="/api/health"
           >
             系统状态
+          </Link>
+          <Link
+            className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] md:block"
+            href="/login"
+          >
+            登录
           </Link>
         </nav>
       </div>

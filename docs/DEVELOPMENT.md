@@ -13,6 +13,10 @@ npm install
 cp .env.example .env.local
 docker compose up -d mongodb
 npm run check-config
+npm run create-admin -- \
+  --name "Admin" \
+  --email "admin@example.com" \
+  --password "replace-with-a-strong-password"
 npm run seed-demo
 npm run dev
 ```
@@ -25,7 +29,7 @@ npm run dev
 openssl rand -hex 32
 ```
 
-## 创建管理员
+## 创建或检查管理员
 
 ```bash
 npm run create-admin -- \
@@ -68,9 +72,9 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-## Phase 1 限制
+## 当前限制
 
-- 首页、配置校验、MongoDB Adapter、初始化脚本和健康检查已经可运行；
-- Local、Console、Mock 和 None 是当前默认开发基线；
-- 正式认证、后台、媒体上传、播放、订单和支付回调在后续阶段实现；
+- 首页、课程目录、管理员登录、本地 MP4、资料下载和学习进度已经可运行；
+- Local Storage 已实现，Console、Mock 和 None 是当前默认配置基线；
+- 普通用户注册、邮箱验证、完整权限矩阵、订单和支付回调在后续阶段实现；
 - OSS、SMTP、XorPay、FFmpeg、MPS、Sentry 和 Webhook 目前只允许配置识别，不提供可工作的 Adapter。

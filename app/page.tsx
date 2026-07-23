@@ -41,9 +41,9 @@ export default function HomePage() {
             <div className="mt-9 flex flex-wrap gap-3">
               <Link
                 className="focus-ring whitespace-nowrap rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-ink)] transition-transform hover:bg-[var(--accent-strong)] active:translate-y-px"
-                href="/api/health"
+                href="/courses"
               >
-                查看状态
+                浏览课程
               </Link>
               <a
                 className="focus-ring whitespace-nowrap rounded-lg border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold transition-transform active:translate-y-px"

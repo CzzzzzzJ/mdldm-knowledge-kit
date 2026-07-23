@@ -18,6 +18,17 @@ const envSchema = z
       .min(1)
       .default("mongodb://localhost:27017/mdldm_knowledge_kit"),
     AUTH_SECRET: z.string().optional(),
+    SESSION_COOKIE_NAME: z
+      .string()
+      .regex(/^[a-zA-Z0-9_-]+$/)
+      .default("mdldm_session"),
+    SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(90).default(30),
+    MAX_UPLOAD_BYTES: z.coerce
+      .number()
+      .int()
+      .min(1_048_576)
+      .max(2_147_483_648)
+      .default(536_870_912),
     STORAGE_PROVIDER: z.enum(["local", "s3", "oss"]).default("local"),
     LOCAL_STORAGE_PATH: z.string().min(1).default("./uploads"),
     EMAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),
@@ -131,4 +142,14 @@ export function getConfigWarnings(env: ServerEnv): string[] {
   }
 
   return warnings;
+}
+
+export function requireAuthSecret(): string {
+  const secret = getServerEnv().AUTH_SECRET;
+
+  if (!secret || secret.length < 32 || secret.includes("replace-with")) {
+    throw new Error("AUTH_SECRET 必须是至少 32 位的非占位值");
+  }
+
+  return secret;
 }

@@ -23,4 +23,4 @@ NNNN-short-title.md
 4. [单仓模块化结构](0004-single-repository-modular-architecture.md)（Accepted）；
 5. [Entitlement 权益模型](0005-entitlement-model.md)（Accepted）；
 6. [Provider 接口与降级策略](0006-provider-interface-and-degradation.md)（Accepted）；
-7. 媒体资产与存储策略。
+7. [媒体资产与本地存储策略](0007-media-asset-and-local-storage.md)（Accepted）。

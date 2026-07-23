@@ -1,16 +1,31 @@
 import { loadEnvConfig } from "@next/env";
+import { spawnSync } from "node:child_process";
+import { readFile, unlink } from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+
 import mongoose from "mongoose";
 
 import { connectMongo } from "@/providers/database/mongodb/connection";
+import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
+import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
 import {
   CourseModel,
   SeriesModel,
 } from "@/providers/database/mongodb/models/series";
+import { UserModel } from "@/providers/database/mongodb/models/user";
+import { localStorageProvider } from "@/providers/storage/local";
 
 loadEnvConfig(process.cwd());
 
 async function main() {
   await connectMongo();
+  const owner = await UserModel.findOne({ role: "admin", status: "active" });
+  if (!owner) {
+    throw new Error(
+      "请先运行 create-admin，再执行 seed-demo，以便为 Demo 媒体记录合法 owner。",
+    );
+  }
 
   const series = await SeriesModel.findOneAndUpdate(
     { slug: "creator-foundations" },
@@ -39,6 +54,7 @@ async function main() {
       summary: "展示无需登录即可访问的公开内容。",
       position: 0,
       accessLevel: "public",
+      status: "published",
     },
     {
       slug: "member-workflow",
@@ -46,6 +62,7 @@ async function main() {
       summary: "展示全站会员权益控制的课程。",
       position: 1,
       accessLevel: "member",
+      status: "draft",
     },
     {
       slug: "single-course-delivery",
@@ -53,16 +70,18 @@ async function main() {
       summary: "展示指定课程权益控制的内容。",
       position: 2,
       accessLevel: "course",
+      status: "draft",
     },
   ] as const;
 
+  const seededCourses = [];
   for (const course of demoCourses) {
-    await CourseModel.findOneAndUpdate(
+    const seededCourse = await CourseModel.findOneAndUpdate(
       { seriesId: series._id, slug: course.slug },
       {
         $set: {
           ...course,
-          status: "published",
+          publishedAt: course.status === "published" ? new Date() : null,
         },
         $setOnInsert: {
           seriesId: series._id,
@@ -74,9 +93,119 @@ async function main() {
         runValidators: true,
       },
     );
+    seededCourses.push(seededCourse);
   }
 
-  console.log(`Demo 数据已就绪：1 个系列，${demoCourses.length} 节课程`);
+  const publicCourse = seededCourses[0];
+  const videoObjectKey = "demo/public-introduction.mp4";
+  let videoAsset = await MediaAssetModel.findOne({ objectKey: videoObjectKey });
+
+  if (!videoAsset || !(await localStorageProvider.exists(videoObjectKey))) {
+    const temporaryVideo = path.join(
+      os.tmpdir(),
+      `mdldm-demo-${process.pid}.mp4`,
+    );
+    const ffmpeg = spawnSync(
+      "ffmpeg",
+      [
+        "-y",
+        "-f",
+        "lavfi",
+        "-i",
+        "testsrc2=size=1280x720:rate=30:duration=8",
+        "-c:v",
+        "libx264",
+        "-pix_fmt",
+        "yuv420p",
+        "-movflags",
+        "+faststart",
+        temporaryVideo,
+      ],
+      { stdio: "ignore" },
+    );
+
+    if (ffmpeg.status !== 0) {
+      throw new Error("生成 Demo MP4 失败，请确认本机已安装 ffmpeg");
+    }
+
+    const videoData = await readFile(temporaryVideo);
+    await localStorageProvider.delete(videoObjectKey);
+    const storedVideo = await localStorageProvider.put(videoObjectKey, videoData);
+    await unlink(temporaryVideo).catch(() => undefined);
+
+    videoAsset = await MediaAssetModel.findOneAndUpdate(
+      { objectKey: videoObjectKey },
+      {
+        $set: {
+          ownerId: owner._id,
+          kind: "video",
+          status: "ready",
+          provider: "local",
+          originalName: "demo-public-introduction.mp4",
+          mimeType: "video/mp4",
+          size: storedVideo.size,
+          checksum: storedVideo.checksum,
+        },
+        $setOnInsert: { objectKey: videoObjectKey },
+      },
+      { upsert: true, new: true, runValidators: true },
+    );
+  }
+
+  if (!videoAsset) {
+    throw new Error("Demo 视频资产创建失败");
+  }
+
+  publicCourse.videoAssetId = videoAsset._id;
+  await publicCourse.save();
+
+  const materialObjectKey = "demo/public-introduction-notes.txt";
+  const materialContent = new TextEncoder().encode(
+    "mdldm Knowledge Kit Demo\n\n这是一份完全虚构的课程资料，用于验证安全下载链路。\n",
+  );
+  if (!(await localStorageProvider.exists(materialObjectKey))) {
+    await localStorageProvider.put(materialObjectKey, materialContent);
+  }
+  const materialPath = localStorageProvider.resolve(materialObjectKey);
+  const materialData = await readFile(materialPath);
+  const crypto = await import("node:crypto");
+  const materialAsset = await MediaAssetModel.findOneAndUpdate(
+    { objectKey: materialObjectKey },
+    {
+      $set: {
+        ownerId: owner._id,
+        kind: "document",
+        status: "ready",
+        provider: "local",
+        originalName: "课程说明.txt",
+        mimeType: "text/plain; charset=utf-8",
+        size: materialData.byteLength,
+        checksum: crypto.createHash("sha256").update(materialData).digest("hex"),
+      },
+      $setOnInsert: { objectKey: materialObjectKey },
+    },
+    { upsert: true, new: true, runValidators: true },
+  );
+
+  await CourseMaterialModel.findOneAndUpdate(
+    { courseId: publicCourse._id, mediaAssetId: materialAsset._id },
+    {
+      $set: {
+        title: "Demo 课程说明",
+        position: 0,
+        accessLevel: "public",
+      },
+      $setOnInsert: {
+        courseId: publicCourse._id,
+        mediaAssetId: materialAsset._id,
+      },
+    },
+    { upsert: true, new: true, runValidators: true },
+  );
+
+  console.log(
+    `Demo 数据已就绪：1 个系列，${demoCourses.length} 节课程，1 个视频，1 份资料`,
+  );
 }
 
 main()

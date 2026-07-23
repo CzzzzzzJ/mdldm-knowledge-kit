@@ -29,13 +29,13 @@
 
 ## Phase 2：课程交付闭环
 
-- TODO：Series、Course、CourseMaterial 和 CourseProgress；
-- TODO：后台系列与课时管理；
-- TODO：统一 MediaAsset；
-- TODO：Local Storage Provider；
-- TODO：本地 MP4 播放和安全下载；
-- TODO：断点续播和系列进度；
-- TODO：发布前媒体可用性校验。
+- DONE：Series、Course、CourseMaterial 和 CourseProgress；
+- DONE：后台系列与课时管理；
+- DONE：统一 MediaAsset；
+- DONE：Local Storage Provider；
+- DONE：本地 MP4 播放和安全下载；
+- DONE：断点续播和系列进度；
+- DONE：发布前媒体可用性校验。
 
 退出条件：管理员能发布一节课，普通用户能观看、续播和下载授权资料。
 

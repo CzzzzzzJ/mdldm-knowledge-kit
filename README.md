@@ -4,9 +4,9 @@
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前阶段：`v0.1 development / Phase 1 runnable skeleton`
+> 当前阶段：`v0.1 development / Phase 2 course delivery`
 >
-> 应用骨架、配置、MongoDB Adapter、初始化脚本、测试和 CI 已可运行；课程交付功能将在 Phase 2 实现。
+> 应用骨架、课程目录、本地 MP4、资料下载、学习进度和受控课程后台已经可运行。
 
 ## 要解决的问题
 
@@ -66,7 +66,7 @@
 - 单仓模块化架构
 - 本地存储、Mock 支付和 Console 邮件作为默认开发 Provider
 
-当前可以运行项目骨架，但还不是功能完整的知识站，不应对外宣称已经进入稳定版本。
+当前可以运行课程交付 Demo，但注册、正式权益授予、支付和生产 Provider 尚未完成，不应对外宣称已经进入稳定版本。
 
 ## 快速启动
 
@@ -75,6 +75,10 @@ npm install
 cp .env.example .env.local
 docker compose up -d mongodb
 npm run check-config
+npm run create-admin -- \
+  --name "Admin" \
+  --email "admin@example.com" \
+  --password "replace-with-a-strong-password"
 npm run seed-demo
 npm run dev
 ```

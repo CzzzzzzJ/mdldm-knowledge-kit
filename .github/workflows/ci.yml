@@ -30,8 +30,19 @@ jobs:
 
   smoke:
     runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
     env:
       AUTH_SECRET: ci-only-secret-value-with-more-than-32-characters
+      MONGODB_URI: mongodb://127.0.0.1:27017/mdldm_knowledge_kit_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -39,5 +50,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: npm run create-admin -- --name "Demo Admin" --email admin@example.com --password local-demo-admin-password
+      - run: npm run seed-demo
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

@@ -49,12 +49,14 @@ export const SeriesModel =
 
 export interface CourseRecord {
   seriesId: Types.ObjectId;
+  videoAssetId: Types.ObjectId | null;
   title: string;
   slug: string;
   summary: string;
   position: number;
   status: PublishStatus;
   accessLevel: AccessLevel;
+  publishedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,6 +68,11 @@ const courseSchema = new Schema<CourseRecord>(
       ref: "Series",
       required: true,
       index: true,
+    },
+    videoAssetId: {
+      type: Schema.Types.ObjectId,
+      ref: "MediaAsset",
+      default: null,
     },
     title: { type: String, required: true, trim: true, maxlength: 120 },
     slug: { type: String, required: true, trim: true, maxlength: 120 },
@@ -83,6 +90,7 @@ const courseSchema = new Schema<CourseRecord>(
       required: true,
       default: "public",
     },
+    publishedAt: { type: Date, default: null },
   },
   {
     strict: "throw",
