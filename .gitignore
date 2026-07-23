@@ -11,6 +11,7 @@ build/
 coverage/
 playwright-report/
 test-results/
+*.tsbuildinfo
 
 # local environment
 .env
@@ -42,4 +43,3 @@ tmp/
 *.p12
 credentials*.json
 service-account*.json
-

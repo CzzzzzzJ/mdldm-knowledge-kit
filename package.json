@@ -1,0 +1,51 @@
+{
+  "name": "mdldm-knowledge-kit",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "check-config": "tsx scripts/check-config.ts",
+    "create-admin": "tsx scripts/create-admin.ts",
+    "seed-demo": "tsx scripts/seed-demo.ts"
+  },
+  "dependencies": {
+    "@next/env": "15.5.21",
+    "bcryptjs": "3.0.3",
+    "geist": "1.7.2",
+    "mongoose": "8.24.1",
+    "next": "15.5.21",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "3.3.6",
+    "@playwright/test": "1.61.1",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.1",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "eslint": "9.39.5",
+    "eslint-config-next": "15.5.21",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "overrides": {
+    "postcss": "8.5.22",
+    "sharp": "0.35.3"
+  }
+}

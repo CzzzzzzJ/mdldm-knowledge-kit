@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light dark;
+  --page: #f5f7f9;
+  --surface: #fbfcfd;
+  --surface-strong: #e9eef3;
+  --ink: #17202a;
+  --muted: #5b6773;
+  --line: #ced7df;
+  --accent: #315fc4;
+  --accent-strong: #23489a;
+  --accent-ink: #f7f9ff;
+  --success: #1f7554;
+  --shadow: rgba(38, 59, 79, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page: #10151b;
+    --surface: #161d25;
+    --surface-strong: #202a35;
+    --ink: #edf2f6;
+    --muted: #aab6c2;
+    --line: #34414d;
+    --accent: #85a8f4;
+    --accent-strong: #a9c2fb;
+    --accent-ink: #111823;
+    --success: #72c8a7;
+    --shadow: rgba(1, 8, 14, 0.35);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+}
+
+.page-shell {
+  width: min(100% - 2rem, 88rem);
+  margin-inline: auto;
+}
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  box-shadow: 0 1.25rem 3rem var(--shadow);
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

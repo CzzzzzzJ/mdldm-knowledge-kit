@@ -4,9 +4,9 @@
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前阶段：`v0.0 / architecture-first`
+> 当前阶段：`v0.1 development / Phase 1 runnable skeleton`
 >
-> 仓库先冻结产品边界、目标架构、安全基线和开发路线，再开始 Phase 1 应用骨架开发。
+> 应用骨架、配置、MongoDB Adapter、初始化脚本、测试和 CI 已可运行；课程交付功能将在 Phase 2 实现。
 
 ## 要解决的问题
 
@@ -49,21 +49,47 @@
 - [开发任务](TASKS.md)
 - [架构总览](ARCHITECTURE.md)
 - [完整现状分析与目标拓扑](docs/analysis/知识站开源版-现状分析与目标拓扑-2026-07-23.md)
+- [原项目 Phase 1 参考审视](docs/analysis/原项目Phase1参考审视-2026-07-24.md)
 - [开发路线图](docs/ROADMAP.md)
+- [本地开发](docs/DEVELOPMENT.md)
 - [安全基线](docs/SECURITY_BASELINE.md)
 - [架构决策](docs/decisions/README.md)
 - [贡献指南](CONTRIBUTING.md)
 
-## 计划中的技术基线
+## 技术基线
 
-- Next.js 15+
-- React 19+
-- TypeScript
-- MongoDB / Mongoose
+- Next.js 15.5
+- React 19.2
+- TypeScript 5.9
+- MongoDB / Mongoose 8
+- Tailwind CSS 4
 - 单仓模块化架构
 - 本地存储、Mock 支付和 Console 邮件作为默认开发 Provider
 
-应用脚手架将在 Phase 1 建立。当前仓库不提供可运行产品，也不应对外宣称已经进入稳定版本。
+当前可以运行项目骨架，但还不是功能完整的知识站，不应对外宣称已经进入稳定版本。
+
+## 快速启动
+
+```bash
+npm install
+cp .env.example .env.local
+docker compose up -d mongodb
+npm run check-config
+npm run seed-demo
+npm run dev
+```
+
+打开 `http://localhost:3000`。首次启动前请在 `.env.local` 中替换 `AUTH_SECRET` 占位值，完整说明见 [本地开发](docs/DEVELOPMENT.md)。
+
+## 质量检查
+
+```bash
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npm run test:e2e
+```
 
 ## 开发准备
 
@@ -77,5 +103,4 @@
 
 ## License
 
-许可证尚未最终确定。公开发布前必须从 `docs/LICENSE-DECISION.md` 中完成选择并加入正式 `LICENSE` 文件。在此之前，仓库内容默认保留全部权利，不应被描述为已经完成许可证发布。
-
+本项目公共核心采用 [Apache License 2.0](LICENSE)。该许可证不授予 `mdldm`、麦当相关名称、Logo 或其他商标的额外使用权。

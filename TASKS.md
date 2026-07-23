@@ -8,22 +8,22 @@
 - DONE：归档现状分析、迁移映射和目标拓扑；
 - DONE：明确 v0.1 核心、可选和不进入范围；
 - DONE：建立安全基线和仓库协作规则；
-- TODO：确定正式英文展示名是否继续使用 `mdldm Knowledge Kit`；
-- TODO：选择 Apache-2.0 或 AGPL-3.0 许可证；
-- TODO：确认 v0.1 是否包含单课购买，还是只做会员权益；
-- TODO：为所有旧功能补齐 `core / optional / private / drop` 清单。
+- DONE：正式英文展示名使用 `mdldm Knowledge Kit`，见 ADR 0001；
+- DONE：公共核心采用 Apache-2.0，见 ADR 0002；
+- DONE：v0.1 同时支持全站订阅会员与单课购买，见 ADR 0003；
+- DONE：为旧站功能补齐 `core / optional / private / drop` 清单。
 
 退出条件：产品名、许可证、v0.1 权益范围均有正式决策记录。
 
 ## Phase 1：应用骨架
 
-- TODO：初始化 Next.js、React、TypeScript 和 Tailwind；
-- TODO：建立 `modules/`、`providers/`、`config/` 模块边界；
-- TODO：接入 MongoDB Adapter；
-- TODO：实现 Feature Flags 和站点配置；
-- TODO：加入 `.env.example`、Docker Compose 和配置校验；
-- TODO：实现 `create-admin`、`seed-demo` 和 `check-config`；
-- TODO：建立 Lint、类型检查、单测、构建和 E2E CI。
+- DONE：初始化 Next.js、React、TypeScript 和 Tailwind；
+- DONE：建立 `modules/`、`providers/`、`config/` 模块边界；
+- DONE：接入 MongoDB Adapter；
+- DONE：实现 Feature Flags 和站点配置；
+- DONE：加入 `.env.example`、Docker Compose 和配置校验；
+- DONE：实现 `create-admin`、`seed-demo` 和 `check-config`；
+- DONE：建立 Lint、类型检查、单测、构建和 E2E CI。
 
 退出条件：在无支付、OSS、SMTP 配置时可启动 Demo 站。
 
@@ -86,4 +86,3 @@
 - TODO：发布 `v0.1.0`。
 
 退出条件：陌生贡献者只读 README 即可跑通发布和学习主流程。
-
