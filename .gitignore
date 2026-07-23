@@ -1,0 +1,45 @@
+# dependencies
+node_modules/
+.pnp/
+.pnp.*
+
+# build output
+.next/
+out/
+dist/
+build/
+coverage/
+playwright-report/
+test-results/
+
+# local environment
+.env
+.env.*
+!.env.example
+
+# logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# editor and OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# local data and uploads
+data/
+uploads/
+tmp/
+
+# secrets and credentials
+*.pem
+*.key
+*.p12
+credentials*.json
+service-account*.json
+
