@@ -79,11 +79,11 @@
 
 ## Phase 6：公开发布
 
-- TODO：全新环境 15 分钟安装测试；
-- TODO：虚构 Demo 数据、截图和演示课程；
-- TODO：部署、Provider、升级、备份和回滚文档；
-- TODO：依赖、安全、隐私和密钥扫描；
-- TODO：贡献指南、Issue 模板和 Release 流程；
-- TODO：发布 `v0.1.0`。
+- DONE：全新环境 15 分钟安装测试；
+- DONE：虚构 Demo 数据、截图和演示课程；
+- DONE：部署、Provider、升级、备份和回滚文档；
+- DONE：依赖、安全、隐私和密钥扫描；
+- DONE：贡献指南、Issue 模板和 Release 流程；
+- DONE：发布 `v0.1.0`。
 
 退出条件：陌生贡献者只读 README 即可跑通发布和学习主流程。

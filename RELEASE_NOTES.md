@@ -15,6 +15,13 @@
 
 按 [README](https://github.com/CzzzzzzJ/mdldm-knowledge-kit#快速启动) 可以在无付费第三方服务的本地环境运行完整 Demo。
 
+## 发布验证
+
+- 全新 GitHub 浅克隆到生产启动与深度健康检查约 86.35 秒；
+- 40/40 单元测试与 7/7 端到端测试通过；
+- 生产构建、发布审计和 `npm audit` 通过，已知漏洞为 0；
+- Secret Scanning、Push Protection、Dependabot、CodeQL 与私密漏洞报告已启用。
+
 ## 升级与运维
 
 - [升级与回滚](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/blob/v0.1.0/docs/UPGRADING.md)

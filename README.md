@@ -9,7 +9,7 @@
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前目标：`v0.1.0 / Phase 6 release candidate`
+> 当前版本：`v0.1.0 / Phase 6 public release`
 >
 > 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
 
@@ -85,7 +85,7 @@
 - Manual / Mock / XorPay Payment
 - Structured Console / signed Webhook Observability
 
-当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本目标，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
+当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
 
 ## 快速启动
 
