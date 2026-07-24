@@ -20,8 +20,8 @@ jobs:
       MONGODB_URI: mongodb://127.0.0.1:27017/mdldm_knowledge_kit_test
       PAYMENT_PROVIDER: manual
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -47,8 +47,8 @@ jobs:
       AUTH_SECRET: ci-only-secret-value-with-more-than-32-characters
       MONGODB_URI: mongodb://127.0.0.1:27017/mdldm_knowledge_kit_test
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
