@@ -11,7 +11,7 @@ export interface MediaAssetRecord {
   ownerId: Types.ObjectId;
   kind: MediaKind;
   status: MediaStatus;
-  provider: "local";
+  provider: "local" | "oss";
   objectKey: string;
   originalName: string;
   mimeType: string;
@@ -31,7 +31,7 @@ const mediaAssetSchema = new Schema<MediaAssetRecord>(
     },
     kind: { type: String, enum: mediaKinds, required: true },
     status: { type: String, enum: mediaStatuses, required: true },
-    provider: { type: String, enum: ["local"], required: true },
+    provider: { type: String, enum: ["local", "oss"], required: true },
     objectKey: { type: String, required: true, unique: true },
     originalName: { type: String, required: true, maxlength: 255 },
     mimeType: { type: String, required: true, maxlength: 120 },

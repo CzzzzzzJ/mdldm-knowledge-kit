@@ -85,7 +85,11 @@ export async function getCurrentUser(): Promise<UserAccount | null> {
   }
 
   const user = await UserModel.findById(session.userId);
-  if (!user || user.status !== "active") {
+  if (
+    !user ||
+    user.status !== "active" ||
+    (!user.emailVerified && user.role !== "admin")
+  ) {
     return null;
   }
 

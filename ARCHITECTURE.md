@@ -181,3 +181,20 @@ mdldm-knowledge-kit/
 
 第一阶段保持一个 Next.js 仓库，不提前拆成复杂 Monorepo。
 
+## 5. 当前生产部署拓扑
+
+```mermaid
+flowchart LR
+    Browser["浏览器"] --> Vercel["Vercel / Next.js"]
+    Vercel --> Atlas["MongoDB Atlas"]
+    Vercel --> SMTP["SMTP / 阿里云邮件推送"]
+    Vercel --> Signed["生成短期 OSS 签名"]
+    Browser -->|"管理员 PUT 直传"| OSS["阿里云 OSS 私有 Bucket"]
+    Browser -->|"鉴权后 307 读取"| OSS
+```
+
+- Vercel 负责页面、API、会话与权益编排，不持久保存媒体；
+- Atlas 保存用户、Session、Token、限流、课程、权益和学习数据；
+- OSS 保持私有，上传与读取都由短期签名授权；
+- SMTP 只通过 Email Port 调用；
+- Preview 与 Production 必须使用隔离的数据和密钥。

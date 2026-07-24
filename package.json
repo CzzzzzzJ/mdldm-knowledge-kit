@@ -15,14 +15,17 @@
     "check": "npm run lint && npm run typecheck && npm run test && npm run build",
     "check-config": "tsx scripts/check-config.ts",
     "create-admin": "tsx scripts/create-admin.ts",
+    "create-invitation": "tsx scripts/create-invitation.ts",
     "seed-demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@next/env": "15.5.21",
+    "ali-oss": "^6.23.0",
     "bcryptjs": "3.0.3",
     "geist": "1.7.2",
     "mongoose": "8.24.1",
     "next": "15.5.21",
+    "nodemailer": "^9.0.3",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "3.25.76"
@@ -31,7 +34,9 @@
     "@eslint/eslintrc": "3.3.6",
     "@playwright/test": "1.61.1",
     "@tailwindcss/postcss": "4.3.3",
+    "@types/ali-oss": "^6.23.3",
     "@types/node": "22.20.1",
+    "@types/nodemailer": "^7.0.11",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.5",

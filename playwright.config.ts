@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const port = 3210;
+const testClientIp = `2001:db8::${Date.now().toString(16)}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -10,6 +11,9 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: `http://127.0.0.1:${port}`,
+    extraHTTPHeaders: {
+      "x-forwarded-for": testClientIp,
+    },
     trace: "on-first-retry",
   },
   projects: [

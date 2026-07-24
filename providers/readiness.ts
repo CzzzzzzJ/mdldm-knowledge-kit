@@ -13,11 +13,15 @@ export function getProviderReadiness(
   return {
     storage: {
       provider: runtime.providers.storage,
-      status: runtime.providers.storage === "local" ? "configured" : "planned",
+      status: ["local", "oss"].includes(runtime.providers.storage)
+        ? "configured"
+        : "planned",
     },
     email: {
       provider: runtime.providers.email,
-      status: runtime.providers.email === "console" ? "configured" : "planned",
+      status: ["console", "smtp"].includes(runtime.providers.email)
+        ? "configured"
+        : "planned",
     },
     payment: {
       provider: runtime.providers.payment,

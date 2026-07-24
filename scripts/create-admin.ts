@@ -2,6 +2,10 @@ import { loadEnvConfig } from "@next/env";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 
+import {
+  emailSchema,
+  passwordSchema,
+} from "@/modules/identity/credentials";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { UserModel } from "@/providers/database/mongodb/models/user";
 
@@ -14,8 +18,8 @@ function readArgument(name: string): string | undefined {
 
 const inputSchema = z.object({
   name: z.string().trim().min(1).max(80),
-  email: z.string().email().max(254).transform((value) => value.toLowerCase()),
-  password: z.string().min(12).max(128),
+  email: emailSchema,
+  password: passwordSchema,
 });
 
 async function main() {
@@ -56,7 +60,7 @@ main()
   .catch((error: unknown) => {
     if (error instanceof z.ZodError) {
       console.error(
-        "用法：npm run create-admin -- --name \"Admin\" --email admin@example.com --password \"至少12位密码\"",
+        "用法：npm run create-admin -- --name \"Admin\" --email admin@example.com --password \"至少12位且包含字母和数字\"",
       );
       for (const issue of error.issues) {
         console.error(`- ${issue.path.join(".")}: ${issue.message}`);

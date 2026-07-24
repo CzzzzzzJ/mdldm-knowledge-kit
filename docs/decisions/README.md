@@ -15,7 +15,7 @@ NNNN-short-title.md
 - 影响；
 - 日期。
 
-计划中的首批 ADR：
+已接受的 ADR：
 
 1. [项目英文展示名与仓库名](0001-project-name.md)（Accepted）；
 2. [开源许可证](0002-open-source-license.md)（Accepted）；
@@ -23,4 +23,6 @@ NNNN-short-title.md
 4. [单仓模块化结构](0004-single-repository-modular-architecture.md)（Accepted）；
 5. [Entitlement 权益模型](0005-entitlement-model.md)（Accepted）；
 6. [Provider 接口与降级策略](0006-provider-interface-and-degradation.md)（Accepted）；
-7. [媒体资产与本地存储策略](0007-media-asset-and-local-storage.md)（Accepted）。
+7. [媒体资产与本地存储策略](0007-media-asset-and-local-storage.md)（Accepted）；
+8. [身份验证、凭据恢复与安全边界](0008-identity-verification-and-security.md)（Accepted）；
+9. [Vercel 部署、OSS 直传与 SMTP Provider](0009-serverless-storage-and-email-providers.md)（Accepted）。

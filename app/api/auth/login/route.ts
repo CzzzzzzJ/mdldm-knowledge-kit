@@ -2,38 +2,33 @@ import bcrypt from "bcryptjs";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
-import { clearRateLimit, consumeRateLimit } from "@/modules/identity/rate-limit";
 import {
-  getExpectedRequestOrigin,
-  isSameOriginRequest,
-} from "@/modules/identity/security";
+  getClientAddress,
+  rejectCrossOriginMutation,
+} from "@/app/lib/request-security";
+import { emailSchema } from "@/modules/identity/credentials";
 import { createSession } from "@/providers/auth/session";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { UserModel } from "@/providers/database/mongodb/models/user";
+import {
+  clearRateLimit,
+  consumeRateLimit,
+} from "@/providers/rate-limit/mongodb";
 
 const loginSchema = z.object({
-  email: z.string().email().max(254).transform((value) => value.toLowerCase()),
+  email: emailSchema,
   password: z.string().min(1).max(128),
-});
+}).strict();
 
 export async function POST(request: NextRequest) {
-  const expectedOrigin = getExpectedRequestOrigin(
-    request.headers,
-    request.nextUrl.protocol,
-  );
-  if (
-    !expectedOrigin ||
-    !isSameOriginRequest(request.headers.get("origin"), expectedOrigin)
-  ) {
-    return NextResponse.json({ error: "请求来源无效" }, { status: 403 });
+  const originRejection = rejectCrossOriginMutation(request);
+  if (originRejection) {
+    return originRejection;
   }
 
-  const clientKey =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    request.headers.get("x-real-ip") ??
-    "local";
+  const clientKey = getClientAddress(request);
   const rateLimitKey = `login:${clientKey}`;
-  const limit = consumeRateLimit(rateLimitKey, {
+  const limit = await consumeRateLimit(rateLimitKey, {
     limit: 5,
     windowMs: 15 * 60 * 1_000,
   });
@@ -66,8 +61,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
   }
 
+  if (!user.emailVerified) {
+    return NextResponse.json(
+      { error: "请先完成邮箱验证", code: "EMAIL_NOT_VERIFIED" },
+      { status: 403 },
+    );
+  }
+
   await createSession(user);
-  clearRateLimit(rateLimitKey);
+  await clearRateLimit(rateLimitKey);
 
   return NextResponse.json({
     user: {

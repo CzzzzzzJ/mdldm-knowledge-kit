@@ -4,7 +4,8 @@
 
 - Node.js 20 或更高版本，CI 使用 Node.js 22；
 - npm 10 或更高版本；
-- Docker Desktop，用于启动本地 MongoDB。
+- Docker Desktop，用于启动本地 MongoDB；
+- ffmpeg，用于生成完全合成的 Demo MP4。
 
 ## 首次启动
 
@@ -16,7 +17,7 @@ npm run check-config
 npm run create-admin -- \
   --name "Admin" \
   --email "admin@example.com" \
-  --password "replace-with-a-strong-password"
+  --password "replace-with-a-strong-password-2026"
 npm run seed-demo
 npm run dev
 ```
@@ -29,16 +30,30 @@ npm run dev
 openssl rand -hex 32
 ```
 
+默认 `EMAIL_PROVIDER=console`。注册、验证和找回密码邮件不会真的发出，操作链接会打印在运行开发服务器的终端。
+
 ## 创建或检查管理员
 
 ```bash
 npm run create-admin -- \
   --name "Admin" \
   --email "admin@example.com" \
-  --password "replace-with-a-strong-password"
+  --password "replace-with-a-strong-password-2026"
 ```
 
 脚本不会静默把已有普通用户提升为管理员，也不会重置已有管理员密码。
+
+## 创建邀请码
+
+```bash
+npm run create-invitation -- \
+  --type membership \
+  --duration-days 365 \
+  --max-redemptions 1 \
+  --admin-email "admin@example.com"
+```
+
+类型为 `course` 或 `series` 时还必须传入 `--target-id`。数据库只保存邀请码摘要。
 
 ## 健康检查
 
@@ -74,7 +89,8 @@ npm run test:e2e
 
 ## 当前限制
 
-- 首页、课程目录、管理员登录、本地 MP4、资料下载和学习进度已经可运行；
-- Local Storage 已实现，Console、Mock 和 None 是当前默认配置基线；
-- 普通用户注册、邮箱验证、完整权限矩阵、订单和支付回调在后续阶段实现；
-- OSS、SMTP、XorPay、FFmpeg、MPS、Sentry 和 Webhook 目前只允许配置识别，不提供可工作的 Adapter。
+- 注册验证、密码恢复、邀请码权益、课程交付和学习进度已经可运行；
+- Local / OSS Storage 与 Console / SMTP Email 已实现；
+- Vercel、MongoDB Atlas、阿里云 OSS 和邮件推送配置见 `docs/DEPLOYMENT.md`；
+- Product、订单、支付回调、XorPay、MPS、Sentry 和 Webhook 在后续阶段实现；
+- 未完成的 OSS 直传任务会保留 `pending` MediaAsset，自动清理将在运维阶段补齐。

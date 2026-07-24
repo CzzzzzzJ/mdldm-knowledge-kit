@@ -23,7 +23,10 @@ export function LoginForm() {
       }),
     });
 
-    const payload = (await response.json()) as { error?: string };
+    const payload = (await response.json()) as {
+      error?: string;
+      user?: { role: "user" | "admin" };
+    };
     if (!response.ok) {
       setError(payload.error ?? "登录失败");
       setSubmitting(false);
@@ -31,11 +34,17 @@ export function LoginForm() {
     }
 
     const next = searchParams.get("next");
-    window.location.assign(next?.startsWith("/") ? next : "/admin");
+    const fallback = payload.user?.role === "admin" ? "/admin" : "/courses";
+    window.location.assign(next?.startsWith("/") ? next : fallback);
   }
 
   return (
     <form className="surface mt-8 grid gap-5 p-7" onSubmit={handleSubmit}>
+      {searchParams.get("verified") === "1" ? (
+        <p className="text-sm text-emerald-700 dark:text-emerald-300">
+          邮箱验证成功，现在可以登录。
+        </p>
+      ) : null}
       <div className="grid gap-2">
         <label className="text-sm font-semibold" htmlFor="email">
           邮箱

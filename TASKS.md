@@ -41,14 +41,15 @@
 
 ## Phase 3：身份与权益
 
-- TODO：唯一邮箱注册入口；
-- TODO：邮箱验证、登录、退出、找回和修改密码；
-- TODO：服务端固定新用户角色；
-- TODO：Cookie、CSRF、CORS、安全 Header 和速率限制；
-- TODO：Entitlement 模型与统一鉴权服务；
-- TODO：`public / registered / member / course / series` 权限矩阵；
-- TODO：邀请码授予权益；
-- TODO：越权与到期回收测试。
+- DONE：唯一邮箱注册入口；
+- DONE：邮箱验证、登录、退出、找回和修改密码；
+- DONE：服务端固定新用户角色；
+- DONE：Cookie、CSRF、CORS、安全 Header 和 MongoDB 共享速率限制；
+- DONE：Entitlement 模型与统一鉴权服务；
+- DONE：`public / registered / member / course / series` 权限矩阵；
+- DONE：邀请码授予权益；
+- DONE：越权与到期回收测试；
+- DONE：Vercel、MongoDB Atlas、阿里云 OSS 与 SMTP 配置文档。
 
 退出条件：权限矩阵通过自动化测试，越权请求全部失败。
 

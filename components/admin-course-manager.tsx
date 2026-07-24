@@ -27,6 +27,69 @@ async function readPayload(response: Response): Promise<{
   };
 }
 
+async function uploadMedia(form: FormData): Promise<{ id: string }> {
+  const file = form.get("file");
+  const kind = form.get("kind");
+  if (!(file instanceof File) || typeof kind !== "string") {
+    throw new Error("请选择要上传的文件");
+  }
+
+  const ticketResponse = await fetch("/api/admin/media/upload-ticket", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      kind,
+      originalName: file.name,
+      mimeType: file.type,
+      size: file.size,
+    }),
+  });
+  const ticket = (await ticketResponse.json()) as {
+    error?: string;
+    mode?: "proxy" | "direct";
+    assetId?: string;
+    uploadUrl?: string;
+  };
+  if (!ticketResponse.ok) {
+    throw new Error(ticket.error ?? "创建上传任务失败");
+  }
+
+  if (ticket.mode === "proxy") {
+    const upload = await fetch("/api/admin/media", {
+      method: "POST",
+      body: form,
+    });
+    const payload = await readPayload(upload);
+    if (!upload.ok || !payload.asset) {
+      throw new Error(payload.error ?? "上传文件失败");
+    }
+    return payload.asset;
+  }
+
+  if (!ticket.assetId || !ticket.uploadUrl) {
+    throw new Error("直传任务信息不完整");
+  }
+
+  const upload = await fetch(ticket.uploadUrl, {
+    method: "PUT",
+    headers: { "Content-Type": file.type },
+    body: file,
+  });
+  if (!upload.ok) {
+    throw new Error("上传到对象存储失败，请检查 OSS CORS 和 RAM 权限");
+  }
+
+  const complete = await fetch(
+    `/api/admin/media/${ticket.assetId}/complete`,
+    { method: "POST" },
+  );
+  const payload = await readPayload(complete);
+  if (!complete.ok || !payload.asset) {
+    throw new Error(payload.error ?? "确认上传结果失败");
+  }
+  return payload.asset;
+}
+
 export function AdminCourseManager({
   series,
   courses,
@@ -102,19 +165,12 @@ export function AdminCourseManager({
     form.set("kind", "video");
 
     void run(async () => {
-      const upload = await fetch("/api/admin/media", {
-        method: "POST",
-        body: form,
-      });
-      const uploadPayload = await readPayload(upload);
-      if (!upload.ok || !uploadPayload.asset) {
-        throw new Error(uploadPayload.error ?? "上传视频失败");
-      }
+      const asset = await uploadMedia(form);
 
       const attach = await fetch(`/api/admin/courses/${courseId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ videoAssetId: uploadPayload.asset.id }),
+        body: JSON.stringify({ videoAssetId: asset.id }),
       });
       const attachPayload = await readPayload(attach);
       if (!attach.ok) {
@@ -133,21 +189,14 @@ export function AdminCourseManager({
     form.set("kind", "document");
 
     void run(async () => {
-      const upload = await fetch("/api/admin/media", {
-        method: "POST",
-        body: form,
-      });
-      const uploadPayload = await readPayload(upload);
-      if (!upload.ok || !uploadPayload.asset) {
-        throw new Error(uploadPayload.error ?? "上传资料失败");
-      }
+      const asset = await uploadMedia(form);
 
       const attach = await fetch("/api/admin/materials", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           courseId,
-          mediaAssetId: uploadPayload.asset.id,
+          mediaAssetId: asset.id,
           title,
           accessLevel,
           position,

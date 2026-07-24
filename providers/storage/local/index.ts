@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { access, mkdir, unlink, writeFile } from "node:fs/promises";
+import { access, mkdir, stat, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { getServerEnv } from "@/config/env";
@@ -24,6 +24,8 @@ function resolveObjectKey(objectKey: string): string {
 }
 
 export const localStorageProvider: StorageProvider = {
+  name: "local",
+
   async put(objectKey, data) {
     const absolutePath = resolveObjectKey(objectKey);
     await mkdir(path.dirname(absolutePath), { recursive: true });
@@ -31,13 +33,12 @@ export const localStorageProvider: StorageProvider = {
 
     return {
       objectKey,
-      absolutePath,
       size: data.byteLength,
       checksum: createHash("sha256").update(data).digest("hex"),
     } satisfies StoredObject;
   },
 
-  resolve(objectKey) {
+  localPath(objectKey) {
     return resolveObjectKey(objectKey);
   },
 
@@ -50,6 +51,11 @@ export const localStorageProvider: StorageProvider = {
     }
   },
 
+  async stat(objectKey) {
+    const file = await stat(resolveObjectKey(objectKey)).catch(() => null);
+    return file ? { size: file.size } : null;
+  },
+
   async delete(objectKey) {
     await unlink(resolveObjectKey(objectKey)).catch((error: unknown) => {
       if (
@@ -60,5 +66,13 @@ export const localStorageProvider: StorageProvider = {
         throw error;
       }
     });
+  },
+
+  async createReadUrl() {
+    return null;
+  },
+
+  async createUploadUrl() {
+    return null;
   },
 };

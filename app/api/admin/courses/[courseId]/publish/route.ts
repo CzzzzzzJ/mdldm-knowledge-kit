@@ -5,7 +5,7 @@ import { authorizeAdminMutation } from "@/app/lib/admin-api";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
 import { CourseModel } from "@/providers/database/mongodb/models/series";
-import { localStorageProvider } from "@/providers/storage/local";
+import { getStorageProvider } from "@/providers/storage";
 
 export async function POST(
   request: NextRequest,
@@ -40,7 +40,12 @@ export async function POST(
     status: "ready",
   });
 
-  if (!asset || !(await localStorageProvider.exists(asset.objectKey))) {
+  const storage = getStorageProvider();
+  if (
+    !asset ||
+    asset.provider !== storage.name ||
+    !(await storage.exists(asset.objectKey))
+  ) {
     return NextResponse.json(
       { error: "发布前媒体可用性校验失败" },
       { status: 400 },

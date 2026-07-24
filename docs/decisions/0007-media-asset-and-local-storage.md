@@ -57,5 +57,5 @@ Local Storage Provider：
 
 - `uploads/` 永不进入 Git；
 - Demo Seed 生成合成 MP4 和虚构资料，不使用原站媒体；
-- OSS/S3 Adapter 后续实现相同 Storage Port；
+- OSS Adapter 实现相同 Storage Port，并通过 ADR 0009 增加直传和短期签名读取；
 - 多清晰度 HLS、转码状态机和孤儿资产清理在后续迭代补齐。

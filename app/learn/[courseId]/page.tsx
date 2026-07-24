@@ -105,7 +105,11 @@ export default async function LearnPage({
           <aside>
             <div className="surface p-5">
               <h2 className="font-semibold">课程资料</h2>
-              {materials.length === 0 ? (
+              {!allowed ? (
+                <p className="mt-3 text-sm text-[var(--muted)]">
+                  获得课程权益后显示资料。
+                </p>
+              ) : materials.length === 0 ? (
                 <p className="mt-3 text-sm text-[var(--muted)]">暂无资料</p>
               ) : (
                 <div className="mt-4 grid gap-2">

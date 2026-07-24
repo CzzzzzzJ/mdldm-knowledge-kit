@@ -1,5 +1,6 @@
 import { loadEnvConfig } from "@next/env";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { readFile, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -14,7 +15,7 @@ import {
   SeriesModel,
 } from "@/providers/database/mongodb/models/series";
 import { UserModel } from "@/providers/database/mongodb/models/user";
-import { localStorageProvider } from "@/providers/storage/local";
+import { getStorageProvider } from "@/providers/storage";
 
 loadEnvConfig(process.cwd());
 
@@ -97,10 +98,11 @@ async function main() {
   }
 
   const publicCourse = seededCourses[0];
+  const storage = getStorageProvider();
   const videoObjectKey = "demo/public-introduction.mp4";
   let videoAsset = await MediaAssetModel.findOne({ objectKey: videoObjectKey });
 
-  if (!videoAsset || !(await localStorageProvider.exists(videoObjectKey))) {
+  if (!videoAsset || !(await storage.exists(videoObjectKey))) {
     const temporaryVideo = path.join(
       os.tmpdir(),
       `mdldm-demo-${process.pid}.mp4`,
@@ -129,8 +131,10 @@ async function main() {
     }
 
     const videoData = await readFile(temporaryVideo);
-    await localStorageProvider.delete(videoObjectKey);
-    const storedVideo = await localStorageProvider.put(videoObjectKey, videoData);
+    await storage.delete(videoObjectKey);
+    const storedVideo = await storage.put(videoObjectKey, videoData, {
+      mimeType: "video/mp4",
+    });
     await unlink(temporaryVideo).catch(() => undefined);
 
     videoAsset = await MediaAssetModel.findOneAndUpdate(
@@ -140,7 +144,7 @@ async function main() {
           ownerId: owner._id,
           kind: "video",
           status: "ready",
-          provider: "local",
+          provider: storage.name,
           originalName: "demo-public-introduction.mp4",
           mimeType: "video/mp4",
           size: storedVideo.size,
@@ -163,12 +167,11 @@ async function main() {
   const materialContent = new TextEncoder().encode(
     "mdldm Knowledge Kit Demo\n\n这是一份完全虚构的课程资料，用于验证安全下载链路。\n",
   );
-  if (!(await localStorageProvider.exists(materialObjectKey))) {
-    await localStorageProvider.put(materialObjectKey, materialContent);
+  if (!(await storage.exists(materialObjectKey))) {
+    await storage.put(materialObjectKey, materialContent, {
+      mimeType: "text/plain; charset=utf-8",
+    });
   }
-  const materialPath = localStorageProvider.resolve(materialObjectKey);
-  const materialData = await readFile(materialPath);
-  const crypto = await import("node:crypto");
   const materialAsset = await MediaAssetModel.findOneAndUpdate(
     { objectKey: materialObjectKey },
     {
@@ -176,11 +179,11 @@ async function main() {
         ownerId: owner._id,
         kind: "document",
         status: "ready",
-        provider: "local",
+        provider: storage.name,
         originalName: "课程说明.txt",
         mimeType: "text/plain; charset=utf-8",
-        size: materialData.byteLength,
-        checksum: crypto.createHash("sha256").update(materialData).digest("hex"),
+        size: materialContent.byteLength,
+        checksum: createHash("sha256").update(materialContent).digest("hex"),
       },
       $setOnInsert: { objectKey: materialObjectKey },
     },

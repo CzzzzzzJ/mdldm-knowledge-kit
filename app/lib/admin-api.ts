@@ -1,10 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { rejectCrossOriginMutation } from "@/app/lib/request-security";
 import type { UserAccount } from "@/modules/identity";
-import {
-  getExpectedRequestOrigin,
-  isSameOriginRequest,
-} from "@/modules/identity/security";
 import { requireAdmin } from "@/providers/auth/session";
 
 type AdminAuthorization =
@@ -14,17 +11,11 @@ type AdminAuthorization =
 export async function authorizeAdminMutation(
   request: NextRequest,
 ): Promise<AdminAuthorization> {
-  const expectedOrigin = getExpectedRequestOrigin(
-    request.headers,
-    request.nextUrl.protocol,
-  );
-  if (
-    !expectedOrigin ||
-    !isSameOriginRequest(request.headers.get("origin"), expectedOrigin)
-  ) {
+  const rejection = rejectCrossOriginMutation(request);
+  if (rejection) {
     return {
       ok: false,
-      response: NextResponse.json({ error: "请求来源无效" }, { status: 403 }),
+      response: rejection,
     };
   }
 

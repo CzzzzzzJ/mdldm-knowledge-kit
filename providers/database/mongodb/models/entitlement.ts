@@ -27,7 +27,18 @@ const entitlementSchema = new Schema<EntitlementRecord>(
       index: true,
     },
     type: { type: String, enum: entitlementTypes, required: true },
-    targetId: { type: String, default: null },
+    targetId: {
+      type: String,
+      default: null,
+      validate: {
+        validator(this: EntitlementRecord, value: string | null) {
+          return this.type === "membership"
+            ? value === null
+            : typeof value === "string" && value.length > 0;
+        },
+        message: "membership 权益不能设置目标，course/series 权益必须设置目标",
+      },
+    },
     startsAt: { type: Date, required: true },
     endsAt: { type: Date, default: null },
     revokedAt: { type: Date, default: null },
