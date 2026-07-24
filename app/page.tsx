@@ -3,7 +3,7 @@ import Link from "next/link";
 import { RuntimePanel } from "@/components/runtime-panel";
 import { SiteHeader } from "@/components/site-header";
 import { getPublicRuntimeConfig } from "@/config/env";
-import { featuresConfig } from "@/config/features.config";
+import { getFeaturesConfig } from "@/config/features.config";
 import { productsConfig } from "@/config/products.config";
 import { getSiteConfig } from "@/config/site.config";
 
@@ -18,10 +18,13 @@ const domains = [
   "Operations",
 ];
 
+export const dynamic = "force-dynamic";
+
 export default function HomePage() {
   const site = getSiteConfig();
   const runtime = getPublicRuntimeConfig();
-  const enabledFeatureCount = Object.values(featuresConfig).filter(Boolean).length;
+  const features = getFeaturesConfig();
+  const enabledFeatureCount = Object.values(features).filter(Boolean).length;
 
   return (
     <>
@@ -122,6 +125,12 @@ export default function HomePage() {
                 <p className="mt-10 font-mono text-sm">
                   服务端 SKU：{product.id}
                 </p>
+                <Link
+                  className="mt-5 inline-block rounded-lg border border-current px-4 py-2 text-sm font-semibold"
+                  href="/pricing"
+                >
+                  查看价格与购买
+                </Link>
               </article>
             ))}
           </div>

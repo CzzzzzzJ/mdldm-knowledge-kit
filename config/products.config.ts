@@ -26,7 +26,8 @@ export const productsConfig = [
     },
     entitlement: {
       type: "course",
-      targetId: "demo-foundations",
+      targetId: null,
+      targetSlug: "single-course-delivery",
       durationDays: null,
     },
     active: true,

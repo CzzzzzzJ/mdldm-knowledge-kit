@@ -21,5 +21,8 @@
 - `email/smtp`：标准 SMTP 事务邮件；
 - `auth/session`：服务端会话 Cookie 与数据库 Session；
 - `rate-limit/mongodb`：跨实例共享的身份接口固定窗口限流。
+- `payment/manual`：管理员核对后手工确认到账；
+- `payment/mock`：仅用于非生产 Demo 的无扣款支付；
+- `payment/xorpay`：XorPay 下单、签名和回调协议适配。
 
-S3、正式支付、转码与外部监控 Provider 仍处于配置识别或计划状态。
+支付 Provider 不决定商品价格或发放权益。订单校验、PaymentEvent 幂等和 Entitlement 发放统一位于应用用例层。S3、转码与外部监控 Provider 仍处于配置识别或计划状态。

@@ -4,9 +4,9 @@
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前阶段：`v0.1 development / Phase 3 identity and entitlement`
+> 当前阶段：`v0.1 development / Phase 4 commerce and payment`
 >
-> 课程交付、邮箱身份流程、五级权限矩阵、邀请码权益、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+> 课程交付、身份权益、服务端商品、订单、Manual/Mock/XorPay 支付、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
 
 ## 要解决的问题
 
@@ -69,7 +69,7 @@
 - Console / SMTP Email
 - Mock 支付作为当前开发 Provider
 
-当前可以运行“注册验证 → 邀请码得权益 → 观看受控课程”的完整 Demo。订单和支付将在 Phase 4 实现，项目仍不是稳定版本。
+当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程”的完整 Demo。项目仍不是稳定版本。
 
 ## 快速启动
 
@@ -88,6 +88,14 @@ npm run dev
 ```
 
 把 `openssl` 输出写入 `.env.local` 的 `AUTH_SECRET`，再打开 `http://localhost:3000`。Console Email 会把验证与找回链接打印在运行 `npm run dev` 的服务端终端。
+
+`seed-demo` 会同步两个虚构商品：一年期全站会员和一门永久单课。打开 `/pricing`，在非生产环境中可用 Mock Payment 完整测试下单与权益发放，不会产生真实扣款。修改 `config/products.config.ts` 后运行：
+
+```bash
+npm run sync-products
+```
+
+浏览器只提交 `productId` 和支付方式；价格、币种、权益类型、目标与期限全部从服务端商品生成，并保存到 `OrderItem` 快照。
 
 创建一年期单人会员邀请码：
 
@@ -111,7 +119,7 @@ npm run create-invitation -- \
 | 数据库 | Docker MongoDB | MongoDB Atlas |
 | 媒体 | Local Storage | 阿里云 OSS 私有 Bucket |
 | 邮件 | Console Email | SMTP / 阿里云邮件推送 |
-| 支付 | Mock | Phase 4 接入 |
+| 支付 | Mock / Manual | XorPay 或 Manual |
 
 ### 1. Vercel
 
@@ -172,7 +180,43 @@ SMTP_PASSWORD=replace-with-smtp-password
 
 阿里云 SMTP 用户名必须与已配置发信地址一致；SMTP 密码不是阿里云账号密码。上线前完成发信域名、DNS 和发信地址验证。
 
-### 5. 必填生产变量
+### 5. Manual、Mock 与 XorPay
+
+本地默认使用 Mock：
+
+```dotenv
+PAYMENT_PROVIDER=mock
+```
+
+Mock 只用于开发，生产配置校验会直接拒绝。暂时不接第三方平台时可以使用 Manual，由管理员在订单后台核对并确认：
+
+```dotenv
+PAYMENT_PROVIDER=manual
+MANUAL_PAYMENT_INSTRUCTIONS=请转账后联系管理员，并提供订单号。
+```
+
+接入 XorPay：
+
+```dotenv
+PAYMENT_PROVIDER=xorpay
+XORPAY_AID=replace-with-xorpay-aid
+XORPAY_APP_SECRET=replace-with-xorpay-app-secret
+# 留空时自动使用 APP_URL/api/payments/webhooks/xorpay
+XORPAY_NOTIFY_URL=https://your-domain.example/api/payments/webhooks/xorpay
+```
+
+1. 在 XorPay 后台取得 AID 与 App Secret；
+2. 在 Vercel Production 环境配置以上变量，不能添加 `NEXT_PUBLIC_` 前缀；
+3. 确保回调地址是公网 HTTPS，并允许 XorPay 无登录 POST；
+4. 重新部署后运行 `npm run check-config`；
+5. 用隔离的低价测试商品完成一次支付宝或微信 Native 支付；
+6. 在 `/admin` 确认订单为 `fulfilled / fulfilled`，再恢复正式商品价格并重新同步。
+
+XorPay 回调会先验签，再核对订单 Provider、服务端金额和币种。`PaymentEvent` 以 Provider 事件 ID 幂等留痕；重复通知不会重复创建 Entitlement。授权失败会保留支付成功事实，并在后台提供重试入口。
+
+切换支付 Provider 前应先处理完旧 Provider 的待支付订单，并保留旧回调密钥一段时间。Preview 应使用独立 XorPay 测试配置或 Manual，不要与 Production 共用订单和数据库。
+
+### 6. 必填生产变量
 
 ```dotenv
 NODE_ENV=production
@@ -182,9 +226,12 @@ MONGODB_URI=mongodb+srv://...
 AUTH_SECRET=replace-with-at-least-32-random-characters
 STORAGE_PROVIDER=oss
 EMAIL_PROVIDER=smtp
+PAYMENT_PROVIDER=xorpay
+XORPAY_AID=...
+XORPAY_APP_SECRET=...
 ```
 
-运行 `npm run check-config` 会拒绝生产环境中的 HTTP `APP_URL`、不完整 OSS/SMTP 配置和弱 `AUTH_SECRET`；MongoDB 指向本机时会提示该组合不能用于 Vercel。完整步骤、安全建议、Vercel 初始化管理员命令与官方文档链接见 [生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
+运行 `npm run check-config` 会拒绝生产环境中的 Mock Payment、HTTP `APP_URL`、不完整 OSS/SMTP/XorPay 配置和弱 `AUTH_SECRET`；MongoDB 指向本机时会提示该组合不能用于 Vercel。完整步骤、安全建议、Vercel 初始化管理员命令与官方文档链接见 [生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
 
 ## 质量检查
 

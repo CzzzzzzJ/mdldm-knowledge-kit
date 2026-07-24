@@ -42,6 +42,7 @@ describe("environment configuration", () => {
       MONGODB_URI:
         "mongodb+srv://demo.invalid.example/mdldm_knowledge_kit",
       AUTH_SECRET: "a-secure-production-value-with-more-than-32-characters",
+      PAYMENT_PROVIDER: "manual",
     });
 
     expect(env.NODE_ENV).toBe("production");
@@ -55,5 +56,26 @@ describe("environment configuration", () => {
         EMAIL_PROVIDER: "smtp",
       }),
     ).toThrow(/OSS_REGION|EMAIL_FROM/);
+  });
+
+  it("rejects mock payments in production", () => {
+    expect(() =>
+      parseEnv({
+        NODE_ENV: "production",
+        APP_URL: "https://courses.example.com",
+        AUTH_SECRET:
+          "a-secure-production-value-with-more-than-32-characters",
+        PAYMENT_PROVIDER: "mock",
+      }),
+    ).toThrow(/Mock Payment/);
+  });
+
+  it("requires XorPay credentials when selected", () => {
+    expect(() =>
+      parseEnv({
+        NODE_ENV: "development",
+        PAYMENT_PROVIDER: "xorpay",
+      }),
+    ).toThrow(/XORPAY_AID|XORPAY_APP_SECRET/);
   });
 });

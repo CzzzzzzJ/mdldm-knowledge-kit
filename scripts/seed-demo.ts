@@ -7,6 +7,7 @@ import path from "node:path";
 
 import mongoose from "mongoose";
 
+import { syncConfiguredProducts } from "@/app/lib/commerce-service";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
 import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
@@ -63,7 +64,7 @@ async function main() {
       summary: "展示全站会员权益控制的课程。",
       position: 1,
       accessLevel: "member",
-      status: "draft",
+      status: "published",
     },
     {
       slug: "single-course-delivery",
@@ -71,7 +72,7 @@ async function main() {
       summary: "展示指定课程权益控制的内容。",
       position: 2,
       accessLevel: "course",
-      status: "draft",
+      status: "published",
     },
   ] as const;
 
@@ -160,8 +161,10 @@ async function main() {
     throw new Error("Demo 视频资产创建失败");
   }
 
-  publicCourse.videoAssetId = videoAsset._id;
-  await publicCourse.save();
+  for (const course of seededCourses) {
+    course.videoAssetId = videoAsset._id;
+    await course.save();
+  }
 
   const materialObjectKey = "demo/public-introduction-notes.txt";
   const materialContent = new TextEncoder().encode(
@@ -206,8 +209,10 @@ async function main() {
     { upsert: true, new: true, runValidators: true },
   );
 
+  const productSync = await syncConfiguredProducts();
+
   console.log(
-    `Demo 数据已就绪：1 个系列，${demoCourses.length} 节课程，1 个视频，1 份资料`,
+    `Demo 数据已就绪：1 个系列，${demoCourses.length} 节课程，1 个视频，1 份资料，${productSync.synced} 个商品`,
   );
 }
 

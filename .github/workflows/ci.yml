@@ -16,6 +16,7 @@ jobs:
       APP_URL: https://ci.example.invalid
       AUTH_SECRET: ci-only-secret-value-with-more-than-32-characters
       MONGODB_URI: mongodb://127.0.0.1:27017/mdldm_knowledge_kit_test
+      PAYMENT_PROVIDER: manual
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -52,7 +53,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: npm run create-admin -- --name "Demo Admin" --email admin@example.com --password local-demo-admin-password
+      - run: npm run create-admin -- --name "Demo Admin" --email admin@example.com --password local-demo-admin-password-2026
       - run: npm run seed-demo
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

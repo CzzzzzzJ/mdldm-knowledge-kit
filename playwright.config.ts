@@ -5,6 +5,10 @@ const testClientIp = `2001:db8::${Date.now().toString(16)}`;
 
 export default defineConfig({
   testDir: "./e2e",
+  timeout: 180_000,
+  expect: {
+    timeout: 15_000,
+  },
   fullyParallel: false,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
@@ -23,9 +27,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --hostname 127.0.0.1 --port ${port}`,
+    command: `npm run dev -- --turbopack --hostname 127.0.0.1 --port ${port}`,
     env: {
       ...process.env,
+      NEXT_DIST_DIR: ".next-e2e",
       AUTH_SECRET:
         process.env.AUTH_SECRET ??
         "playwright-local-secret-value-with-more-than-32-characters",

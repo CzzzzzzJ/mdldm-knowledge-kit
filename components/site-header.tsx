@@ -28,18 +28,18 @@ export function SiteHeader({ site }: { site: SiteConfig }) {
           >
             课程
           </Link>
-          <a
+          <Link
             className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] sm:block"
-            href="#architecture"
+            href="/pricing"
           >
-            架构
-          </a>
-          <a
-            className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] sm:block"
-            href="#commerce"
+            价格
+          </Link>
+          <Link
+            className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] md:block"
+            href="/account/orders"
           >
-            付费模式
-          </a>
+            订单
+          </Link>
           <Link
             className="focus-ring whitespace-nowrap rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3.5 py-2 font-medium transition-transform active:translate-y-px"
             href="/api/health"

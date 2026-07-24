@@ -65,6 +65,21 @@ const envSchema = z
     PAYMENT_PROVIDER: z
       .enum(["manual", "mock", "xorpay"])
       .default("mock"),
+    MANUAL_PAYMENT_INSTRUCTIONS: z
+      .string()
+      .trim()
+      .min(1)
+      .max(2_000)
+      .default("请按站点说明完成转账，管理员核对后会确认订单。"),
+    XORPAY_AID: optionalEnvString,
+    XORPAY_APP_SECRET: optionalEnvString,
+    XORPAY_NOTIFY_URL: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === ""
+          ? undefined
+          : value,
+      z.string().url().optional(),
+    ),
     TRANSCODE_PROVIDER: z
       .enum(["none", "ffmpeg", "aliyun-mps"])
       .default("none"),
@@ -133,6 +148,41 @@ const envSchema = z
           });
         }
       }
+    }
+
+    if (env.PAYMENT_PROVIDER === "xorpay") {
+      for (const key of ["XORPAY_AID", "XORPAY_APP_SECRET"] as const) {
+        if (!env[key]) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `使用 XorPay 时必须配置 ${key}`,
+            path: [key],
+          });
+        }
+      }
+    }
+
+    if (
+      env.NODE_ENV === "production" &&
+      env.PAYMENT_PROVIDER === "mock"
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "生产环境禁止使用 Mock Payment，请改用 manual 或 xorpay",
+        path: ["PAYMENT_PROVIDER"],
+      });
+    }
+
+    if (
+      env.NODE_ENV === "production" &&
+      env.XORPAY_NOTIFY_URL &&
+      new URL(env.XORPAY_NOTIFY_URL).protocol !== "https:"
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "生产环境 XORPAY_NOTIFY_URL 必须使用 HTTPS",
+        path: ["XORPAY_NOTIFY_URL"],
+      });
     }
   });
 
@@ -219,10 +269,8 @@ export function getConfigWarnings(env: ServerEnv): string[] {
     );
   }
 
-  if (!["manual", "mock"].includes(env.PAYMENT_PROVIDER)) {
-    warnings.push(
-      `${env.PAYMENT_PROVIDER} Payment Provider 尚未实现。`,
-    );
+  if (env.NODE_ENV !== "production" && env.PAYMENT_PROVIDER === "mock") {
+    warnings.push("当前使用 Mock Payment，不会产生真实扣款。");
   }
 
   if (env.TRANSCODE_PROVIDER !== "none") {

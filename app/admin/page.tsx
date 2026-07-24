@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminCourseManager } from "@/components/admin-course-manager";
+import { AdminOrderManager } from "@/components/admin-order-manager";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
 import { getCurrentUser } from "@/providers/auth/session";
@@ -53,6 +54,7 @@ export default async function AdminPage() {
             status: item.status,
           }))}
         />
+        <AdminOrderManager />
       </main>
     </>
   );

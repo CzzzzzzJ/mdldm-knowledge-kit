@@ -71,12 +71,15 @@ test("plays a public local MP4 and downloads its material", async ({
 test("allows the controlled admin account to open the course backend", async ({
   page,
 }) => {
-  await page.goto("/login");
-  await page.getByLabel("邮箱").fill("admin@example.com");
-  await page.getByLabel("密码").fill("local-demo-admin-password");
-  await page.getByRole("button", { name: "登录" }).click();
-
-  await expect(page).toHaveURL(/\/admin$/);
+  const adminLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "admin@example.com",
+      password: "local-demo-admin-password-2026",
+    },
+  });
+  expect(adminLogin.ok()).toBe(true);
+  await page.goto("/admin");
   await expect(
     page.getByRole("heading", { name: "课程交付后台" }),
   ).toBeVisible();
@@ -177,11 +180,15 @@ test("enforces verified identity, invitation entitlement and password rotation",
   const newPassword = "learner-password-2027";
   const resetPassword = "learner-password-2028";
 
-  await page.goto("/login");
-  await page.getByLabel("邮箱").fill("admin@example.com");
-  await page.getByLabel("密码").fill("local-demo-admin-password");
-  await page.getByRole("button", { name: "登录" }).click();
-  await expect(page).toHaveURL(/\/admin$/);
+  const adminLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "admin@example.com",
+      password: "local-demo-admin-password-2026",
+    },
+  });
+  expect(adminLogin.ok()).toBe(true);
+  await page.goto("/admin");
 
   const seriesResponse = await page.request.post("/api/admin/series", {
     headers: { Origin: e2eOrigin },
@@ -464,6 +471,148 @@ test("enforces verified identity, invitation entitlement and password rotation",
       })
     ).ok(),
   ).toBe(true);
+
+  await database.close();
+});
+
+test("creates server-priced mock orders and grants both payment entitlement modes idempotently", async ({
+  page,
+}) => {
+  const suffix = `${Date.now().toString(36)}-${Math.random()
+    .toString(36)
+    .slice(2, 7)}`;
+  const email = `buyer-${suffix}@example.com`;
+  const password = "buyer-password-2026";
+
+  const registration = await page.request.post("/api/auth/register", {
+    headers: { Origin: e2eOrigin },
+    data: { name: "Demo Buyer", email, password },
+  });
+  expect(registration.status()).toBe(201);
+  const registered = (await registration.json()) as {
+    user: { id: string };
+  };
+
+  const database = await createConnection(
+    process.env.MONGODB_URI ??
+      "mongodb://127.0.0.1:27017/mdldm_knowledge_kit",
+  ).asPromise();
+  await database.collection("users").updateOne(
+    { _id: new Types.ObjectId(registered.user.id) },
+    { $set: { emailVerified: true, updatedAt: new Date() } },
+  );
+
+  expect(
+    (
+      await page.request.post("/api/auth/login", {
+        headers: { Origin: e2eOrigin },
+        data: { email, password },
+      })
+    ).ok(),
+  ).toBe(true);
+
+  const productsResponse = await page.request.get("/api/products");
+  expect(productsResponse.ok()).toBe(true);
+  await expect(productsResponse.json()).resolves.toMatchObject({
+    provider: "mock",
+    paymentMethods: ["mock"],
+    products: expect.arrayContaining([
+      expect.objectContaining({ id: "membership-yearly" }),
+      expect.objectContaining({ id: "course-demo-foundations" }),
+    ]),
+  });
+
+  const tampered = await page.request.post("/api/checkout", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      productId: "course-demo-foundations",
+      paymentMethod: "mock",
+      amountInMinorUnits: 1,
+    },
+  });
+  expect(tampered.status()).toBe(400);
+
+  const createdOrderIds: string[] = [];
+  for (const productId of [
+    "course-demo-foundations",
+    "membership-yearly",
+  ]) {
+    const checkout = await page.request.post("/api/checkout", {
+      headers: { Origin: e2eOrigin },
+      data: { productId, paymentMethod: "mock" },
+    });
+    expect(checkout.status()).toBe(201);
+    const payload = (await checkout.json()) as {
+      order: { id: string; amountInMinorUnits: number };
+      checkout: { mode: string };
+    };
+    expect(payload.checkout.mode).toBe("mock");
+    expect(payload.order.amountInMinorUnits).toBe(
+      productId === "membership-yearly" ? 49_900 : 9_900,
+    );
+    createdOrderIds.push(payload.order.id);
+
+    const firstConfirmation = await page.request.post(
+      `/api/payments/mock/${payload.order.id}/confirm`,
+      { headers: { Origin: e2eOrigin } },
+    );
+    expect(firstConfirmation.ok()).toBe(true);
+    await expect(firstConfirmation.json()).resolves.toMatchObject({
+      confirmed: true,
+      alreadyProcessed: false,
+    });
+
+    const duplicateConfirmation = await page.request.post(
+      `/api/payments/mock/${payload.order.id}/confirm`,
+      { headers: { Origin: e2eOrigin } },
+    );
+    expect(duplicateConfirmation.ok()).toBe(true);
+    await expect(duplicateConfirmation.json()).resolves.toMatchObject({
+      confirmed: true,
+      alreadyProcessed: true,
+    });
+  }
+
+  for (const orderId of createdOrderIds) {
+    const order = await page.request.get(`/api/orders/${orderId}`);
+    expect(order.ok()).toBe(true);
+    await expect(order.json()).resolves.toMatchObject({
+      order: {
+        status: "fulfilled",
+        fulfillmentStatus: "fulfilled",
+        items: [expect.objectContaining({ entitlementGranted: true })],
+      },
+    });
+  }
+
+  const entitlements = database.collection("entitlements");
+  expect(
+    await entitlements.countDocuments({
+      userId: new Types.ObjectId(registered.user.id),
+      sourceType: "order",
+    }),
+  ).toBe(2);
+  expect(
+    await entitlements
+      .find({
+        userId: new Types.ObjectId(registered.user.id),
+        sourceType: "order",
+      })
+      .project({ type: 1 })
+      .toArray(),
+  ).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ type: "course" }),
+      expect.objectContaining({ type: "membership" }),
+    ]),
+  );
+
+  const paidCourse = await database
+    .collection("courses")
+    .findOne({ slug: "single-course-delivery" });
+  expect(paidCourse).not.toBeNull();
+  await page.goto(`/learn/${paidCourse!._id.toString()}`);
+  await expect(page.locator("video")).toBeVisible();
 
   await database.close();
 });

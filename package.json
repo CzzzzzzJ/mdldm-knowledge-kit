@@ -16,6 +16,7 @@
     "check-config": "tsx scripts/check-config.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-invitation": "tsx scripts/create-invitation.ts",
+    "sync-products": "tsx scripts/sync-products.ts",
     "seed-demo": "tsx scripts/seed-demo.ts"
   },
   "dependencies": {
@@ -26,6 +27,7 @@
     "mongoose": "8.24.1",
     "next": "15.5.21",
     "nodemailer": "^9.0.3",
+    "qrcode.react": "4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "3.25.76"

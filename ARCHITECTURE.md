@@ -188,6 +188,8 @@ flowchart LR
     Browser["浏览器"] --> Vercel["Vercel / Next.js"]
     Vercel --> Atlas["MongoDB Atlas"]
     Vercel --> SMTP["SMTP / 阿里云邮件推送"]
+    Vercel --> XorPay["XorPay"]
+    XorPay -->|"验签 Webhook"| Vercel
     Vercel --> Signed["生成短期 OSS 签名"]
     Browser -->|"管理员 PUT 直传"| OSS["阿里云 OSS 私有 Bucket"]
     Browser -->|"鉴权后 307 读取"| OSS
@@ -197,4 +199,5 @@ flowchart LR
 - Atlas 保存用户、Session、Token、限流、课程、权益和学习数据；
 - OSS 保持私有，上传与读取都由短期签名授权；
 - SMTP 只通过 Email Port 调用；
+- XorPay 只负责支付协议，价格校验、PaymentEvent 和 Entitlement 仍在服务端领域流程；
 - Preview 与 Production 必须使用隔离的数据和密钥。

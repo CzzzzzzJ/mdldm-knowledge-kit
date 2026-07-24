@@ -25,7 +25,9 @@ export function getProviderReadiness(
     },
     payment: {
       provider: runtime.providers.payment,
-      status: ["manual", "mock"].includes(runtime.providers.payment)
+      status: ["manual", "mock", "xorpay"].includes(
+        runtime.providers.payment,
+      )
         ? "configured"
         : "planned",
     },

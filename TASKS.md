@@ -55,14 +55,14 @@
 
 ## Phase 4：交易与支付
 
-- TODO：Product、Order、OrderItem 和 PaymentEvent；
-- TODO：服务端 SKU 定价；
-- TODO：Manual Payment Provider；
-- TODO：Mock Payment Provider；
-- TODO：XorPay Adapter；
-- TODO：Webhook 验签、幂等和失败重放；
-- TODO：支付与授权事务边界；
-- TODO：订单后台。
+- DONE：Product、Order、OrderItem 和 PaymentEvent；
+- DONE：服务端 SKU 定价；
+- DONE：Manual Payment Provider；
+- DONE：Mock Payment Provider；
+- DONE：XorPay Adapter；
+- DONE：Webhook 验签、幂等和失败重放；
+- DONE：支付与授权事务边界；
+- DONE：订单后台。
 
 退出条件：客户端无法篡改金额，重复回调不会重复授予权益。
 
