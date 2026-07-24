@@ -7,7 +7,7 @@
 - `seed-demo`：导入虚构示例课程和双模式商品；
 - `sync-products`：把服务端商品配置同步到 MongoDB；
 - `check-config`：启动前检查配置；
-- 后续的数据迁移、备份和恢复脚本。
+- 数据备份与恢复当前使用 Atlas 或 MongoDB Database Tools，见 `docs/BACKUP_AND_RECOVERY.md`。
 
 脚本默认应可重复执行，并在破坏性操作前明确目标和影响。
 

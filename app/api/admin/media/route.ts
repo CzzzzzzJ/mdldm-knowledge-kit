@@ -4,6 +4,7 @@ import path from "node:path";
 import { NextResponse, type NextRequest } from "next/server";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
+import { reportOperationalFailure } from "@/app/lib/operations-service";
 import { getServerEnv } from "@/config/env";
 import {
   isAllowedMediaUpload,
@@ -56,7 +57,25 @@ export async function POST(request: NextRequest) {
   const extension = path.extname(file.name).toLowerCase().slice(0, 12);
   const objectKey = `${parsedKind.data}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${extension}`;
   const data = new Uint8Array(await file.arrayBuffer());
-  const stored = await storage.put(objectKey, data, { mimeType: file.type });
+  let stored;
+  try {
+    stored = await storage.put(objectKey, data, { mimeType: file.type });
+  } catch (error) {
+    await reportOperationalFailure({
+      category: "storage",
+      severity: "error",
+      code: "MEDIA_UPLOAD_FAILED",
+      summary: "媒体写入存储 Provider 失败",
+      error,
+      provider: storage.name,
+      sourceType: "admin",
+      sourceId: authorization.user.id,
+    });
+    return NextResponse.json(
+      { error: "媒体存储暂时不可用，请稍后重试" },
+      { status: 503 },
+    );
+  }
 
   try {
     await connectMongo();
@@ -85,7 +104,17 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error) {
-    await storage.delete(objectKey);
+    await storage.delete(objectKey).catch(() => undefined);
+    await reportOperationalFailure({
+      category: "storage",
+      severity: "error",
+      code: "MEDIA_ASSET_PERSIST_FAILED",
+      summary: "媒体写入成功但资产记录创建失败",
+      error,
+      provider: storage.name,
+      sourceType: "admin",
+      sourceId: authorization.user.id,
+    });
     throw error;
   }
 }

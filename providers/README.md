@@ -24,5 +24,7 @@
 - `payment/manual`：管理员核对后手工确认到账；
 - `payment/mock`：仅用于非生产 Demo 的无扣款支付；
 - `payment/xorpay`：XorPay 下单、签名和回调协议适配。
+- `observability/console`：脱敏后的单行 JSON 故障日志；
+- `observability/webhook`：带时间戳与 HMAC-SHA256 签名的通用告警。
 
-支付 Provider 不决定商品价格或发放权益。订单校验、PaymentEvent 幂等和 Entitlement 发放统一位于应用用例层。S3、转码与外部监控 Provider 仍处于配置识别或计划状态。
+支付 Provider 不决定商品价格或发放权益。订单校验、PaymentEvent 幂等和 Entitlement 发放统一位于应用用例层。S3、转码与 Sentry Provider 仍处于配置识别或计划状态。

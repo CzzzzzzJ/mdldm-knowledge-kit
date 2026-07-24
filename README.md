@@ -4,9 +4,9 @@
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前阶段：`v0.1 development / Phase 4 commerce and payment`
+> 当前阶段：`v0.1 development / Phase 5 operations and monitoring`
 >
-> 课程交付、身份权益、服务端商品、订单、Manual/Mock/XorPay 支付、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+> 课程交付、身份权益、双模式交易、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
 
 ## 要解决的问题
 
@@ -53,6 +53,7 @@
 - [开发路线图](docs/ROADMAP.md)
 - [本地开发](docs/DEVELOPMENT.md)
 - [生产部署与第三方 Provider](docs/DEPLOYMENT.md)
+- [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)
 - [安全基线](docs/SECURITY_BASELINE.md)
 - [架构决策](docs/decisions/README.md)
 - [贡献指南](CONTRIBUTING.md)
@@ -67,9 +68,10 @@
 - 单仓模块化架构
 - Local / 阿里云 OSS Storage
 - Console / SMTP Email
-- Mock 支付作为当前开发 Provider
+- Manual / Mock / XorPay Payment
+- Structured Console / signed Webhook Observability
 
-当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程”的完整 Demo。项目仍不是稳定版本。
+当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。项目仍不是稳定版本。
 
 ## 快速启动
 
@@ -120,6 +122,7 @@ npm run create-invitation -- \
 | 媒体 | Local Storage | 阿里云 OSS 私有 Bucket |
 | 邮件 | Console Email | SMTP / 阿里云邮件推送 |
 | 支付 | Mock / Manual | XorPay 或 Manual |
+| 监控 | Structured Console | 签名 Webhook |
 
 ### 1. Vercel
 
@@ -216,7 +219,29 @@ XorPay 回调会先验签，再核对订单 Provider、服务端金额和币种�
 
 切换支付 Provider 前应先处理完旧 Provider 的待支付订单，并保留旧回调密钥一段时间。Preview 应使用独立 XorPay 测试配置或 Manual，不要与 Production 共用订单和数据库。
 
-### 6. 必填生产变量
+### 6. 结构化日志与通用 Webhook 告警
+
+默认配置会向服务端输出单行 JSON 结构化日志：
+
+```dotenv
+OBSERVABILITY_PROVIDER=console
+```
+
+生产环境建议把主要故障同步到自建 Vercel Function、自动化平台或告警中继：
+
+```dotenv
+OBSERVABILITY_PROVIDER=webhook
+OBSERVABILITY_WEBHOOK_URL=https://alerts.example.com/hooks/mdldm
+OBSERVABILITY_WEBHOOK_SECRET=replace-with-at-least-32-random-characters
+```
+
+Webhook 请求包含 `X-MDLDm-Timestamp` 与 `X-MDLDm-Signature`。接收方应使用原始请求体计算 `HMAC-SHA256(secret, timestamp + "." + rawBody)`，并拒绝超过 5 分钟的时间戳。不要把 Secret 放进 URL 或 `NEXT_PUBLIC_` 变量。
+
+Slack、飞书、Teams 等平台通常有自己的消息格式和签名协议，不建议把平台机器人地址直接填入本项目。用一层 Vercel Function/Serverless 中继先校验本项目签名，再转换为目标平台格式；这样可以轮换目标平台 Webhook 而不改业务站配置。
+
+支付、邮件和存储错误会聚合到 `/admin` 的统一失败队列；未来转码 Provider 也使用同一类别。Sentry 目前只保留配置枚举，选择后会明确降级为 Console，不视为已接入。
+
+### 7. 必填生产变量
 
 ```dotenv
 NODE_ENV=production
@@ -231,7 +256,9 @@ XORPAY_AID=...
 XORPAY_APP_SECRET=...
 ```
 
-运行 `npm run check-config` 会拒绝生产环境中的 Mock Payment、HTTP `APP_URL`、不完整 OSS/SMTP/XorPay 配置和弱 `AUTH_SECRET`；MongoDB 指向本机时会提示该组合不能用于 Vercel。完整步骤、安全建议、Vercel 初始化管理员命令与官方文档链接见 [生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
+运行 `npm run check-config` 会拒绝生产环境中的 Mock Payment、HTTP `APP_URL`、不完整 OSS/SMTP/XorPay/Webhook 配置和弱 `AUTH_SECRET`；MongoDB 指向本机时会提示该组合不能用于 Vercel。完整步骤、安全建议、Vercel 初始化管理员命令与官方文档链接见 [生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
+
+生产上线前同时配置 Atlas 与 OSS 备份，并实际做一次隔离恢复演练；管理员 JSON 导出不包含凭据，也不能替代完整备份。操作步骤见 [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)。
 
 ## 质量检查
 

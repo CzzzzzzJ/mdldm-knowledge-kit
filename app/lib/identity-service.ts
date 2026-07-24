@@ -1,6 +1,11 @@
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
 
+import {
+  reportOperationalFailure,
+  resolveOperationalFailures,
+  structuredLog,
+} from "@/app/lib/operations-service";
 import { getServerEnv, requireAuthSecret } from "@/config/env";
 import {
   generateOpaqueToken,
@@ -61,12 +66,33 @@ async function sendIdentityAction(
   const actionUrl = new URL(pathname, env.APP_URL);
   actionUrl.searchParams.set("token", token);
 
-  await getEmailProvider().sendIdentityEmail({
-    to: user.email,
-    recipientName: user.name,
-    actionUrl: actionUrl.toString(),
-    kind: purpose,
-  });
+  const provider = getEmailProvider();
+  try {
+    await provider.sendIdentityEmail({
+      to: user.email,
+      recipientName: user.name,
+      actionUrl: actionUrl.toString(),
+      kind: purpose,
+    });
+    await resolveOperationalFailures({
+      category: "email",
+      code: "IDENTITY_EMAIL_FAILED",
+      sourceType: "user",
+      sourceId: user._id.toString(),
+    });
+  } catch (error) {
+    await reportOperationalFailure({
+      category: "email",
+      severity: "error",
+      code: "IDENTITY_EMAIL_FAILED",
+      summary: "身份验证邮件发送失败",
+      error,
+      provider: provider.name,
+      sourceType: "user",
+      sourceId: user._id.toString(),
+    });
+    throw error;
+  }
 }
 
 export async function registerUser(input: {
@@ -88,8 +114,10 @@ export async function registerUser(input: {
   try {
     await sendIdentityAction(user, "verify_email");
     return { user, emailSent: true };
-  } catch (error) {
-    console.error("注册成功，但验证邮件发送失败", error);
+  } catch {
+    structuredLog("warn", "registration_email_not_sent", {
+      userId: user._id.toString(),
+    });
     return { user, emailSent: false };
   }
 }

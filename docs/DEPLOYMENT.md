@@ -8,6 +8,7 @@ Vercel（Next.js）
   + 阿里云 OSS 私有 Bucket（视频与资料）
   + SMTP / 阿里云邮件推送（验证与找回邮件）
   + XorPay 或 Manual Payment（订单与权益）
+  + Signed Webhook（主要故障告警）
 ```
 
 ## 环境隔离
@@ -211,6 +212,72 @@ XORPAY_NOTIFY_URL=https://your-domain.example/api/payments/webhooks/xorpay
 - [回调通知与重试](https://xorpay.com/doc/notify.html)
 - [订单状态查询](https://xorpay.com/doc/query.html)
 
+## Observability 与通用 Webhook
+
+本地默认使用结构化 Console：
+
+```dotenv
+OBSERVABILITY_PROVIDER=console
+```
+
+每条主要故障是单行 JSON，错误信息会先移除邮箱、Bearer Token、MongoDB URI 凭据以及名称含 `password`、`secret`、`token`、`cookie`、`accessKey` 的上下文字段。
+
+生产环境使用通用 Webhook：
+
+```dotenv
+OBSERVABILITY_PROVIDER=webhook
+OBSERVABILITY_WEBHOOK_URL=https://alerts.example.com/hooks/mdldm
+OBSERVABILITY_WEBHOOK_SECRET=replace-with-at-least-32-random-characters
+```
+
+配置流程：
+
+1. 创建只负责接收告警的 HTTPS Endpoint；可部署为独立 Vercel Function；
+2. 使用 `openssl rand -hex 32` 生成独立 Secret，不与 `AUTH_SECRET` 或支付密钥复用；
+3. 在 Endpoint 和知识站的 Production 环境中配置相同 Secret；
+4. Endpoint 读取原始 Body 和 `X-MDLDm-Timestamp`；
+5. 拒绝与当前时间相差超过 5 分钟的请求；
+6. 计算 `HMAC-SHA256(secret, timestamp + "." + rawBody)`，与 `X-MDLDm-Signature` 中 `sha256=` 后的十六进制摘要做常量时间比较；
+7. 验签通过后再转换为飞书、Slack、Teams、短信或其他平台消息；
+8. 制造一条隔离测试故障，确认 `/admin` 出现记录且告警到达；
+9. 在后台写下处理说明，确认相同故障再次发生时会自动重新打开。
+
+告警 Body 结构：
+
+```json
+{
+  "type": "mdldm.operation_failure",
+  "version": "1",
+  "event": {
+    "fingerprint": "sha256-hex",
+    "category": "payment",
+    "severity": "critical",
+    "code": "ORDER_FULFILLMENT_FAILED",
+    "message": "支付成功但权益发放失败：...",
+    "provider": "xorpay",
+    "sourceType": "order",
+    "sourceId": "object-id",
+    "occurredAt": "2026-07-24T00:00:00.000Z",
+    "occurrenceCount": 1
+  }
+}
+```
+
+Webhook 返回非 2xx 或 5 秒内未响应时，应用会降级记录 `ERROR_REPORTER_FAILED` 结构化日志，但不会回滚原订单或覆盖原业务错误。接收方应快速返回 2xx，把耗时通知放入自己的队列。
+
+Sentry Adapter 尚未实现。`OBSERVABILITY_PROVIDER=sentry` 只会给出明确配置提示并降级为 Console，不应作为生产告警已经可用的信号。
+
+## 后台、健康检查与数据导出
+
+- `/api/health`：公开浅检查，不连接数据库；
+- `/api/health?deep=1`：连接 MongoDB 的深度检查，适合 Vercel/外部监控；
+- `/admin`：管理员查看用户、课程、订单、权益、媒体、学习指标和统一失败队列；
+- `/api/admin/export`：管理员下载限量 JSON 快照，不包含密码、Session 与身份令牌。
+
+深度健康检查返回的配置名称不含密钥，但仍建议只在监控系统中保存必要字段。管理员导出包含邮箱和订单等个人数据，应加密保存并按用途删除。
+
+完整备份、恢复目标与演练步骤见 [数据备份与恢复](BACKUP_AND_RECOVERY.md)。
+
 ## 首个管理员与邀请码
 
 管理员只能从受控终端创建：
@@ -262,5 +329,9 @@ npm run test:e2e
 - XorPay 回调地址公网可达，签名错误与金额不符会被拒绝；
 - 重复回调不会重复发放权益；
 - `paid + failed` 订单能在后台重试授权；
+- `/admin` 可看到运营指标和未处理失败；
+- Webhook 接收端能校验时间戳与签名；
+- 管理员数据导出不会出现 `passwordHash` 或 `tokenHash`；
 - Atlas 有备份与告警；
+- OSS 已开启版本控制或等价备份，并完成一次隔离恢复演练；
 - `.env*`、AccessKey、SMTP 密码未进入 Git。

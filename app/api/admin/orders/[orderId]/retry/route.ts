@@ -5,6 +5,7 @@ import {
   CommerceError,
   retryOrderFulfillment,
 } from "@/app/lib/commerce-service";
+import { structuredLog } from "@/app/lib/operations-service";
 
 export async function POST(
   request: NextRequest,
@@ -26,7 +27,10 @@ export async function POST(
         { status: error.code === "ORDER_NOT_FOUND" ? 404 : 409 },
       );
     }
-    console.error("重试订单授权失败", error);
+    structuredLog("error", "admin_order_retry_failed", {
+      orderId,
+      error,
+    });
     return NextResponse.json({ error: "重试授权失败" }, { status: 500 });
   }
 }

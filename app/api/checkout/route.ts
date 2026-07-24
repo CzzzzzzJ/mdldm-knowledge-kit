@@ -5,6 +5,7 @@ import {
   CommerceError,
   createCheckout,
 } from "@/app/lib/commerce-service";
+import { structuredLog } from "@/app/lib/operations-service";
 import {
   applyRequestRateLimit,
   rejectCrossOriginMutation,
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
         },
       );
     }
-    console.error("创建订单失败", error);
+    structuredLog("error", "checkout_failed", { error });
     return NextResponse.json(
       { error: "创建订单失败，请稍后重试" },
       { status: 502 },

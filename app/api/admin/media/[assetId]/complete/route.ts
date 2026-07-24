@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { isValidObjectId } from "mongoose";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
+import { reportOperationalFailure } from "@/app/lib/operations-service";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
 import { getStorageProvider } from "@/providers/storage";
@@ -43,7 +44,25 @@ export async function POST(
     );
   }
 
-  const object = await storage.stat(asset.objectKey);
+  let object;
+  try {
+    object = await storage.stat(asset.objectKey);
+  } catch (error) {
+    await reportOperationalFailure({
+      category: "storage",
+      severity: "error",
+      code: "MEDIA_VERIFY_FAILED",
+      summary: "验证直传媒体状态失败",
+      error,
+      provider: storage.name,
+      sourceType: "media_asset",
+      sourceId: asset._id.toString(),
+    });
+    return NextResponse.json(
+      { error: "媒体存储暂时不可用，请稍后重试" },
+      { status: 503 },
+    );
+  }
   if (!object || object.size !== asset.size) {
     return NextResponse.json(
       { error: "上传文件尚未就绪或大小不一致" },

@@ -6,7 +6,9 @@
 - `../TASKS.md`：按阶段维护的开发任务；
 - `ROADMAP.md`：阶段目标、依赖和退出条件；
 - `DEVELOPMENT.md`：本地启动、初始化、健康检查和质量命令；
-- `LICENSE-DECISION.md`：正式公开前必须完成的许可证决策。
+- `DEPLOYMENT.md`：Vercel 与第三方 Provider 配置流程；
+- `BACKUP_AND_RECOVERY.md`：Atlas、MongoDB 和 OSS 备份恢复基线；
+- `LICENSE-DECISION.md`：Apache-2.0 许可证决策说明。
 
 ## 架构与分析
 

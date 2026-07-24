@@ -26,4 +26,5 @@ NNNN-short-title.md
 7. [媒体资产与本地存储策略](0007-media-asset-and-local-storage.md)（Accepted）；
 8. [身份验证、凭据恢复与安全边界](0008-identity-verification-and-security.md)（Accepted）；
 9. [Vercel 部署、OSS 直传与 SMTP Provider](0009-serverless-storage-and-email-providers.md)（Accepted）；
-10. [支付事件与权益发放事务边界](0010-payment-event-and-fulfillment-boundary.md)（Accepted）。
+10. [支付事件与权益发放事务边界](0010-payment-event-and-fulfillment-boundary.md)（Accepted）；
+11. [运营失败队列与告警边界](0011-operational-failure-and-alerting-boundary.md)（Accepted）。

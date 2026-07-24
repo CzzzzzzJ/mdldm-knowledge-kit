@@ -93,9 +93,11 @@ v0.1 发布时，一个没有接触过原私有项目的人，应当能够：
 | 课程交付闭环 | Phase 2 已完成 |
 | 身份与权益 | Phase 3 已完成 |
 | 交易与支付 | Phase 4 已完成 |
+| 后台与监控 | Phase 5 已完成 |
 | 生产 Provider | MongoDB、OSS 与 SMTP 已接入，Vercel 部署流程已记录 |
 | 支付 Provider | Manual、Mock 与 XorPay 已接入 |
-| 可运行 Demo | 注册验证、双模式购买、幂等权益、课程、媒体、进度和后台已可运行 |
+| 可观测性 Provider | 结构化 Console 与签名 Webhook 已接入 |
+| 可运行 Demo | 注册验证、双模式购买、幂等权益、课程、媒体、进度、运营总览和失败队列已可运行 |
 
 ## 7. 事实来源
 

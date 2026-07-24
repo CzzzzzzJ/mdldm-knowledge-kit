@@ -68,12 +68,12 @@
 
 ## Phase 5：后台与监控
 
-- TODO：用户、课程、订单、权益、媒体和学习数据总览；
-- TODO：支付、转码、邮件和存储失败队列；
-- TODO：`/api/health`；
-- TODO：结构化日志和 ErrorReporter；
-- TODO：通用 Webhook 告警；
-- TODO：数据导出、备份和恢复说明。
+- DONE：用户、课程、订单、权益、媒体和学习数据总览；
+- DONE：支付、转码、邮件和存储失败队列；
+- DONE：`/api/health`；
+- DONE：结构化日志和 ErrorReporter；
+- DONE：通用 Webhook 告警；
+- DONE：数据导出、备份和恢复说明。
 
 退出条件：管理员无需查看服务器日志即可发现主要故障。
 

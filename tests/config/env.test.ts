@@ -78,4 +78,36 @@ describe("environment configuration", () => {
       }),
     ).toThrow(/XORPAY_AID|XORPAY_APP_SECRET/);
   });
+
+  it("requires a URL and signing secret for webhook observability", () => {
+    expect(() =>
+      parseEnv({
+        NODE_ENV: "development",
+        OBSERVABILITY_PROVIDER: "webhook",
+      }),
+    ).toThrow(/OBSERVABILITY_WEBHOOK_URL|OBSERVABILITY_WEBHOOK_SECRET/);
+
+    const env = parseEnv({
+      NODE_ENV: "development",
+      OBSERVABILITY_PROVIDER: "webhook",
+      OBSERVABILITY_WEBHOOK_URL: "https://alerts.example.com/mdldm",
+      OBSERVABILITY_WEBHOOK_SECRET: "a-test-secret-with-enough-length",
+    });
+    expect(env.OBSERVABILITY_PROVIDER).toBe("webhook");
+  });
+
+  it("requires HTTPS webhook delivery in production", () => {
+    expect(() =>
+      parseEnv({
+        NODE_ENV: "production",
+        APP_URL: "https://courses.example.com",
+        AUTH_SECRET:
+          "a-secure-production-value-with-more-than-32-characters",
+        PAYMENT_PROVIDER: "manual",
+        OBSERVABILITY_PROVIDER: "webhook",
+        OBSERVABILITY_WEBHOOK_URL: "http://alerts.example.com/mdldm",
+        OBSERVABILITY_WEBHOOK_SECRET: "a-test-secret-with-enough-length",
+      }),
+    ).toThrow(/OBSERVABILITY_WEBHOOK_URL 必须使用 HTTPS/);
+  });
 });

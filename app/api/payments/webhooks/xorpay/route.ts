@@ -5,6 +5,7 @@ import {
   processVerifiedPayment,
   recordRejectedXorPayCallback,
 } from "@/app/lib/commerce-service";
+import { structuredLog } from "@/app/lib/operations-service";
 import { getServerEnv } from "@/config/env";
 import { verifyXorPayCallback } from "@/providers/payment/xorpay";
 
@@ -29,7 +30,9 @@ export async function POST(request: NextRequest) {
       error instanceof Error ? error.message : "XorPay 回调验证失败";
     await recordRejectedXorPayCallback({ rawBody, reason }).catch(
       (recordError: unknown) => {
-        console.error("记录被拒绝的 XorPay 回调失败", recordError);
+        structuredLog("error", "xorpay_rejection_record_failed", {
+          error: recordError,
+        });
       },
     );
     return new NextResponse("invalid signature or payload", { status: 400 });
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
         status: error.code === "PAYMENT_EVENT_BUSY" ? 409 : 400,
       });
     }
-    console.error("处理 XorPay 回调失败", error);
+    structuredLog("error", "xorpay_callback_failed", { error });
     return new NextResponse("retry", { status: 500 });
   }
 }

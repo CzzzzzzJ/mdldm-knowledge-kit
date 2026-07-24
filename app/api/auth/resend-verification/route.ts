@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { resendVerification } from "@/app/lib/identity-service";
+import { structuredLog } from "@/app/lib/operations-service";
 import {
   applyRequestRateLimit,
   rejectCrossOriginMutation,
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   await resendVerification(parsed.data.email).catch((error) => {
-    console.error("重新发送验证邮件失败", error);
+    structuredLog("error", "verification_email_failed", { error });
   });
 
   return NextResponse.json(

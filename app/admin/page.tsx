@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { AdminCourseManager } from "@/components/admin-course-manager";
+import { AdminOperationsPanel } from "@/components/admin-operations-panel";
 import { AdminOrderManager } from "@/components/admin-order-manager";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
@@ -39,6 +40,7 @@ export default async function AdminPage() {
           当前管理员：{user.email}
         </p>
 
+        <AdminOperationsPanel />
         <AdminCourseManager
           courses={courseRecords.map((course) => ({
             id: course._id.toString(),

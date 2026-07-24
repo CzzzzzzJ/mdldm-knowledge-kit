@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
+import { reportOperationalFailure } from "@/app/lib/operations-service";
 import { getServerEnv } from "@/config/env";
 import {
   isAllowedMediaUpload,
@@ -55,10 +56,28 @@ export async function POST(request: NextRequest) {
     .toLowerCase()
     .slice(0, 12);
   const objectKey = `${parsed.data.kind}/${new Date().toISOString().slice(0, 10)}/${randomUUID()}${extension}`;
-  const uploadUrl = await storage.createUploadUrl(objectKey, {
-    expiresInSeconds: 10 * 60,
-    contentType: parsed.data.mimeType,
-  });
+  let uploadUrl;
+  try {
+    uploadUrl = await storage.createUploadUrl(objectKey, {
+      expiresInSeconds: 10 * 60,
+      contentType: parsed.data.mimeType,
+    });
+  } catch (error) {
+    await reportOperationalFailure({
+      category: "storage",
+      severity: "error",
+      code: "UPLOAD_TICKET_FAILED",
+      summary: "生成媒体直传地址失败",
+      error,
+      provider: storage.name,
+      sourceType: "admin",
+      sourceId: authorization.user.id,
+    });
+    return NextResponse.json(
+      { error: "媒体直传服务暂时不可用，请稍后重试" },
+      { status: 503 },
+    );
+  }
   if (!uploadUrl) {
     return NextResponse.json(
       { error: "当前 Storage Provider 不支持直传" },

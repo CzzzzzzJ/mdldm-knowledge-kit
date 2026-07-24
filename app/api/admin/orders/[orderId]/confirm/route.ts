@@ -5,6 +5,7 @@ import {
   CommerceError,
   confirmInternalPayment,
 } from "@/app/lib/commerce-service";
+import { structuredLog } from "@/app/lib/operations-service";
 
 export async function POST(
   request: NextRequest,
@@ -29,7 +30,10 @@ export async function POST(
         { status: error.code === "ORDER_NOT_FOUND" ? 404 : 409 },
       );
     }
-    console.error("手工确认订单失败", error);
+    structuredLog("error", "admin_order_confirm_failed", {
+      orderId,
+      error,
+    });
     return NextResponse.json({ error: "订单确认失败" }, { status: 500 });
   }
 }

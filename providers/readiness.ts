@@ -38,7 +38,9 @@ export function getProviderReadiness(
     observability: {
       provider: runtime.providers.observability,
       status:
-        runtime.providers.observability === "console" ? "configured" : "planned",
+        ["console", "webhook"].includes(runtime.providers.observability)
+          ? "configured"
+          : "planned",
     },
   };
 }

@@ -30,6 +30,8 @@ export async function GET(request: NextRequest) {
     {
       status,
       checkedAt: new Date().toISOString(),
+      version: "0.1.0-alpha.5",
+      uptimeSeconds: Math.floor(process.uptime()),
       app: {
         name: runtime.appName,
         environment: runtime.environment,

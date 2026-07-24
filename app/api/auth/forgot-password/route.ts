@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { requestPasswordReset } from "@/app/lib/identity-service";
+import { structuredLog } from "@/app/lib/operations-service";
 import {
   applyRequestRateLimit,
   rejectCrossOriginMutation,
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
   }
 
   await requestPasswordReset(parsed.data.email).catch((error) => {
-    console.error("密码重置邮件发送失败", error);
+    structuredLog("error", "password_reset_email_failed", { error });
   });
 
   return NextResponse.json(

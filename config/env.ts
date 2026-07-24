@@ -12,6 +12,12 @@ const optionalEnvString = z.preprocess(
   z.string().trim().min(1).optional(),
 );
 
+const optionalSecretString = z.preprocess(
+  (value) =>
+    typeof value === "string" && value.trim() === "" ? undefined : value,
+  z.string().trim().min(16).optional(),
+);
+
 const envSchema = z
   .object({
     NODE_ENV: z
@@ -86,6 +92,14 @@ const envSchema = z
     OBSERVABILITY_PROVIDER: z
       .enum(["console", "webhook", "sentry"])
       .default("console"),
+    OBSERVABILITY_WEBHOOK_URL: z.preprocess(
+      (value) =>
+        typeof value === "string" && value.trim() === ""
+          ? undefined
+          : value,
+      z.string().url().optional(),
+    ),
+    OBSERVABILITY_WEBHOOK_SECRET: optionalSecretString,
     FEATURE_MEMBERSHIP: booleanString("true"),
     FEATURE_SINGLE_COURSE: booleanString("true"),
     FEATURE_COMMENTS: booleanString("false"),
@@ -184,6 +198,33 @@ const envSchema = z
         path: ["XORPAY_NOTIFY_URL"],
       });
     }
+
+    if (env.OBSERVABILITY_PROVIDER === "webhook") {
+      for (const key of [
+        "OBSERVABILITY_WEBHOOK_URL",
+        "OBSERVABILITY_WEBHOOK_SECRET",
+      ] as const) {
+        if (!env[key]) {
+          context.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `使用 Webhook 告警时必须配置 ${key}`,
+            path: [key],
+          });
+        }
+      }
+    }
+
+    if (
+      env.NODE_ENV === "production" &&
+      env.OBSERVABILITY_WEBHOOK_URL &&
+      new URL(env.OBSERVABILITY_WEBHOOK_URL).protocol !== "https:"
+    ) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "生产环境 OBSERVABILITY_WEBHOOK_URL 必须使用 HTTPS",
+        path: ["OBSERVABILITY_WEBHOOK_URL"],
+      });
+    }
   });
 
 export type ServerEnv = z.infer<typeof envSchema>;
@@ -279,9 +320,9 @@ export function getConfigWarnings(env: ServerEnv): string[] {
     );
   }
 
-  if (env.OBSERVABILITY_PROVIDER !== "console") {
+  if (env.OBSERVABILITY_PROVIDER === "sentry") {
     warnings.push(
-      `${env.OBSERVABILITY_PROVIDER} Observability Provider 尚未实现。`,
+      "sentry Observability Provider 尚未实现，当前会降级为结构化 Console 日志。",
     );
   }
 

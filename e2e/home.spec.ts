@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import { createConnection, Types } from "mongoose";
 
+import { reportOperationalFailure } from "@/app/lib/operations-service";
 import { hashInvitationCode } from "@/modules/entitlement/invitation";
 import { hashOpaqueToken } from "@/modules/identity/credentials";
 
@@ -34,10 +35,108 @@ test("exposes a shallow health endpoint without a database", async ({
   expect(response.ok()).toBe(true);
   await expect(response.json()).resolves.toMatchObject({
     status: "ok",
+    version: "0.1.0-alpha.5",
     database: {
       status: "not_checked",
     },
   });
+
+  expect((await request.get("/api/admin/operations/summary")).status()).toBe(
+    403,
+  );
+  expect((await request.get("/api/admin/export")).status()).toBe(403);
+});
+
+test("shows operational metrics, failure queue and protected data export", async ({
+  page,
+}) => {
+  const adminLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "admin@example.com",
+      password: "local-demo-admin-password-2026",
+    },
+  });
+  expect(adminLogin.ok()).toBe(true);
+
+  const database = await createConnection(
+    process.env.MONGODB_URI ??
+      "mongodb://127.0.0.1:27017/mdldm_knowledge_kit",
+  ).asPromise();
+  const suffix = Date.now().toString(36);
+  const failureId = await reportOperationalFailure({
+    category: "storage",
+    severity: "error",
+    code: "E2E_STORAGE_FAILURE",
+    summary: "E2E 虚构存储故障",
+    error: "仅用于验证管理员故障队列。",
+    provider: "local",
+    sourceType: "test",
+    sourceId: suffix,
+  });
+  expect(failureId).not.toBeNull();
+  const repeatedFailureId = await reportOperationalFailure({
+    category: "storage",
+    severity: "error",
+    code: "E2E_STORAGE_FAILURE",
+    summary: "E2E 虚构存储故障",
+    error: "重复发生时应聚合到同一条记录。",
+    provider: "local",
+    sourceType: "test",
+    sourceId: suffix,
+  });
+  expect(repeatedFailureId).toBe(failureId);
+  expect(
+    await database.collection("operationfailures").countDocuments({
+      _id: new Types.ObjectId(failureId!),
+      occurrenceCount: 2,
+    }),
+  ).toBe(1);
+
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("heading", { name: "运营与故障总览" }),
+  ).toBeVisible();
+  await expect(page.getByText("E2E 虚构存储故障")).toBeVisible();
+
+  const summary = await page.request.get("/api/admin/operations/summary");
+  expect(summary.ok()).toBe(true);
+  await expect(summary.json()).resolves.toMatchObject({
+    metrics: {
+      users: expect.any(Number),
+      courses: expect.any(Number),
+      openFailures: expect.any(Number),
+    },
+  });
+
+  const exported = await page.request.get("/api/admin/export");
+  expect(exported.ok()).toBe(true);
+  expect(exported.headers()["content-disposition"]).toContain(
+    "mdldm-admin-export",
+  );
+  const exportBody = await exported.text();
+  expect(exportBody).toContain('"schemaVersion": "1"');
+  expect(exportBody).not.toContain("passwordHash");
+  expect(exportBody).not.toContain("tokenHash");
+
+  const resolve = await page.request.post(
+    `/api/admin/operations/failures/${failureId}/resolve`,
+    {
+      headers: { Origin: e2eOrigin },
+      data: { note: "E2E 已确认恢复" },
+    },
+  );
+  expect(resolve.ok()).toBe(true);
+  expect(
+    await database.collection("operationfailures").countDocuments({
+      _id: new Types.ObjectId(failureId!),
+      status: "resolved",
+    }),
+  ).toBe(1);
+  await database.collection("operationfailures").deleteOne({
+    _id: new Types.ObjectId(failureId!),
+  });
+  await database.close();
 });
 
 test("plays a public local MP4 and downloads its material", async ({

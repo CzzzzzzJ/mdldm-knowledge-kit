@@ -4,6 +4,7 @@ import {
   CommerceError,
   confirmInternalPayment,
 } from "@/app/lib/commerce-service";
+import { structuredLog } from "@/app/lib/operations-service";
 import {
   applyRequestRateLimit,
   rejectCrossOriginMutation,
@@ -62,7 +63,10 @@ export async function POST(
         },
       );
     }
-    console.error("Mock 支付确认失败", error);
+    structuredLog("error", "mock_payment_confirm_failed", {
+      orderId,
+      error,
+    });
     return NextResponse.json({ error: "支付确认失败" }, { status: 500 });
   }
 }

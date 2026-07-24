@@ -89,6 +89,7 @@ erDiagram
     ORDER ||--o{ ORDER_ITEM : contains
     ORDER ||--o{ PAYMENT_EVENT : receives
     ORDER ||--o{ ENTITLEMENT : grants
+    USER ||--o{ OPERATION_FAILURE : resolves
 
     SERIES ||--o{ COURSE : contains
     COURSE ||--o{ COURSE_PROGRESS : tracks
@@ -106,6 +107,7 @@ erDiagram
 - `Product + OrderItem` 取代订单 JSON 中的商品信息；
 - `PaymentEvent` 负责回调留痕和幂等处理；
 - `MediaAsset` 统一视频、封面和课程资料；
+- `OperationFailure` 聚合支付、转码、邮件与存储故障，不替代领域事实；
 - 微信、飞书和 AI 网关信息不进入核心 `User`。
 
 ## 3. 三条关键业务流

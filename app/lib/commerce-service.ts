@@ -6,6 +6,10 @@ import { getServerEnv } from "@/config/env";
 import { getFeaturesConfig } from "@/config/features.config";
 import { productsConfig } from "@/config/products.config";
 import {
+  reportOperationalFailure,
+  resolveOperationalFailures,
+} from "@/app/lib/operations-service";
+import {
   calculateEntitlementWindow,
   type Currency,
   type PaymentMethod,
@@ -245,6 +249,16 @@ export async function createCheckout(input: {
     order.lastError =
       error instanceof Error ? error.message.slice(0, 1_000) : "创建支付失败";
     await order.save();
+    await reportOperationalFailure({
+      category: "payment",
+      severity: "error",
+      code: "PAYMENT_CHECKOUT_FAILED",
+      summary: "创建支付订单失败",
+      error,
+      provider: provider.name,
+      sourceType: "order",
+      sourceId: order._id.toString(),
+    });
     throw error;
   }
 }
@@ -384,6 +398,12 @@ async function fulfillOrder(
         },
       },
     );
+    await resolveOperationalFailures({
+      category: "payment",
+      code: "ORDER_FULFILLMENT_FAILED",
+      sourceType: "order",
+      sourceId: order._id.toString(),
+    });
   } catch (error) {
     await OrderModel.updateOne(
       { _id: order._id },
@@ -397,6 +417,16 @@ async function fulfillOrder(
         },
       },
     );
+    await reportOperationalFailure({
+      category: "payment",
+      severity: "critical",
+      code: "ORDER_FULFILLMENT_FAILED",
+      summary: "支付成功但权益发放失败",
+      error,
+      provider: order.provider,
+      sourceType: "order",
+      sourceId: order._id.toString(),
+    });
     throw error;
   }
 }
@@ -420,6 +450,16 @@ export async function processVerifiedPayment(
     event.status = "rejected";
     event.lastError = "ORDER_NOT_FOUND";
     await event.save();
+    await reportOperationalFailure({
+      category: "payment",
+      severity: "warning",
+      code: "PAYMENT_ORDER_NOT_FOUND",
+      summary: "支付事件无法匹配订单",
+      error: event.lastError,
+      provider: payment.provider,
+      sourceType: "payment_event",
+      sourceId: event._id.toString(),
+    });
     throw new CommerceError("ORDER_NOT_FOUND", "支付事件对应的订单不存在");
   }
 
@@ -428,6 +468,16 @@ export async function processVerifiedPayment(
     event.status = "rejected";
     event.lastError = "PAYMENT_PROVIDER_MISMATCH";
     await event.save();
+    await reportOperationalFailure({
+      category: "payment",
+      severity: "critical",
+      code: "PAYMENT_PROVIDER_MISMATCH",
+      summary: "支付事件与订单 Provider 不一致",
+      error: event.lastError,
+      provider: payment.provider,
+      sourceType: "payment_event",
+      sourceId: event._id.toString(),
+    });
     throw new CommerceError(
       "PAYMENT_PROVIDER_MISMATCH",
       "支付事件与订单 Provider 不一致",
@@ -440,6 +490,16 @@ export async function processVerifiedPayment(
     event.status = "rejected";
     event.lastError = "PAYMENT_AMOUNT_MISMATCH";
     await event.save();
+    await reportOperationalFailure({
+      category: "payment",
+      severity: "critical",
+      code: "PAYMENT_AMOUNT_MISMATCH",
+      summary: "支付金额或币种与服务端订单不一致",
+      error: event.lastError,
+      provider: payment.provider,
+      sourceType: "payment_event",
+      sourceId: event._id.toString(),
+    });
     throw new CommerceError(
       "PAYMENT_AMOUNT_MISMATCH",
       "支付金额或币种与服务端订单不一致",
@@ -527,6 +587,16 @@ export async function recordRejectedXorPayCallback(input: {
     },
     { upsert: true },
   );
+  await reportOperationalFailure({
+    category: "payment",
+    severity: "warning",
+    code: "PAYMENT_CALLBACK_REJECTED",
+    summary: "XorPay 回调未通过验签或结构校验",
+    error: input.reason,
+    provider: "xorpay",
+    sourceType: "webhook",
+    sourceId: "xorpay",
+  });
 }
 
 export async function confirmInternalPayment(input: {
