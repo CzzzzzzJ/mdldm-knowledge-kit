@@ -1,0 +1,51 @@
+name: Feature request
+description: 提议符合公共核心边界的新能力
+title: "[Feature]: "
+labels:
+  - enhancement
+  - needs-triage
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决的问题
+      description: 先描述创作者或学习者遇到的问题，不只列功能名称。
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 建议方案
+      description: 说明用户路径、模块边界和可能的 Provider。
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: 主要模块
+      options:
+        - Site
+        - Identity
+        - Catalog
+        - Entitlement
+        - Commerce
+        - Media
+        - Learning
+        - Operations
+        - Provider
+        - Documentation
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 备选方案与不做的影响
+  - type: checkboxes
+    id: boundaries
+    attributes:
+      label: 边界确认
+      options:
+        - label: 该建议不依赖真实业务数据或麦当私有系统。
+          required: true
+        - label: 如涉及核心模型或外部接口，我愿意先讨论 ADR。
+          required: true

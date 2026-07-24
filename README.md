@@ -1,12 +1,21 @@
 # mdldm Knowledge Kit
 
+[![CI](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/codeql.yml)
+[![Release](https://img.shields.io/github/v/release/CzzzzzzJ/mdldm-knowledge-kit)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/releases/latest)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 一套面向个人创作者的、自托管的知识产品交付与会员运营底座。
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前阶段：`v0.1 development / Phase 5 operations and monitoring`
+> 当前目标：`v0.1.0 / Phase 6 release candidate`
 >
-> 课程交付、身份权益、双模式交易、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+> 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+
+![虚构 Demo 首页](docs/assets/home.png)
+
+所有截图、账号、商品和课程内容均为虚构数据。完整演示路径见 [Demo 指南](docs/DEMO.md)。
 
 ## 要解决的问题
 
@@ -53,7 +62,12 @@
 - [开发路线图](docs/ROADMAP.md)
 - [本地开发](docs/DEVELOPMENT.md)
 - [生产部署与第三方 Provider](docs/DEPLOYMENT.md)
+- [虚构 Demo 与验收路径](docs/DEMO.md)
 - [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)
+- [升级与回滚](docs/UPGRADING.md)
+- [Release 流程](docs/RELEASE.md)
+- [更新日志](CHANGELOG.md)
+- [第三方许可证说明](THIRD_PARTY_NOTICES.md)
 - [安全基线](docs/SECURITY_BASELINE.md)
 - [架构决策](docs/decisions/README.md)
 - [贡献指南](CONTRIBUTING.md)
@@ -71,12 +85,14 @@
 - Manual / Mock / XorPay Payment
 - Structured Console / signed Webhook Observability
 
-当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。项目仍不是稳定版本。
+当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本目标，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
 
 ## 快速启动
 
 ```bash
-npm install
+git clone https://github.com/CzzzzzzJ/mdldm-knowledge-kit.git
+cd mdldm-knowledge-kit
+npm ci
 cp .env.example .env.local
 openssl rand -hex 32
 docker compose up -d mongodb
@@ -263,12 +279,14 @@ XORPAY_APP_SECRET=...
 ## 质量检查
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run build
+npm run check
+npm run release:audit
 npm run test:e2e
 ```
+
+`release:audit` 会检查公开仓库必需文件、本机绝对路径、疑似密钥、非示例邮箱、带凭据的 MongoDB URI、误提交运行数据与依赖许可证。CI 还会执行 `npm audit`，GitHub 仓库启用了 Dependabot、Secret Scanning、Push Protection、CodeQL 与私密漏洞报告。
+
+`npm run check` 的生产构建使用隔离的 HTTPS 与 Manual Payment 测试配置；正式部署仍须用真实环境变量单独运行 `npm run check-config`。
 
 ## 开发准备
 

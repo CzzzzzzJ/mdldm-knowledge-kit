@@ -35,7 +35,7 @@ test("exposes a shallow health endpoint without a database", async ({
   expect(response.ok()).toBe(true);
   await expect(response.json()).resolves.toMatchObject({
     status: "ok",
-    version: "0.1.0-alpha.5",
+    version: "0.1.0",
     database: {
       status: "not_checked",
     },

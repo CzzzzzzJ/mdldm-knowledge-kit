@@ -1,0 +1,67 @@
+name: Bug report
+description: 报告可复现的功能错误或回归
+title: "[Bug]: "
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈。安全漏洞请使用 Security Advisory 私密报告，不要在这里公开。
+  - type: input
+    id: version
+    attributes:
+      label: 版本
+      description: Release、Git tag 或 commit SHA
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: 部署环境
+      options:
+        - 本地开发
+        - Vercel Preview
+        - Vercel Production
+        - 其他 Node.js 部署
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: 问题与期望
+      description: 说明实际结果、期望结果和影响。
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 最小复现步骤
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: providers
+    attributes:
+      label: Provider 配置
+      description: 只写 Provider 名称，不要粘贴 URI、Token、密码或 AccessKey。
+      placeholder: storage=oss, email=smtp, payment=manual
+  - type: textarea
+    id: logs
+    attributes:
+      label: 已脱敏日志或截图
+      description: 删除邮箱、订单、Cookie、Token、密钥、Bucket、域名和真实用户数据。
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已搜索现有 Issue，并确认没有重复报告。
+          required: true
+        - label: 我没有提交真实用户数据、支付信息或密钥。
+          required: true

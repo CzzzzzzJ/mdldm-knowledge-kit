@@ -2,11 +2,14 @@
 
 ## Supported versions
 
-项目尚未发布稳定版本，目前只维护主开发分支。
+| Version | Supported |
+| --- | --- |
+| `0.1.x` | Yes |
+| `< 0.1.0` | No |
 
 ## Reporting a vulnerability
 
-在正式公开邮箱确定前，请不要在公共 Issue 中披露可利用细节。项目所有者应在公开发布前补充专用安全联系邮箱和响应 SLA。
+请通过 GitHub 的 [Private vulnerability reporting](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new) 提交安全问题。不要在公共 Issue、Discussion、Pull Request 或截图中披露可利用细节、真实密钥和用户数据。
 
 报告建议包含：
 
@@ -15,6 +18,8 @@
 - 影响范围；
 - 可行的缓解建议；
 - 是否涉及用户数据、支付、权限或媒体访问。
+
+维护者目标是在 3 个工作日内确认收到报告，并在 14 天内给出初步影响判断和后续安排。实际修复时间取决于风险、复现和兼容性；在补丁可用前，双方应保持细节私密。
 
 ## High-risk areas
 
@@ -28,4 +33,3 @@
 - 数据导入、导出、备份和恢复。
 
 详细工程基线见 `docs/SECURITY_BASELINE.md`。
-

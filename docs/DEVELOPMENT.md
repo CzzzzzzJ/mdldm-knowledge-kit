@@ -10,7 +10,7 @@
 ## 首次启动
 
 ```bash
-npm install
+npm ci
 cp .env.example .env.local
 docker compose up -d mongodb
 npm run check-config
@@ -74,11 +74,11 @@ curl "http://localhost:3000/api/health?deep=1"
 ## 质量检查
 
 ```bash
-npm run lint
-npm run typecheck
-npm run test
-npm run build
+npm run check
+npm run release:audit
 ```
+
+`npm run check` 会依次执行 Lint、类型检查、单测与生产构建。构建步骤使用隔离的 HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产配置；真实部署变量仍必须单独通过 `npm run check-config`。
 
 首次运行浏览器测试前安装 Chromium：
 
@@ -92,5 +92,6 @@ npm run test:e2e
 - 注册验证、密码恢复、邀请码权益、课程交付和学习进度已经可运行；
 - Local / OSS Storage 与 Console / SMTP Email 已实现；
 - Vercel、MongoDB Atlas、阿里云 OSS 和邮件推送配置见 `docs/DEPLOYMENT.md`；
-- Product、订单、支付回调、XorPay、MPS、Sentry 和 Webhook 在后续阶段实现；
-- 未完成的 OSS 直传任务会保留 `pending` MediaAsset，自动清理将在运维阶段补齐。
+- Product、订单、支付回调、Manual/Mock/XorPay 与签名 Webhook 已实现；
+- 转码 Provider、S3 Adapter 与 Sentry Adapter 尚未实现；
+- 未完成的 OSS 直传任务会保留 `pending` MediaAsset，当前需要管理员核查或清理。

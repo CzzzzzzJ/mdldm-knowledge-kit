@@ -5,6 +5,7 @@ import {
   getPublicRuntimeConfig,
   getServerEnv,
 } from "@/config/env";
+import { appVersion } from "@/config/version";
 import type { HealthCheck } from "@/modules/operations";
 import { mongoDatabaseProvider } from "@/providers/database/mongodb/connection";
 import { getProviderReadiness } from "@/providers/readiness";
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     {
       status,
       checkedAt: new Date().toISOString(),
-      version: "0.1.0-alpha.5",
+      version: appVersion,
       uptimeSeconds: Math.floor(process.uptime()),
       app: {
         name: runtime.appName,

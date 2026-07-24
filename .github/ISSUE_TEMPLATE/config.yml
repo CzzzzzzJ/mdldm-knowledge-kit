@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 私密报告安全漏洞
+    url: https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new
+    about: 请勿在公开 Issue 中披露漏洞、密钥或用户数据。
