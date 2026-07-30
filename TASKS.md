@@ -87,3 +87,38 @@
 - DONE：发布 `v0.1.0`。
 
 退出条件：陌生贡献者只读 README 即可跑通发布和学习主流程。
+
+## Phase 7：Vibe Coding 创作者可运营
+
+- DONE：定义第三方配置后直接运营的真实用户旅程；
+- DONE：明确目标用户为稍懂 Git、环境变量和 Vibe Coding、可使用 Agent 的 AI 博主；
+- DONE：明确后台、第三方平台和 Agent 的职责边界与 `v0.2.0` 总完成定义；
+- DONE：明确环境变量与后台运营设置的边界，见 ADR 0012；
+- DONE：从原项目脱敏提取 MongoDB、OSS、SMTP、XorPay、Vercel 与 MPS 配置结构；
+- DONE：建立 L0 配置、L1 只读连接、L2 隔离写入和 L3 业务全链路验证分级；
+- DONE：提供 `npm run validate:providers` 无密钥输出验证命令；
+- DONE：使用原项目配置完成第一轮 L0/L1 验证并记录脱敏结果；
+- DONE：把站长教学入口、逐屏意义、操作、验收与 Agent Prompt 集成进当前知识站；
+- DONE：在站长引导中接入当前运行配置和无副作用的深度健康检查；
+- DONE：实现严格 SiteSetting 模型、服务、管理员 API 和站点设置表单；
+- DONE：把 SiteSetting 接入公开首页、元信息、页头、创作者资料和基础导航；
+- DONE：实现分类、Tag、搜索、系列详情和 Tag 聚合的内容发现链路；
+- DONE：补齐基础学习中心、系列连续学习、权益入口和学员空状态；
+- DONE：按站点、内容、商品、订单和系统拆分基础后台；
+- DONE：实现服务端商品、价格、期限、权益目标和上下架后台管理；
+- DONE：为 E2E 使用独立数据库并自动准备虚构管理员与 Demo 数据；
+- DONE：从原站抽离统一 Neo-brutalism Token 与公开页组件库，并完成 P0 页面风格迁移；
+- DONE：移除未批准的自动生成 Demo 图片，默认使用可配置封面或几何封面；
+- IN PROGRESS：补齐课程和系列的编辑、排序、预览、安全删除与 Demo 清理；
+- IN PROGRESS：补齐用户、权益和分析后台；
+- TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 与 XorPay 配置；
+- TODO：实现一次性 `/setup` 与首个管理员初始化；
+- TODO：提供部署、Provider、品牌改造、内容迁移和上线验收的任务级 Agent Prompt；
+- TODO：使用隔离第三方测试账号完成 L2 验证；
+- TODO：邀请未参与开发、稍懂 Vibe Coding 的 AI 博主完成全新部署和 L3 验收；
+- TODO：发布面向运营就绪的 `v0.2.0`。
+
+退出条件：不了解 Next.js、但会使用 Agent 的 AI 博主可以按 README 或 Prompt 完成
+独立部署；完成第三方平台配置后，不修改 TypeScript 即可发布第一门课、配置会员或
+单课商品，并处理用户、订单、权益和主要故障。视觉与个性化代码改造具有明确扩展边界，
+且全新隔离环境的 L2/L3 验收通过。

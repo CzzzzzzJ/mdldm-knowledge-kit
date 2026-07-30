@@ -2,7 +2,11 @@ import { createHash, randomBytes } from "node:crypto";
 
 import { cookies } from "next/headers";
 
-import { getServerEnv, requireAuthSecret } from "@/config/env";
+import {
+  getServerEnv,
+  isAuthSecretConfigured,
+  requireAuthSecret,
+} from "@/config/env";
 import type { UserAccount } from "@/modules/identity";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { SessionModel } from "@/providers/database/mongodb/models/session";
@@ -58,7 +62,7 @@ export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
   const token = cookieStore.get(env.SESSION_COOKIE_NAME)?.value;
 
-  if (token) {
+  if (token && isAuthSecretConfigured(env)) {
     await connectMongo();
     await SessionModel.deleteOne({ tokenHash: hashToken(token) });
   }
@@ -70,7 +74,7 @@ export async function getCurrentUser(): Promise<UserAccount | null> {
   const env = getServerEnv();
   const token = (await cookies()).get(env.SESSION_COOKIE_NAME)?.value;
 
-  if (!token) {
+  if (!token || !isAuthSecretConfigured(env)) {
     return null;
   }
 

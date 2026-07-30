@@ -15,10 +15,11 @@
     "check": "node scripts/check.mjs",
     "release:audit": "node scripts/release-audit.mjs",
     "check-config": "tsx scripts/check-config.ts",
+    "validate:providers": "tsx scripts/validate-provider-config.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-invitation": "tsx scripts/create-invitation.ts",
     "sync-products": "tsx scripts/sync-products.ts",
-    "seed-demo": "tsx scripts/seed-demo.ts"
+    "seed-demo": "tsx scripts/run-seed-demo.ts"
   },
   "dependencies": {
     "@next/env": "15.5.21",

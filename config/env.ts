@@ -273,11 +273,7 @@ export function getPublicRuntimeConfig(): PublicRuntimeConfig {
 export function getConfigWarnings(env: ServerEnv): string[] {
   const warnings: string[] = [];
 
-  if (
-    !env.AUTH_SECRET ||
-    env.AUTH_SECRET.length < 32 ||
-    env.AUTH_SECRET.includes("replace-with")
-  ) {
+  if (!isAuthSecretConfigured(env)) {
     warnings.push(
       "AUTH_SECRET 未设置。页面可浏览，但身份、会话和邀请码功能不可用。",
     );
@@ -327,6 +323,16 @@ export function getConfigWarnings(env: ServerEnv): string[] {
   }
 
   return warnings;
+}
+
+export function isAuthSecretConfigured(
+  env: ServerEnv = getServerEnv(),
+): boolean {
+  return Boolean(
+    env.AUTH_SECRET &&
+      env.AUTH_SECRET.length >= 32 &&
+      !env.AUTH_SECRET.includes("replace-with"),
+  );
 }
 
 export function requireAuthSecret(): string {

@@ -2,6 +2,10 @@ import { model, models, Schema, type Model, type Types } from "mongoose";
 
 import {
   accessLevels,
+  discoveryLimits,
+  normalizeCategory,
+  normalizeCoverImageUrl,
+  normalizeSeriesTags,
   publishStatuses,
   type AccessLevel,
   type PublishStatus,
@@ -11,6 +15,9 @@ export interface SeriesRecord {
   title: string;
   slug: string;
   description: string;
+  category?: string;
+  tags?: string[];
+  coverImageUrl?: string;
   status: PublishStatus;
   accessLevel: AccessLevel;
   createdAt: Date;
@@ -22,6 +29,28 @@ const seriesSchema = new Schema<SeriesRecord>(
     title: { type: String, required: true, trim: true, maxlength: 120 },
     slug: { type: String, required: true, trim: true, maxlength: 120 },
     description: { type: String, required: true, maxlength: 2_000 },
+    category: {
+      type: String,
+      default: "",
+      maxlength: discoveryLimits.taxonomy,
+      set: normalizeCategory,
+    },
+    tags: {
+      type: [String],
+      default: [],
+      set: normalizeSeriesTags,
+      validate: {
+        validator: (value: string[]) =>
+          value.length <= discoveryLimits.tagsPerSeries,
+        message: `系列标签最多 ${discoveryLimits.tagsPerSeries} 个`,
+      },
+    },
+    coverImageUrl: {
+      type: String,
+      default: "",
+      maxlength: discoveryLimits.coverImageUrl,
+      set: normalizeCoverImageUrl,
+    },
     status: {
       type: String,
       enum: publishStatuses,
@@ -42,6 +71,8 @@ const seriesSchema = new Schema<SeriesRecord>(
 );
 
 seriesSchema.index({ slug: 1 }, { unique: true });
+seriesSchema.index({ status: 1, category: 1, createdAt: -1 });
+seriesSchema.index({ status: 1, tags: 1, createdAt: -1 });
 
 export const SeriesModel =
   (models.Series as Model<SeriesRecord> | undefined) ??

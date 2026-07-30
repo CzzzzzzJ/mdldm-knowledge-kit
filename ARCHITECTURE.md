@@ -183,7 +183,7 @@ mdldm-knowledge-kit/
 
 第一阶段保持一个 Next.js 仓库，不提前拆成复杂 Monorepo。
 
-## 5. 当前生产部署拓扑
+## 5. 推荐生产部署拓扑
 
 ```mermaid
 flowchart LR
@@ -203,3 +203,28 @@ flowchart LR
 - SMTP 只通过 Email Port 调用；
 - XorPay 只负责支付协议，价格校验、PaymentEvent 和 Entitlement 仍在服务端领域流程；
 - Preview 与 Production 必须使用隔离的数据和密钥。
+
+这张图描述推荐目标，不代表公共仓库已经绑定真实第三方账号。每个部署者都必须在
+自己的隔离环境中完成 Provider 验证。
+
+## 6. Phase 7 初始化与运营配置边界
+
+```mermaid
+flowchart LR
+    Secrets["Environment / Secret Manager<br/>URI、密钥、Provider 选择"]
+    Setup["一次性 /setup<br/>配置检查、首个管理员、初始化"]
+    Settings["SiteSetting / Product<br/>品牌、导航、商品、运营规则"]
+    Admin["运营后台<br/>内容、用户、权益、订单、系统"]
+    Public["用户端<br/>首页、系列、学习、账户"]
+
+    Secrets --> Setup
+    Setup --> Settings
+    Settings --> Admin
+    Settings --> Public
+```
+
+- `/setup` 不保存或展示第三方密钥，只读取 Provider 健康状态；
+- 初始化状态与首个管理员创建必须具备一次性安全边界；
+- SiteSetting 和 Product 是服务端事实，不能被客户端直接决定；
+- 环境变量变更需要重新部署，日常运营设置不需要修改代码；
+- 原项目只作为配置结构与运营旅程参考，真实值和私有插件不进入公共核心。

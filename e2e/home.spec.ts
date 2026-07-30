@@ -20,11 +20,79 @@ test("renders the runnable project skeleton", async ({ page }) => {
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "知识产品，自己交付",
+      name: "把 AI 学会，也把它做成作品",
     }),
   ).toBeVisible();
-  await expect(page.getByText("全站年度会员")).toBeVisible();
-  await expect(page.getByText("单课永久访问")).toBeVisible();
+  await expect(page.getByRole("link", { name: "开始学习" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "从一个完整系列开始" }),
+  ).toBeVisible();
+});
+
+test("keeps the operator setup journey inside the current knowledge site", async ({
+  page,
+}) => {
+  await page.goto("/setup");
+
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "先知道整条路，再开始填配置",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "为什么要做这一步" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "交给 Codex 或 Agent" }),
+  ).toBeVisible();
+
+  await page
+    .getByRole("button", { name: /连接 MongoDB/ })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "让用户、订单和学习进度有可靠的家",
+    }),
+  ).toBeVisible();
+  await expect(page.getByText("MONGODB_URI", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: "复制 Prompt" }).click();
+  await expect(page.getByRole("button", { name: "已复制" })).toBeVisible();
+
+  await page.getByRole("button", { name: "标记为已理解" }).click();
+  await page.reload();
+  await expect(page.getByText("教学进度 1/8")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "已记录教学进度" }),
+  ).toBeVisible();
+});
+
+test("discovers a series through search and tags", async ({ page }) => {
+  await page.goto("/courses?q=创作者");
+
+  await expect(
+    page.getByRole("heading", { level: 1, name: "找到适合你的课程" }),
+  ).toBeVisible();
+  await expect(page.locator('input[name="q"]')).toHaveValue("创作者");
+
+  await page
+    .getByRole("link", { name: "创作者知识产品入门", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/series\/creator-foundations$/);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "创作者知识产品入门",
+    }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: "Vibe Coding", exact: true }).click();
+  await expect(page).toHaveURL(/\/tags\/Vibe%20Coding$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Vibe Coding" }),
+  ).toBeVisible();
 });
 
 test("exposes a shallow health endpoint without a database", async ({
@@ -45,6 +113,69 @@ test("exposes a shallow health endpoint without a database", async ({
     403,
   );
   expect((await request.get("/api/admin/export")).status()).toBe(403);
+});
+
+test("publishes administrator site settings to the public homepage", async ({
+  page,
+}) => {
+  const adminLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "admin@example.com",
+      password: "local-demo-admin-password-2026",
+    },
+  });
+  expect(adminLogin.ok()).toBe(true);
+
+  const currentResponse = await page.request.get("/api/admin/site");
+  expect(currentResponse.ok()).toBe(true);
+  const currentPayload = (await currentResponse.json()) as {
+    settings: {
+      siteName: string;
+      description: string;
+      creatorName: string;
+      creatorBio: string;
+      supportEmail: string;
+      homeTitle: string;
+      homeSubtitle: string;
+      avatarUrl: string | null;
+      heroImageUrl: string | null;
+      socialLinks: Array<{ label: string; url: string }>;
+    };
+  };
+  const current = currentPayload.settings;
+  const original = {
+    siteName: current.siteName,
+    description: current.description,
+    creatorName: current.creatorName,
+    creatorBio: current.creatorBio,
+    supportEmail: current.supportEmail,
+    homeTitle: current.homeTitle,
+    homeSubtitle: current.homeSubtitle,
+    avatarUrl: current.avatarUrl,
+    heroImageUrl: current.heroImageUrl,
+    socialLinks: current.socialLinks,
+  };
+  const title = `E2E 知识站 ${Date.now().toString(36)}`;
+
+  try {
+    const update = await page.request.patch("/api/admin/site", {
+      headers: { Origin: e2eOrigin },
+      data: { homeTitle: title },
+    });
+    expect(update.ok()).toBe(true);
+
+    await page.goto("/");
+    await expect(
+      page.getByRole("heading", { level: 1, name: title }),
+    ).toBeVisible();
+  } finally {
+    const restore = await page.request.patch("/api/admin/site", {
+      headers: { Origin: e2eOrigin },
+      data: original,
+    });
+    expect(restore.ok()).toBe(true);
+  }
 });
 
 test("shows operational metrics, failure queue and protected data export", async ({
@@ -93,7 +224,7 @@ test("shows operational metrics, failure queue and protected data export", async
     }),
   ).toBe(1);
 
-  await page.goto("/admin");
+  await page.goto("/admin/system");
   await expect(
     page.getByRole("heading", { name: "运营与故障总览" }),
   ).toBeVisible();
@@ -143,7 +274,10 @@ test("plays a public local MP4 and downloads its material", async ({
   page,
 }) => {
   await page.goto("/courses");
-  await page.getByRole("link", { name: /从一节公开课开始/ }).click();
+  await page
+    .getByRole("link", { name: "创作者知识产品入门", exact: true })
+    .click();
+  await page.getByRole("link", { name: "开始学习", exact: true }).click();
 
   const video = page.locator("video");
   await expect(video).toBeVisible();
@@ -178,9 +312,9 @@ test("allows the controlled admin account to open the course backend", async ({
     },
   });
   expect(adminLogin.ok()).toBe(true);
-  await page.goto("/admin");
+  await page.goto("/admin/catalog");
   await expect(
-    page.getByRole("heading", { name: "课程交付后台" }),
+    page.getByRole("heading", { name: "内容管理" }),
   ).toBeVisible();
   await expect(
     page.locator("p").filter({ hasText: "从一节公开课开始" }),

@@ -102,30 +102,34 @@ export async function syncConfiguredProducts(): Promise<{
   const unavailable: string[] = [];
 
   for (const definition of productsConfig) {
-    const targetId = await resolveConfiguredTarget(definition.entitlement);
-    if (targetId === undefined) {
-      unavailable.push(definition.id);
-      await ProductModel.updateOne(
-        { sku: definition.id },
-        { $set: { active: false } },
-      );
+    if (await ProductModel.exists({ sku: definition.id })) {
+      synced += 1;
       continue;
     }
 
-    const product =
-      (await ProductModel.findOne({ sku: definition.id })) ??
-      new ProductModel({ sku: definition.id });
-    product.set({
-      title: definition.title,
-      description: definition.description,
-      amountInMinorUnits: definition.price.amountInMinorUnits,
-      currency: definition.price.currency,
-      entitlementType: definition.entitlement.type,
-      entitlementTargetId: targetId,
-      entitlementDurationDays: definition.entitlement.durationDays,
-      active: definition.active,
-    });
-    await product.save();
+    const targetId = await resolveConfiguredTarget(definition.entitlement);
+    if (targetId === undefined) {
+      unavailable.push(definition.id);
+      continue;
+    }
+
+    try {
+      await ProductModel.create({
+        sku: definition.id,
+        title: definition.title,
+        description: definition.description,
+        amountInMinorUnits: definition.price.amountInMinorUnits,
+        currency: definition.price.currency,
+        entitlementType: definition.entitlement.type,
+        entitlementTargetId: targetId,
+        entitlementDurationDays: definition.entitlement.durationDays,
+        active: definition.active,
+      });
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) {
+        throw error;
+      }
+    }
     synced += 1;
   }
 

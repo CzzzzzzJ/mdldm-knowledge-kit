@@ -15,3 +15,5 @@ export interface CourseAccessPolicy {
   courseId: string;
   seriesId?: string;
 }
+
+export * from "./discovery";

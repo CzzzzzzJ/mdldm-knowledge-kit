@@ -5,6 +5,10 @@
 - `../PROJECT.md`：产品定位、目标用户、模块边界和成功标准；
 - `../TASKS.md`：按阶段维护的开发任务；
 - `ROADMAP.md`：阶段目标、依赖和退出条件；
+- `VIBE_CODING_CREATOR_PLAN.md`：目标 AI 博主、当前差距、后台与 Agent 边界、实施 Wave 和验收门槛；
+- `OPERATOR_READY_JOURNEY.md`：第三方配置后直接运营的站长与学员旅程；
+- `DESIGN_SYSTEM.md`：原站视觉语言、公开组件库与素材规则；
+- `PROVIDER_VALIDATION.md`：Provider 配置结构、L0-L3 分级和脱敏验证记录；
 - `DEVELOPMENT.md`：本地启动、初始化、健康检查和质量命令；
 - `DEMO.md`：虚构演示数据、账号和主流程验收路径；
 - `DEPLOYMENT.md`：Vercel 与第三方 Provider 配置流程；

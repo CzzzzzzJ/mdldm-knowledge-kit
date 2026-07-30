@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { getConfigWarnings, parseEnv } from "@/config/env";
+import {
+  getConfigWarnings,
+  isAuthSecretConfigured,
+  parseEnv,
+} from "@/config/env";
 
 describe("environment configuration", () => {
   it("provides safe local defaults", () => {
@@ -21,9 +25,19 @@ describe("environment configuration", () => {
   it("warns when the development auth secret is missing", () => {
     const env = parseEnv({ NODE_ENV: "development" });
 
+    expect(isAuthSecretConfigured(env)).toBe(false);
     expect(getConfigWarnings(env)).toContainEqual(
       expect.stringContaining("AUTH_SECRET"),
     );
+  });
+
+  it("recognizes a usable development auth secret", () => {
+    const env = parseEnv({
+      NODE_ENV: "development",
+      AUTH_SECRET: "a-local-auth-secret-with-at-least-32-characters",
+    });
+
+    expect(isAuthSecretConfigured(env)).toBe(true);
   });
 
   it("rejects a missing production auth secret", () => {

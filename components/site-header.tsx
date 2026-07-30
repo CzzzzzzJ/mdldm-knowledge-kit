@@ -1,57 +1,74 @@
 import Link from "next/link";
 
+import { getResolvedSiteSettings } from "@/app/lib/site-settings-service";
+import { MdldmActionLink } from "@/components/mdldm-ui";
 import type { SiteConfig } from "@/modules/site";
+import { getCurrentUser } from "@/providers/auth/session";
 
-export function SiteHeader({ site }: { site: SiteConfig }) {
+export async function SiteHeader({ site }: { site: SiteConfig }) {
+  const [resolved, user] = await Promise.all([
+    getResolvedSiteSettings(),
+    getCurrentUser(),
+  ]);
+  const displayName = resolved.siteName || site.name;
+  const mark = Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
+  const isAdmin = user?.role === "admin";
+
   return (
-    <header className="border-b border-[var(--line)] bg-[var(--surface)]/90 backdrop-blur">
-      <div className="page-shell flex h-[4.5rem] items-center justify-between gap-6">
+    <header className="sticky top-0 z-20 border-b-2 border-[var(--ink)] bg-[var(--surface)]/95 backdrop-blur">
+      <div className="page-shell flex h-[4.25rem] items-center justify-between gap-4">
         <Link
-          className="focus-ring flex min-w-0 items-center gap-3 rounded-lg"
+          className="focus-ring flex min-w-0 items-center gap-3 rounded-lg font-black"
           href="/"
         >
           <span
             aria-hidden="true"
-            className="grid size-8 place-items-center rounded-lg bg-[var(--ink)] font-mono text-sm font-bold text-[var(--page)]"
+            className="grid size-9 shrink-0 place-items-center rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] font-mono text-xs font-black text-[var(--accent-ink)] shadow-[3px_3px_0_var(--hard-shadow)]"
           >
-            MK
+            {mark || "MK"}
           </span>
-          <span className="truncate text-sm font-semibold tracking-[-0.02em]">
-            {site.name}
+          <span className="hidden max-w-52 truncate text-sm tracking-[-0.02em] sm:block lg:max-w-64">
+            {displayName}
           </span>
         </Link>
 
-        <nav aria-label="主导航" className="flex items-center gap-5 text-sm">
+        <nav
+          aria-label="主导航"
+          className="flex min-w-0 items-center gap-3 text-sm font-black sm:gap-5"
+        >
           <Link
-            className="focus-ring rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            className="focus-ring whitespace-nowrap rounded-md text-[var(--ink)] underline-offset-4 hover:underline"
             href="/courses"
           >
             课程
           </Link>
           <Link
-            className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] sm:block"
+            className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--ink)] underline-offset-4 hover:underline sm:block"
+            href="/account"
+          >
+            学习
+          </Link>
+          <Link
+            className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--ink)] underline-offset-4 hover:underline md:block"
             href="/pricing"
           >
-            价格
+            会员与单课
           </Link>
-          <Link
-            className="focus-ring hidden rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] md:block"
-            href="/account/orders"
+          {isAdmin ? (
+            <Link
+              className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--ink)] underline-offset-4 hover:underline lg:block"
+              href="/setup"
+            >
+              开站指南
+            </Link>
+          ) : null}
+          <MdldmActionLink
+            className="min-h-9 px-3 py-2"
+            href={isAdmin ? "/admin" : "/login"}
+            variant="primary"
           >
-            订单
-          </Link>
-          <Link
-            className="focus-ring whitespace-nowrap rounded-lg border border-[var(--line)] bg-[var(--surface-strong)] px-3.5 py-2 font-medium transition-transform active:translate-y-px"
-            href="/api/health"
-          >
-            系统状态
-          </Link>
-          <Link
-            className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--muted)] transition-colors hover:text-[var(--ink)] md:block"
-            href="/login"
-          >
-            登录
-          </Link>
+            {isAdmin ? "站长后台" : "登录"}
+          </MdldmActionLink>
         </nav>
       </div>
     </header>

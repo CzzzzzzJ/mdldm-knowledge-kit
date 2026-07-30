@@ -2,19 +2,22 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 
-import { getSiteConfig } from "@/config/site.config";
+import { getResolvedSiteSettings } from "@/app/lib/site-settings-service";
 
 import "./globals.css";
 
-const site = getSiteConfig();
+export async function generateMetadata(): Promise<Metadata> {
+  const site = await getResolvedSiteSettings();
 
-export const metadata: Metadata = {
-  title: {
-    default: site.name,
-    template: `%s | ${site.name}`,
-  },
-  description: site.description,
-};
+  return {
+    metadataBase: new URL(site.url),
+    title: {
+      default: site.siteName,
+      template: `%s | ${site.siteName}`,
+    },
+    description: site.description,
+  };
+}
 
 export default function RootLayout({
   children,

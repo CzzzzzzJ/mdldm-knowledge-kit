@@ -2,7 +2,10 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
-import { accessLevels } from "@/modules/catalog";
+import {
+  accessLevels,
+  seriesDiscoveryMetadataSchema,
+} from "@/modules/catalog";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { SeriesModel } from "@/providers/database/mongodb/models/series";
 
@@ -16,6 +19,9 @@ const seriesInput = z.object({
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   description: z.string().trim().min(1).max(2_000),
   accessLevel: z.enum(accessLevels).default("public"),
+  category: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  coverImageUrl: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -29,6 +35,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "系列数据格式错误" }, { status: 400 });
   }
 
+  const metadata = seriesDiscoveryMetadataSchema.safeParse({
+    category: parsed.data.category,
+    tags: parsed.data.tags,
+    coverImageUrl: parsed.data.coverImageUrl,
+  });
+  if (!metadata.success) {
+    return NextResponse.json(
+      { error: "系列分类、标签或封面格式错误" },
+      { status: 400 },
+    );
+  }
+
   await connectMongo();
   const exists = await SeriesModel.exists({ slug: parsed.data.slug });
   if (exists) {
@@ -37,6 +55,7 @@ export async function POST(request: NextRequest) {
 
   const series = await SeriesModel.create({
     ...parsed.data,
+    ...metadata.data,
     status: "draft",
   });
 

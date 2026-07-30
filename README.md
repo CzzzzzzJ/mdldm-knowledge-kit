@@ -5,13 +5,18 @@
 [![Release](https://img.shields.io/github/v/release/CzzzzzzJ/mdldm-knowledge-kit)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-一套面向个人创作者的、自托管的知识产品交付与会员运营底座。
+一套面向个人创作者的、自托管的知识产品交付与会员运营底座。当前重点是把它交到一名
+稍懂 Git、环境变量和 Vibe Coding 的 AI 博主手中，让他通过后台配置和少量 Agent
+协作，把项目改造成自己的知识站。
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前版本：`v0.1.0 / Phase 6 public release`
+> 当前版本：`v0.1.0 / Phase 7 operator-ready in progress`
 >
 > 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+> SiteSetting、内容发现、系列详情、学习中心和后台分区正在整合；一次性初始化、完整
+> 商品运营后台和独立第三方生产验收尚未完成。因此当前版本仍是可运行的开发底座，
+> 不是已经通过目标用户验收的开箱即营成品。
 
 ![虚构 Demo 首页](docs/assets/home.png)
 
@@ -28,6 +33,11 @@
 - 安全播放、资料下载、断点续播和学习进度；
 - 课程、用户、权益、订单、媒体与系统状态后台；
 - 可替换的支付、存储、邮件、转码和监控 Provider。
+
+目标站长可以借助 Codex 或其他 Agent 完成 Fork、部署、第三方密钥配置、视觉改造和
+故障排查；站点品牌、课程、商品、用户权益和订单等日常经营事实必须由后台管理，不应
+长期依赖修改 TypeScript。当前差距、实施 Wave 和验收门槛见
+[Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)。
 
 ## v0.1 边界
 
@@ -60,6 +70,9 @@
 - [完整现状分析与目标拓扑](docs/analysis/知识站开源版-现状分析与目标拓扑-2026-07-23.md)
 - [原项目 Phase 1 参考审视](docs/analysis/原项目Phase1参考审视-2026-07-24.md)
 - [开发路线图](docs/ROADMAP.md)
+- [Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)
+- [Phase 7 小白可运营用户旅程](docs/OPERATOR_READY_JOURNEY.md)
+- [第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)
 - [本地开发](docs/DEVELOPMENT.md)
 - [生产部署与第三方 Provider](docs/DEPLOYMENT.md)
 - [虚构 Demo 与验收路径](docs/DEMO.md)
@@ -106,6 +119,11 @@ npm run dev
 ```
 
 把 `openssl` 输出写入 `.env.local` 的 `AUTH_SECRET`，再打开 `http://localhost:3000`。Console Email 会把验证与找回链接打印在运行 `npm run dev` 的服务端终端。
+
+首次打开后可进入 [`/setup`](http://localhost:3000/setup)。站长引导就在当前知识站
+内部，每一项都会说明为什么要做、具体怎么做、如何验证，并提供一段可以直接交给
+Codex 或其他 Agent 的 Prompt。页面不会接收或保存第三方密钥，真实值仍然只写入
+自己的 `.env.local`、Vercel Environment Variables 或 Secret Manager。
 
 `seed-demo` 会同步两个虚构商品：一年期全站会员和一门永久单课。打开 `/pricing`，在非生产环境中可用 Mock Payment 完整测试下单与权益发放，不会产生真实扣款。修改 `config/products.config.ts` 后运行：
 
@@ -282,11 +300,16 @@ XORPAY_APP_SECRET=...
 npm run check
 npm run release:audit
 npm run test:e2e
+npm run validate:providers
 ```
 
 `release:audit` 会检查公开仓库必需文件、本机绝对路径、疑似密钥、非示例邮箱、带凭据的 MongoDB URI、误提交运行数据与依赖许可证。CI 还会执行 `npm audit`，GitHub 仓库启用了 Dependabot、Secret Scanning、Push Protection、CodeQL 与私密漏洞报告。
 
 `npm run check` 的生产构建使用隔离的 HTTPS 与 Manual Payment 测试配置；正式部署仍须用真实环境变量单独运行 `npm run check-config`。
+
+`npm run validate:providers -- --live` 执行 MongoDB、Storage 和 Email 的无副作用
+连接检查，不发送邮件、不创建支付订单，也不写入 OSS。验证分级和当前记录见
+[第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)。
 
 ## 开发准备
 

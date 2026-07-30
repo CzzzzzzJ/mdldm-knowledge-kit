@@ -6,6 +6,7 @@ node_modules/
 # build output
 .next/
 .next-e2e/
+.next-local-preview/
 out/
 dist/
 build/

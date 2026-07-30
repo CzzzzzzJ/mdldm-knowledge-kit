@@ -124,6 +124,12 @@ export function AdminCourseManager({
           title: form.get("title"),
           slug: form.get("slug"),
           description: form.get("description"),
+          category: form.get("category"),
+          tags: String(form.get("tags") ?? "")
+            .split(/[,，]/u)
+            .map((tag) => tag.trim())
+            .filter(Boolean),
+          coverImageUrl: form.get("coverImageUrl"),
           accessLevel: form.get("accessLevel"),
         }),
       });
@@ -229,12 +235,17 @@ export function AdminCourseManager({
 
   const inputClass =
     "focus-ring w-full rounded-lg border border-[var(--line)] bg-[var(--page)] px-3.5 py-2.5";
+  const fieldClass = "grid gap-2 text-sm font-medium";
+  const helpClass = "text-xs font-normal leading-5 text-[var(--muted)]";
 
   return (
     <div className="mt-10 grid gap-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p aria-live="polite" className="text-sm text-[var(--muted)]">
-          {message || "所有写操作都要求管理员会话和同源请求。"}
+          {message ||
+            (busy
+              ? "正在处理，请不要关闭页面。"
+              : "建议按 1–5 的顺序完成：先建系列和课时，再上传内容，确认后发布。")}
         </p>
         <button
           className="focus-ring rounded-lg border border-[var(--line)] px-4 py-2 text-sm"
@@ -246,42 +257,101 @@ export function AdminCourseManager({
         </button>
       </div>
 
-      <section className="grid gap-5 lg:grid-cols-2">
+      <section className="grid gap-4">
+        <div>
+          <p className="eyebrow">步骤 1–2 · 搭好课程结构</p>
+          <h2 className="mt-2 text-2xl font-semibold">先创建系列，再添加课时</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+            系列是一组相关课程的合集，课时是学员实际观看的一节内容。第一次使用时，先创建一个系列，
+            再在这个系列下创建第一节课。
+          </p>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
         <form className="surface grid gap-4 p-6" onSubmit={submitSeries}>
-          <h2 className="text-xl font-semibold">创建系列</h2>
-          <input
-            aria-label="系列名称"
-            className={inputClass}
-            name="title"
-            placeholder="系列名称"
-            required
-          />
-          <input
-            aria-label="系列 Slug"
-            className={inputClass}
-            name="slug"
-            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-            placeholder="creator-foundations"
-            required
-          />
-          <textarea
-            aria-label="系列简介"
-            className={inputClass}
-            name="description"
-            placeholder="系列简介"
-            required
-            rows={3}
-          />
-          <select
-            aria-label="系列访问等级"
-            className={inputClass}
-            defaultValue="public"
-            name="accessLevel"
-          >
-            <option value="public">公开</option>
-            <option value="registered">登录可看</option>
-            <option value="member">会员</option>
-          </select>
+          <div>
+            <p className="eyebrow">步骤 1</p>
+            <h3 className="mt-2 text-xl font-semibold">创建课程系列</h3>
+          </div>
+          <label className={fieldClass}>
+            系列名称
+            <input
+              className={inputClass}
+              name="title"
+              placeholder="例如：AI 博主入门课"
+              required
+            />
+          </label>
+          <label className={fieldClass}>
+            网址标识（英文小写和连字符）
+            <input
+              className={inputClass}
+              name="slug"
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              placeholder="ai-creator-basics"
+              required
+            />
+            <span className={helpClass}>
+              用在系列网址中，只能填写英文小写字母、数字和连字符，例如 ai-creator-basics。
+            </span>
+          </label>
+          <label className={fieldClass}>
+            系列简介
+            <textarea
+              className={inputClass}
+              name="description"
+              placeholder="告诉学员这个系列能解决什么问题、适合谁学习"
+              required
+              rows={3}
+            />
+          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className={fieldClass}>
+              分类
+              <input
+                className={inputClass}
+                maxLength={40}
+                name="category"
+                placeholder="例如：AI 内容创作"
+              />
+              <span className={helpClass}>用于课程列表筛选；没有明确分类时可以暂时留空。</span>
+            </label>
+            <label className={fieldClass}>
+              标签
+              <input
+                className={inputClass}
+                name="tags"
+                placeholder="例如：Codex, 提示词, 自媒体"
+              />
+              <span className={helpClass}>多个标签用中文或英文逗号分隔，最多 10 个。</span>
+            </label>
+          </div>
+          <label className={fieldClass}>
+            系列封面 URL
+            <input
+              className={inputClass}
+              maxLength={2048}
+              name="coverImageUrl"
+              placeholder="https://example.com/cover.jpg"
+            />
+            <span className={helpClass}>
+              选填。建议使用已经上传到 OSS 或图床的 HTTPS 图片地址。
+            </span>
+          </label>
+          <label className={fieldClass}>
+            系列访问等级
+            <select
+              className={inputClass}
+              defaultValue="public"
+              name="accessLevel"
+            >
+              <option value="public">公开 — 所有人都能访问</option>
+              <option value="registered">登录可看 — 注册用户可访问</option>
+              <option value="member">会员 — 有效会员可访问</option>
+            </select>
+            <span className={helpClass}>
+              系列等级决定系列页面的默认门槛；每节课还可以单独设置更具体的权限。
+            </span>
+          </label>
           <button
             className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
             disabled={busy}
@@ -292,64 +362,84 @@ export function AdminCourseManager({
         </form>
 
         <form className="surface grid gap-4 p-6" onSubmit={submitCourse}>
-          <h2 className="text-xl font-semibold">创建课时</h2>
-          <select
-            aria-label="所属系列"
-            className={inputClass}
-            name="seriesId"
-            required
-          >
-            {series.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="课时名称"
-            className={inputClass}
-            name="title"
-            placeholder="课时名称"
-            required
-          />
-          <input
-            aria-label="课时 Slug"
-            className={inputClass}
-            name="slug"
-            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-            placeholder="first-lesson"
-            required
-          />
-          <textarea
-            aria-label="课时简介"
-            className={inputClass}
-            name="summary"
-            placeholder="课时简介"
-            required
-            rows={3}
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              aria-label="课时访问等级"
-              className={inputClass}
-              defaultValue="public"
-              name="accessLevel"
-            >
-              <option value="public">公开</option>
-              <option value="registered">登录可看</option>
-              <option value="member">会员</option>
-              <option value="course">单课</option>
-              <option value="series">系列</option>
+          <div>
+            <p className="eyebrow">步骤 2</p>
+            <h3 className="mt-2 text-xl font-semibold">创建一节课</h3>
+          </div>
+          <label className={fieldClass}>
+            所属系列
+            <select className={inputClass} name="seriesId" required>
+              {series.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.title}
+                </option>
+              ))}
             </select>
+            <span className={helpClass}>
+              {series.length === 0
+                ? "请先完成左侧的步骤 1，创建至少一个系列。"
+                : "选择这节课要出现在哪个系列中。"}
+            </span>
+          </label>
+          <label className={fieldClass}>
+            课时名称
             <input
-              aria-label="课时排序"
               className={inputClass}
-              defaultValue="0"
-              min="0"
-              name="position"
+              name="title"
+              placeholder="例如：第 1 课，认识 Codex"
               required
-              type="number"
             />
+          </label>
+          <label className={fieldClass}>
+            网址标识（英文小写和连字符）
+            <input
+              className={inputClass}
+              name="slug"
+              pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
+              placeholder="meet-codex"
+              required
+            />
+            <span className={helpClass}>
+              用在课时网址中，只能填写英文小写字母、数字和连字符，例如 meet-codex。
+            </span>
+          </label>
+          <label className={fieldClass}>
+            课时简介
+            <textarea
+              className={inputClass}
+              name="summary"
+              placeholder="用一两句话说明学完这节课能得到什么"
+              required
+              rows={3}
+            />
+          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className={fieldClass}>
+              课时访问等级
+              <select
+                className={inputClass}
+                defaultValue="public"
+                name="accessLevel"
+              >
+                <option value="public">公开 — 所有人都能学习</option>
+                <option value="registered">登录可看 — 注册后可学习</option>
+                <option value="member">会员 — 有效会员可学习</option>
+                <option value="course">单课购买 — 购买本课后可学习</option>
+                <option value="series">系列购买 — 获得本系列权益后可学习</option>
+              </select>
+            </label>
+            <label className={fieldClass}>
+              课时排序
+              <input
+                className={inputClass}
+                defaultValue="0"
+                min="0"
+                name="position"
+                required
+                type="number"
+              />
+              <span className={helpClass}>数字越小越靠前，第一节课通常填写 0。</span>
+            </label>
           </div>
           <button
             className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
@@ -359,11 +449,145 @@ export function AdminCourseManager({
             创建课时
           </button>
         </form>
+        </div>
+      </section>
+
+      <section className="grid gap-4">
+        <div>
+          <p className="eyebrow">步骤 3–4 · 添加学习内容</p>
+          <h2 className="mt-2 text-2xl font-semibold">为课时上传视频和配套资料</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
+            视频是发布课程的必要内容；PDF、ZIP、Markdown 等资料为选填。上传完成后，
+            系统会自动把文件绑定到所选课时。
+          </p>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <form className="surface grid gap-4 p-6" onSubmit={uploadVideo}>
+            <div>
+              <p className="eyebrow">步骤 3</p>
+              <h3 className="mt-2 text-xl font-semibold">上传并绑定 MP4 视频</h3>
+            </div>
+            <label className={fieldClass}>
+              视频所属课时
+              <select className={inputClass} name="courseId" required>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+              {courses.length === 0 ? (
+                <span className={helpClass}>请先完成步骤 2，创建至少一节课。</span>
+              ) : null}
+            </label>
+            <label className={fieldClass}>
+              MP4 视频文件
+              <input
+                accept="video/mp4"
+                className={inputClass}
+                name="file"
+                required
+                type="file"
+              />
+              <span className={helpClass}>
+                当前支持 MP4。大文件会根据存储配置自动直传 OSS。
+              </span>
+            </label>
+            <button
+              className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
+              disabled={busy || courses.length === 0}
+              type="submit"
+            >
+              上传视频
+            </button>
+          </form>
+
+          <form className="surface grid gap-4 p-6" onSubmit={uploadMaterial}>
+            <div>
+              <p className="eyebrow">步骤 4 · 选填</p>
+              <h3 className="mt-2 text-xl font-semibold">上传课程资料</h3>
+            </div>
+            <label className={fieldClass}>
+              资料所属课时
+              <select className={inputClass} name="courseId" required>
+                {courses.map((course) => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className={fieldClass}>
+              资料名称
+              <input
+                className={inputClass}
+                name="title"
+                placeholder="例如：本节课提示词模板"
+                required
+              />
+            </label>
+            <label className={fieldClass}>
+              课程资料文件
+              <input
+                accept=".pdf,.zip,.txt,.md"
+                className={inputClass}
+                name="file"
+                required
+                type="file"
+              />
+              <span className={helpClass}>支持 PDF、ZIP、TXT 和 Markdown 文件。</span>
+            </label>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className={fieldClass}>
+                资料访问等级
+                <select
+                  className={inputClass}
+                  defaultValue="public"
+                  name="accessLevel"
+                >
+                  <option value="public">公开 — 所有人可下载</option>
+                  <option value="registered">登录可见 — 注册后可下载</option>
+                  <option value="member">会员 — 有效会员可下载</option>
+                  <option value="course">单课购买 — 购买本课后可下载</option>
+                  <option value="series">系列购买 — 获得系列权益后可下载</option>
+                </select>
+              </label>
+              <label className={fieldClass}>
+                资料排序
+                <input
+                  className={inputClass}
+                  defaultValue="0"
+                  min="0"
+                  name="position"
+                  required
+                  type="number"
+                />
+                <span className={helpClass}>数字越小越靠前。</span>
+              </label>
+            </div>
+            <button
+              className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
+              disabled={busy || courses.length === 0}
+              type="submit"
+            >
+              上传资料
+            </button>
+          </form>
+        </div>
       </section>
 
       <section className="surface p-6">
-        <h2 className="text-xl font-semibold">课时发布</h2>
+        <p className="eyebrow">步骤 5 · 上线前确认</p>
+        <h2 className="mt-2 text-xl font-semibold">发布课程</h2>
+        <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
+          请先确认标题、权限和视频都正确。发布后，符合访问条件的学员就能在前台看到并学习课程。
+        </p>
         <div className="mt-5 grid gap-3">
+          {courses.length === 0 ? (
+            <p className="rounded-xl border border-dashed border-[var(--line)] p-4 text-sm text-[var(--muted)]">
+              还没有可发布的课时。请先完成上方步骤 1 和步骤 2。
+            </p>
+          ) : null}
           {courses.map((course) => (
             <div
               className="grid gap-4 rounded-xl border border-[var(--line)] bg-[var(--page)] p-4 md:grid-cols-[1fr_auto]"
@@ -371,10 +595,25 @@ export function AdminCourseManager({
             >
               <div>
                 <p className="font-semibold">{course.title}</p>
-                <p className="mt-1 font-mono text-xs text-[var(--muted)]">
-                  {course.status} / {course.accessLevel} /{" "}
-                  {course.videoAssetId ? "video ready" : "no video"}
+                <p className="mt-1 text-xs leading-5 text-[var(--muted)]">
+                  状态：{course.status === "published" ? "已发布" : "草稿"}
+                  {" · "}
+                  权限：
+                  {{
+                    public: "公开",
+                    registered: "登录可看",
+                    member: "会员",
+                    course: "单课购买",
+                    series: "系列购买",
+                  }[course.accessLevel] ?? course.accessLevel}
+                  {" · "}
+                  视频：{course.videoAssetId ? "已绑定" : "未绑定"}
                 </p>
+                {!course.videoAssetId ? (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    发布前请先在步骤 3 上传视频。
+                  </p>
+                ) : null}
               </div>
               <button
                 className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-semibold disabled:opacity-50"
@@ -382,105 +621,11 @@ export function AdminCourseManager({
                 onClick={() => publishCourse(course.id)}
                 type="button"
               >
-                发布
+                {course.status === "published" ? "已发布" : "确认并发布"}
               </button>
             </div>
           ))}
         </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-2">
-        <form className="surface grid gap-4 p-6" onSubmit={uploadVideo}>
-          <h2 className="text-xl font-semibold">上传并绑定 MP4</h2>
-          <select
-            aria-label="视频所属课时"
-            className={inputClass}
-            name="courseId"
-            required
-          >
-            {courses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.title}
-              </option>
-            ))}
-          </select>
-          <input
-            accept="video/mp4"
-            aria-label="MP4 视频文件"
-            className={inputClass}
-            name="file"
-            required
-            type="file"
-          />
-          <button
-            className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
-            disabled={busy || courses.length === 0}
-            type="submit"
-          >
-            上传视频
-          </button>
-        </form>
-
-        <form className="surface grid gap-4 p-6" onSubmit={uploadMaterial}>
-          <h2 className="text-xl font-semibold">上传课程资料</h2>
-          <select
-            aria-label="资料所属课时"
-            className={inputClass}
-            name="courseId"
-            required
-          >
-            {courses.map((course) => (
-              <option key={course.id} value={course.id}>
-                {course.title}
-              </option>
-            ))}
-          </select>
-          <input
-            aria-label="资料名称"
-            className={inputClass}
-            name="title"
-            placeholder="资料名称"
-            required
-          />
-          <input
-            accept=".pdf,.zip,.txt,.md"
-            aria-label="课程资料文件"
-            className={inputClass}
-            name="file"
-            required
-            type="file"
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              aria-label="资料访问等级"
-              className={inputClass}
-              defaultValue="public"
-              name="accessLevel"
-            >
-              <option value="public">公开</option>
-              <option value="registered">登录可见</option>
-              <option value="member">会员</option>
-              <option value="course">单课</option>
-              <option value="series">系列</option>
-            </select>
-            <input
-              aria-label="资料排序"
-              className={inputClass}
-              defaultValue="0"
-              min="0"
-              name="position"
-              required
-              type="number"
-            />
-          </div>
-          <button
-            className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
-            disabled={busy || courses.length === 0}
-            type="submit"
-          >
-            上传资料
-          </button>
-        </form>
       </section>
     </div>
   );

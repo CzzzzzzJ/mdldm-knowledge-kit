@@ -108,7 +108,7 @@ export function VideoPlayer({
   return (
     <div>
       <video
-        className="aspect-video w-full rounded-xl bg-[#0d1117]"
+        className="aspect-video w-full rounded-xl border-2 border-[var(--surface)] bg-[#0f1014]"
         controls
         playsInline
         preload="metadata"
@@ -116,7 +116,10 @@ export function VideoPlayer({
         src={`/api/media/${assetId}/stream`}
         title={title}
       />
-      <p aria-live="polite" className="mt-3 text-sm text-[var(--muted)]">
+      <p
+        aria-live="polite"
+        className="mt-3 text-sm font-bold text-[var(--surface)]"
+      >
         {status}
       </p>
     </div>
