@@ -13,11 +13,11 @@
 ```bash
 git fetch --tags origin
 git checkout v0.1.0
-npm ci
-npm run check-config
-npm run check
-npm run release:audit
-npm run sync-products
+pnpm install --frozen-lockfile
+pnpm check-config
+pnpm check
+pnpm release:audit
+pnpm sync-products
 ```
 
 部署后检查：
@@ -28,7 +28,9 @@ npm run sync-products
 - 一个隔离测试订单能完成支付与权益发放；
 - 邮件、OSS 签名和告警 Webhook 正常。
 
-`sync-products` 只同步当前商品配置，不修改历史 OrderItem 快照。v0.1.0 没有需要单独执行的数据迁移。
+`sync-products` 只同步当前商品配置，不修改历史 OrderItem 快照。AF-03 为 User 增加的
+`requiresPasswordChange` 字段默认是 `false`：既有管理员会继续使用原密码，不需要离线
+迁移；只有通过新版 `/admin` 创建的首个管理员才会进入强制激活流程。
 
 ## 回滚
 

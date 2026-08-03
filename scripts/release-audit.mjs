@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -6,6 +7,9 @@ const root = process.cwd();
 const requiredFiles = [
   "LICENSE",
   "README.md",
+  "START_HERE.md",
+  "AGENT_QUICKSTART.md",
+  "AGENT_SERVERLESS_DEPLOY.md",
   "CHANGELOG.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
@@ -86,7 +90,8 @@ function listCandidateFiles() {
   )
     .toString()
     .split("\0")
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter((file) => existsSync(path.join(root, file)));
 }
 
 function addFinding(findings, file, message) {
@@ -159,7 +164,8 @@ async function main() {
   for (const file of files) {
     if (
       (/^\.env(?:\.|$)/.test(file) && file !== ".env.example") ||
-      /(^|\/)(?:data|uploads|playwright-report|test-results)\//.test(file) ||
+      /(^|\/)(?:data|uploads|playwright-report|test-results|\.local-planning)\//.test(file) ||
+      /^docs\/analysis\//.test(file) ||
       /(^|\/)(?:credentials|service-account)[^/]*\.json$/i.test(file)
     ) {
       addFinding(findings, file, "不应进入发布仓库");
@@ -178,28 +184,61 @@ async function main() {
     addFinding(findings, "package.json", "license 必须为 Apache-2.0");
   }
 
-  const packageLock = JSON.parse(
-    await readFile(path.join(root, "package-lock.json"), "utf8"),
-  );
-  for (const [packagePath, metadata] of Object.entries(
-    packageLock.packages ?? {},
-  )) {
-    if (!packagePath || packagePath === "") {
-      continue;
+  if (packageJson.packageManager !== "pnpm@10.14.0") {
+    addFinding(findings, "package.json", "packageManager 必须固定为 pnpm@10.14.0");
+  }
+  if (!existsSync(path.join(root, "pnpm-lock.yaml"))) {
+    addFinding(findings, "pnpm-lock.yaml", "pnpm 锁文件缺失");
+  }
+  for (const forbiddenLockfile of [
+    "package-lock.json",
+    "npm-shrinkwrap.json",
+    "yarn.lock",
+  ]) {
+    if (existsSync(path.join(root, forbiddenLockfile))) {
+      addFinding(findings, forbiddenLockfile, "仓库只允许 pnpm-lock.yaml");
     }
-    const licenses = Array.isArray(metadata.license)
-      ? metadata.license
-      : [metadata.license];
-    if (!metadata.license) {
-      addFinding(findings, "package-lock.json", `${packagePath} 缺少 license`);
-    } else if (licenses.some((license) => !allowedLicenses.has(license))) {
+  }
+
+  const packageManagerCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+  let licenseGroups = {};
+  try {
+    licenseGroups = JSON.parse(
+      execFileSync(packageManagerCommand, ["licenses", "list", "--json"], {
+        cwd: root,
+        encoding: "utf8",
+      }),
+    );
+  } catch (error) {
+    addFinding(
+      findings,
+      "pnpm-lock.yaml",
+      `无法读取依赖许可证，请先运行 pnpm install --frozen-lockfile：${error.message}`,
+    );
+  }
+  for (const [license, packages] of Object.entries(licenseGroups)) {
+    if (!allowedLicenses.has(license)) {
+      const packageNames = packages
+        .slice(0, 5)
+        .map((item) => `${item.name}@${item.versions.join(",")}`)
+        .join("、");
       addFinding(
         findings,
-        "package-lock.json",
-        `${packagePath} 使用未审核许可证 ${licenses.join(", ")}`,
+        "pnpm-lock.yaml",
+        `${packageNames} 使用未审核许可证 ${license}`,
       );
     }
   }
+
+  const dependencyRecords = Object.values(licenseGroups).reduce(
+    (count, packages) =>
+      count +
+      packages.reduce(
+        (subtotal, item) => subtotal + item.versions.length,
+        0,
+      ),
+    0,
+  );
 
   const tag = process.env.GITHUB_REF_TYPE === "tag"
     ? process.env.GITHUB_REF_NAME
@@ -222,7 +261,7 @@ async function main() {
   }
 
   console.log(
-    `Release audit passed: ${files.length} files, ${Object.keys(packageLock.packages ?? {}).length - 1} dependency records, no forbidden paths, credentials, private data emails or unreviewed licenses.`,
+    `Release audit passed: ${files.length} files, ${dependencyRecords} dependency records, no forbidden paths, credentials, private data emails or unreviewed licenses.`,
   );
 }
 

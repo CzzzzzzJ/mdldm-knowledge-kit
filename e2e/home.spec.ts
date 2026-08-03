@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { expect, test } from "@playwright/test";
+import bcrypt from "bcryptjs";
 import { createConnection, Types } from "mongoose";
 
 import { reportOperationalFailure } from "@/app/lib/operations-service";
@@ -32,7 +33,17 @@ test("renders the runnable project skeleton", async ({ page }) => {
 test("keeps the operator setup journey inside the current knowledge site", async ({
   page,
 }) => {
+  const adminLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "admin@example.com",
+      password: "local-demo-admin-password-2026",
+    },
+  });
+  expect(adminLogin.ok()).toBe(true);
+
   await page.goto("/setup");
+  await expect(page).toHaveURL(/\/admin\/setup$/);
 
   await expect(
     page.getByRole("heading", {
@@ -61,12 +72,31 @@ test("keeps the operator setup journey inside the current knowledge site", async
   await page.getByRole("button", { name: "复制 Prompt" }).click();
   await expect(page.getByRole("button", { name: "已复制" })).toBeVisible();
 
-  await page.getByRole("button", { name: "标记为已理解" }).click();
+  const [progressResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/admin/setup/progress") &&
+        response.request().method() === "PATCH",
+    ),
+    page.getByRole("button", { name: "确认完成这项任务" }).click(),
+  ]);
+  expect(
+    progressResponse.ok(),
+    await progressResponse.text(),
+  ).toBe(true);
   await page.reload();
-  await expect(page.getByText("教学进度 1/8")).toBeVisible();
+  await expect(page.getByText("开站任务 1/8")).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "已记录教学进度" }),
+    page.getByRole("button", { name: "已完成这项任务" }),
   ).toBeVisible();
+
+  await page.goto("/");
+  await expect(
+    page.getByRole("link", { name: "开站指南" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("link", { name: "站长后台" }),
+  ).toHaveCount(0);
 });
 
 test("discovers a series through search and tags", async ({ page }) => {
@@ -113,6 +143,18 @@ test("exposes a shallow health endpoint without a database", async ({
     403,
   );
   expect((await request.get("/api/admin/export")).status()).toBe(403);
+
+  const duplicateAdmin = await request.post("/api/setup/initialize", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "second-admin@example.com",
+      emailConfirmation: "second-admin@example.com",
+    },
+  });
+  expect(duplicateAdmin.status()).toBe(409);
+  await expect(duplicateAdmin.json()).resolves.toMatchObject({
+    code: "ADMIN_ALREADY_EXISTS",
+  });
 });
 
 test("publishes administrator site settings to the public homepage", async ({
@@ -549,13 +591,16 @@ test("enforces verified identity, invitation entitlement and password rotation",
     createdAt: new Date(),
     updatedAt: new Date(),
   });
+  const verificationResponse = await page.request.post(
+    "/api/auth/verify-email",
+    {
+      headers: { Origin: e2eOrigin },
+      data: { token: verificationToken },
+    },
+  );
   expect(
-    (
-      await page.request.post("/api/auth/verify-email", {
-        headers: { Origin: e2eOrigin },
-        data: { token: verificationToken },
-      })
-    ).ok(),
+    verificationResponse.ok(),
+    await verificationResponse.text(),
   ).toBe(true);
   expect(
     (
@@ -847,5 +892,252 @@ test("creates server-priced mock orders and grants both payment entitlement mode
   await page.goto(`/learn/${paidCourse!._id.toString()}`);
   await expect(page.locator("video")).toBeVisible();
 
+  await database.close();
+});
+
+test("initializes administrator 1 with a one-time temporary credential", async ({
+  page,
+}) => {
+  const database = await createConnection(
+    process.env.MONGODB_URI ??
+      "mongodb://127.0.0.1:27017/mdldm_knowledge_kit",
+  ).asPromise();
+  const users = database.collection("users");
+  const sessions = database.collection("sessions");
+  const initializations = database.collection("siteinitializations");
+
+  const previousAdmins = await users
+    .find({ role: "admin" })
+    .project({ _id: 1 })
+    .toArray();
+  await sessions.deleteMany({
+    userId: { $in: previousAdmins.map((admin) => admin._id) },
+  });
+  await users.deleteMany({ role: "admin" });
+  await initializations.deleteMany({ singletonKey: "default" });
+
+  const concurrentPayloads = [
+    {
+      email: "first-concurrent-admin@example.com",
+      emailConfirmation: "first-concurrent-admin@example.com",
+    },
+    {
+      email: "second-concurrent-admin@example.com",
+      emailConfirmation: "second-concurrent-admin@example.com",
+    },
+  ];
+  const concurrentResponses = await Promise.all(
+    concurrentPayloads.map((data, index) =>
+      page.request.post("/api/setup/initialize", {
+        headers: {
+          Origin: e2eOrigin,
+          "x-forwarded-for": `203.0.113.${index + 10}`,
+        },
+        data,
+      }),
+    ),
+  );
+  expect(concurrentResponses.map((response) => response.status()).sort()).toEqual([
+    201,
+    409,
+  ]);
+  expect(await users.countDocuments({ role: "admin" })).toBe(1);
+
+  const concurrentAdmins = await users
+    .find({ role: "admin" })
+    .project({ _id: 1 })
+    .toArray();
+  await sessions.deleteMany({
+    userId: { $in: concurrentAdmins.map((admin) => admin._id) },
+  });
+  await users.deleteMany({ role: "admin" });
+  await initializations.deleteMany({ singletonKey: "default" });
+
+  await page.goto("/admin");
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "用你的邮箱创建管理员 1 号",
+    }),
+  ).toBeVisible();
+
+  await page.locator('input[name="email"]').fill("admin@example.com");
+  await page
+    .locator('input[name="emailConfirmation"]')
+    .fill("wrong-admin@example.com");
+  await page.getByRole("button", { name: "确认邮箱并创建管理员 1 号" }).click();
+  await expect(page.getByText("两次输入的邮箱不一致")).toBeVisible();
+
+  await page
+    .locator('input[name="emailConfirmation"]')
+    .fill("admin@example.com");
+  const [initializeResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/setup/initialize") &&
+        response.request().method() === "POST",
+    ),
+    page.getByRole("button", { name: "确认邮箱并创建管理员 1 号" }).click(),
+  ]);
+  expect(initializeResponse.status()).toBe(201);
+  expect(initializeResponse.headers()["cache-control"]).toContain("no-store");
+  const initializePayload = (await initializeResponse.json()) as {
+    sessionCreated: boolean;
+    temporaryPassword: string;
+    next: string;
+    user: { email: string };
+  };
+  expect(initializePayload.next).toBe("/admin/activate");
+  expect(initializePayload.sessionCreated).toBe(true);
+  expect(initializePayload.user.email).toBe("admin@example.com");
+  expect(initializePayload.temporaryPassword).toMatch(
+    /^MK1-[A-Za-z0-9_-]{24}$/,
+  );
+  await expect(page.getByText("管理员 1 号已创建")).toBeVisible();
+  await expect(page.getByTestId("temporary-admin-password")).toHaveText(
+    initializePayload.temporaryPassword,
+  );
+  const persistedBrowserState = await page.evaluate(() =>
+    JSON.stringify({
+      localStorage: { ...localStorage },
+      sessionStorage: { ...sessionStorage },
+    }),
+  );
+  expect(persistedBrowserState).not.toContain(
+    initializePayload.temporaryPassword,
+  );
+
+  const storedAdmin = await users.findOne(
+    { email: "admin@example.com" },
+    { projection: { passwordHash: 1, requiresPasswordChange: 1 } },
+  );
+  expect(storedAdmin?.requiresPasswordChange).toBe(true);
+  expect(storedAdmin).not.toHaveProperty("temporaryPassword");
+  expect(storedAdmin?.passwordHash).not.toBe(initializePayload.temporaryPassword);
+  expect(
+    await bcrypt.compare(
+      initializePayload.temporaryPassword,
+      String(storedAdmin?.passwordHash),
+    ),
+  ).toBe(true);
+
+  await page.request.post("/api/auth/logout", {
+    headers: { Origin: e2eOrigin },
+  });
+  await page.goto("/login?next=/admin/setup");
+  await page.locator('input[name="email"]').fill("admin@example.com");
+  await page
+    .locator('input[name="password"]')
+    .fill(initializePayload.temporaryPassword);
+  await page.getByRole("button", { name: "登录" }).click();
+  await expect(page).toHaveURL(/\/admin\/activate$/);
+
+  expect((await page.request.get("/api/admin/site")).status()).toBe(403);
+  const genericPasswordChange = await page.request.post(
+    "/api/auth/change-password",
+    {
+      headers: { Origin: e2eOrigin },
+      data: {
+        currentPassword: initializePayload.temporaryPassword,
+        newPassword: "must-not-bypass-activation-2026",
+      },
+    },
+  );
+  expect(genericPasswordChange.status()).toBe(409);
+  await expect(genericPasswordChange.json()).resolves.toMatchObject({
+    code: "PASSWORD_CHANGE_REQUIRED",
+  });
+  await page.goto("/admin/setup");
+  await expect(page).toHaveURL(/\/admin\/activate$/);
+  await expect(
+    page.getByText(initializePayload.temporaryPassword, { exact: true }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "用你自己的正式密码接管后台",
+    }),
+  ).toBeVisible();
+
+  const permanentPassword = "local-demo-admin-password-2026";
+  await page.locator('input[name="password"]').fill(permanentPassword);
+  await page
+    .locator('input[name="passwordConfirmation"]')
+    .fill(permanentPassword);
+  const [activationResponse] = await Promise.all([
+    page.waitForResponse(
+      (response) =>
+        response.url().endsWith("/api/setup/activate-admin") &&
+        response.request().method() === "POST",
+    ),
+    page
+      .getByRole("button", { name: "保存正式密码并进入开站指南" })
+      .click(),
+  ]);
+  expect(activationResponse.ok()).toBe(true);
+  expect(activationResponse.headers()["cache-control"]).toContain("no-store");
+  await expect(page).toHaveURL(/\/admin\/setup$/);
+
+  const activatedAdmin = await users.findOne(
+    { email: "admin@example.com" },
+    { projection: { _id: 1, passwordHash: 1, requiresPasswordChange: 1 } },
+  );
+  expect(activatedAdmin?.requiresPasswordChange).toBe(false);
+  expect(
+    await bcrypt.compare(
+      initializePayload.temporaryPassword,
+      String(activatedAdmin?.passwordHash),
+    ),
+  ).toBe(false);
+  expect(
+    await bcrypt.compare(permanentPassword, String(activatedAdmin?.passwordHash)),
+  ).toBe(true);
+
+  const duplicate = await page.request.post("/api/setup/initialize", {
+    headers: { Origin: e2eOrigin },
+    data: {
+      email: "another-admin@example.com",
+      emailConfirmation: "another-admin@example.com",
+    },
+  });
+  expect(duplicate.status()).toBe(409);
+  await expect(duplicate.json()).resolves.toMatchObject({
+    code: "ADMIN_ALREADY_EXISTS",
+  });
+
+  await page.request.post("/api/auth/logout", {
+    headers: { Origin: e2eOrigin },
+  });
+  expect(
+    (
+      await page.request.post("/api/auth/login", {
+        headers: { Origin: e2eOrigin },
+        data: {
+          email: "admin@example.com",
+          password: initializePayload.temporaryPassword,
+        },
+      })
+    ).status(),
+  ).toBe(401);
+  const permanentLogin = await page.request.post("/api/auth/login", {
+    headers: { Origin: e2eOrigin },
+    data: { email: "admin@example.com", password: permanentPassword },
+  });
+  expect(permanentLogin.ok()).toBe(true);
+  await expect(permanentLogin.json()).resolves.toMatchObject({
+    user: { role: "admin", requiresPasswordChange: false },
+  });
+
+  await initializations.updateOne(
+    { singletonKey: "default" },
+    {
+      $set: {
+        status: "live",
+        ownerAdminId: activatedAdmin!._id,
+        launchedAt: new Date(),
+        updatedAt: new Date(),
+      },
+    },
+  );
   await database.close();
 });

@@ -96,7 +96,7 @@
 - DONE：明确环境变量与后台运营设置的边界，见 ADR 0012；
 - DONE：从原项目脱敏提取 MongoDB、OSS、SMTP、XorPay、Vercel 与 MPS 配置结构；
 - DONE：建立 L0 配置、L1 只读连接、L2 隔离写入和 L3 业务全链路验证分级；
-- DONE：提供 `npm run validate:providers` 无密钥输出验证命令；
+- DONE：提供 `pnpm validate:providers` 无密钥输出验证命令；
 - DONE：使用原项目配置完成第一轮 L0/L1 验证并记录脱敏结果；
 - DONE：把站长教学入口、逐屏意义、操作、验收与 Agent Prompt 集成进当前知识站；
 - DONE：在站长引导中接入当前运行配置和无副作用的深度健康检查；
@@ -109,10 +109,27 @@
 - DONE：为 E2E 使用独立数据库并自动准备虚构管理员与 Demo 数据；
 - DONE：从原站抽离统一 Neo-brutalism Token 与公开页组件库，并完成 P0 页面风格迁移；
 - DONE：移除未批准的自动生成 Demo 图片，默认使用可配置封面或几何封面；
+- DONE：实现一次性首个管理员页面、并发 claim 和生产初始化口令；
+- DONE：将开站指南迁入独立后台 Shell，并把教学进度保存到站点数据库；
+- DONE：增加 `configuring / live` 生命周期、公开页面门禁和正式开站检查；
+- DONE：从公开站点导航移除后台入口，并补齐后台用户与站长密码入口；
+- DONE：完成 AF-01 pnpm 唯一工具链，固定 10.14.0、唯一锁文件、CI/Vercel 命令、
+  安装脚本白名单，并通过全新冻结安装、质量门、E2E、发布与安全审计；
+- DONE：完成 AF-02 唯一 15 分钟启动入口，新增 `START_HERE.md`、
+  `AGENT_QUICKSTART.md`、安全本地环境准备命令和隔离用户旅程验收；
+- DONE：完成 AF-03 首个管理员初始化，使用双邮箱确认、每次部署独立的临时密码、
+  一次性展示、强制正式密码轮换、后台门禁、并发保护与受控恢复；
+- DONE：完成 AF-04 最低配置与能力裁剪，默认 Manual Payment，仅校验已选择能力，
+  OSS/SMTP SDK 按需加载，生产 Console Email 明确关闭自助邮件流程，后台与 Agent 使用
+  同一份脱敏能力状态，并建立公开能力矩阵和非公开付费实践文档骨架；
+- IN PROGRESS：完成 AF-05 的 Agent + Vercel Serverless 唯一线上协议、`hkg1` 仓库契约、
+  Preview/Production 双确认、只读健康检查、脱敏报告与本地 Docker 边界；全新隔离账号
+  L2/L3 和至少两个中国大陆网络点的真实验收仍待完成；
+- TODO：在最后的 README P0 重构中只暴露 AF-02 这一条推荐启动旅程；
 - IN PROGRESS：补齐课程和系列的编辑、排序、预览、安全删除与 Demo 清理；
 - IN PROGRESS：补齐用户、权益和分析后台；
-- TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 与 XorPay 配置；
-- TODO：实现一次性 `/setup` 与首个管理员初始化；
+- TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 配置，并按需验证 XorPay；
+- DONE：实现一次性首个管理员初始化，`/setup` 兼容重定向到 `/admin/setup`；
 - TODO：提供部署、Provider、品牌改造、内容迁移和上线验收的任务级 Agent Prompt；
 - TODO：使用隔离第三方测试账号完成 L2 验证；
 - TODO：邀请未参与开发、稍懂 Vibe Coding 的 AI 博主完成全新部署和 L3 验收；

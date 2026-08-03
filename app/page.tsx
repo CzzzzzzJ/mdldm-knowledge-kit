@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Types } from "mongoose";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { getResolvedSiteSettings } from "@/app/lib/site-settings-service";
 import {
   MdldmAccessBadge,
@@ -50,6 +51,7 @@ function toSiteConfig(
 }
 
 export default async function HomePage() {
+  await requirePublicSiteAccess();
   const settings = await getResolvedSiteSettings();
   const site = toSiteConfig(settings);
   let featuredSeries: SeriesDocument[] = [];

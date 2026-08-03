@@ -218,6 +218,7 @@ export async function resetPassword(input: {
   }
 
   user.passwordHash = await bcrypt.hash(input.password, 12);
+  user.requiresPasswordChange = false;
   await user.save();
   await SessionModel.deleteMany({ userId: user._id });
   return user;
@@ -246,6 +247,7 @@ export async function changePassword(input: {
   }
 
   user.passwordHash = await bcrypt.hash(input.newPassword, 12);
+  user.requiresPasswordChange = false;
   await user.save();
   await SessionModel.deleteMany({ userId: user._id });
   return user;

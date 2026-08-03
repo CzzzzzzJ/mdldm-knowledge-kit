@@ -11,4 +11,5 @@ export interface UserAccount {
   role: UserRole;
   status: UserStatus;
   emailVerified: boolean;
+  requiresPasswordChange: boolean;
 }

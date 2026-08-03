@@ -3,6 +3,7 @@ import { isValidObjectId } from "mongoose";
 import { notFound } from "next/navigation";
 
 import { canCurrentUserAccessCourse } from "@/app/lib/course-access";
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
   MdldmActionLink,
@@ -29,6 +30,7 @@ export default async function LearnPage({
 }: {
   params: Promise<{ courseId: string }>;
 }) {
+  await requirePublicSiteAccess();
   const { courseId } = await params;
   if (!isValidObjectId(courseId)) {
     notFound();

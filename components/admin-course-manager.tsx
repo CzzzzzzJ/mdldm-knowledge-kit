@@ -227,12 +227,6 @@ export function AdminCourseManager({
     });
   }
 
-  async function logout() {
-    setBusy(true);
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.assign("/");
-  }
-
   const inputClass =
     "focus-ring w-full rounded-lg border border-[var(--line)] bg-[var(--page)] px-3.5 py-2.5";
   const fieldClass = "grid gap-2 text-sm font-medium";
@@ -240,26 +234,18 @@ export function AdminCourseManager({
 
   return (
     <div className="mt-10 grid gap-8">
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div>
         <p aria-live="polite" className="text-sm text-[var(--muted)]">
           {message ||
             (busy
               ? "正在处理，请不要关闭页面。"
-              : "建议按 1–5 的顺序完成：先建系列和课时，再上传内容，确认后发布。")}
+              : "建议按 1-5 的顺序完成：先建系列和课时，再上传内容，确认后发布。")}
         </p>
-        <button
-          className="focus-ring rounded-lg border border-[var(--line)] px-4 py-2 text-sm"
-          disabled={busy}
-          onClick={() => void logout()}
-          type="button"
-        >
-          退出登录
-        </button>
       </div>
 
       <section className="grid gap-4">
         <div>
-          <p className="eyebrow">步骤 1–2 · 搭好课程结构</p>
+          <p className="eyebrow">搭好课程结构</p>
           <h2 className="mt-2 text-2xl font-semibold">先创建系列，再添加课时</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
             系列是一组相关课程的合集，课时是学员实际观看的一节内容。第一次使用时，先创建一个系列，
@@ -269,7 +255,7 @@ export function AdminCourseManager({
         <div className="grid gap-5 lg:grid-cols-2">
         <form className="surface grid gap-4 p-6" onSubmit={submitSeries}>
           <div>
-            <p className="eyebrow">步骤 1</p>
+            <p className="eyebrow">创建系列</p>
             <h3 className="mt-2 text-xl font-semibold">创建课程系列</h3>
           </div>
           <label className={fieldClass}>
@@ -344,9 +330,9 @@ export function AdminCourseManager({
               defaultValue="public"
               name="accessLevel"
             >
-              <option value="public">公开 — 所有人都能访问</option>
-              <option value="registered">登录可看 — 注册用户可访问</option>
-              <option value="member">会员 — 有效会员可访问</option>
+              <option value="public">公开：所有人都能访问</option>
+              <option value="registered">登录可看：注册用户可访问</option>
+              <option value="member">会员：有效会员可访问</option>
             </select>
             <span className={helpClass}>
               系列等级决定系列页面的默认门槛；每节课还可以单独设置更具体的权限。
@@ -363,7 +349,7 @@ export function AdminCourseManager({
 
         <form className="surface grid gap-4 p-6" onSubmit={submitCourse}>
           <div>
-            <p className="eyebrow">步骤 2</p>
+            <p className="eyebrow">创建课时</p>
             <h3 className="mt-2 text-xl font-semibold">创建一节课</h3>
           </div>
           <label className={fieldClass}>
@@ -377,7 +363,7 @@ export function AdminCourseManager({
             </select>
             <span className={helpClass}>
               {series.length === 0
-                ? "请先完成左侧的步骤 1，创建至少一个系列。"
+                ? "请先完成左侧的系列创建，至少需要一个系列。"
                 : "选择这节课要出现在哪个系列中。"}
             </span>
           </label>
@@ -421,11 +407,11 @@ export function AdminCourseManager({
                 defaultValue="public"
                 name="accessLevel"
               >
-                <option value="public">公开 — 所有人都能学习</option>
-                <option value="registered">登录可看 — 注册后可学习</option>
-                <option value="member">会员 — 有效会员可学习</option>
-                <option value="course">单课购买 — 购买本课后可学习</option>
-                <option value="series">系列购买 — 获得本系列权益后可学习</option>
+                <option value="public">公开：所有人都能学习</option>
+                <option value="registered">登录可看：注册后可学习</option>
+                <option value="member">会员：有效会员可学习</option>
+                <option value="course">单课购买：购买本课后可学习</option>
+                <option value="series">系列购买：获得本系列权益后可学习</option>
               </select>
             </label>
             <label className={fieldClass}>
@@ -454,7 +440,7 @@ export function AdminCourseManager({
 
       <section className="grid gap-4">
         <div>
-          <p className="eyebrow">步骤 3–4 · 添加学习内容</p>
+          <p className="eyebrow">添加学习内容</p>
           <h2 className="mt-2 text-2xl font-semibold">为课时上传视频和配套资料</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
             视频是发布课程的必要内容；PDF、ZIP、Markdown 等资料为选填。上传完成后，
@@ -464,7 +450,7 @@ export function AdminCourseManager({
         <div className="grid gap-5 lg:grid-cols-2">
           <form className="surface grid gap-4 p-6" onSubmit={uploadVideo}>
             <div>
-              <p className="eyebrow">步骤 3</p>
+              <p className="eyebrow">上传视频</p>
               <h3 className="mt-2 text-xl font-semibold">上传并绑定 MP4 视频</h3>
             </div>
             <label className={fieldClass}>
@@ -477,7 +463,7 @@ export function AdminCourseManager({
                 ))}
               </select>
               {courses.length === 0 ? (
-                <span className={helpClass}>请先完成步骤 2，创建至少一节课。</span>
+                <span className={helpClass}>请先创建至少一节课。</span>
               ) : null}
             </label>
             <label className={fieldClass}>
@@ -504,7 +490,7 @@ export function AdminCourseManager({
 
           <form className="surface grid gap-4 p-6" onSubmit={uploadMaterial}>
             <div>
-              <p className="eyebrow">步骤 4 · 选填</p>
+              <p className="eyebrow">配套资料（选填）</p>
               <h3 className="mt-2 text-xl font-semibold">上传课程资料</h3>
             </div>
             <label className={fieldClass}>
@@ -545,11 +531,11 @@ export function AdminCourseManager({
                   defaultValue="public"
                   name="accessLevel"
                 >
-                  <option value="public">公开 — 所有人可下载</option>
-                  <option value="registered">登录可见 — 注册后可下载</option>
-                  <option value="member">会员 — 有效会员可下载</option>
-                  <option value="course">单课购买 — 购买本课后可下载</option>
-                  <option value="series">系列购买 — 获得系列权益后可下载</option>
+                  <option value="public">公开：所有人可下载</option>
+                  <option value="registered">登录可见：注册后可下载</option>
+                  <option value="member">会员：有效会员可下载</option>
+                  <option value="course">单课购买：购买本课后可下载</option>
+                  <option value="series">系列购买：获得系列权益后可下载</option>
                 </select>
               </label>
               <label className={fieldClass}>
@@ -577,7 +563,7 @@ export function AdminCourseManager({
       </section>
 
       <section className="surface p-6">
-        <p className="eyebrow">步骤 5 · 上线前确认</p>
+        <p className="eyebrow">上线前确认</p>
         <h2 className="mt-2 text-xl font-semibold">发布课程</h2>
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
           请先确认标题、权限和视频都正确。发布后，符合访问条件的学员就能在前台看到并学习课程。
@@ -585,7 +571,7 @@ export function AdminCourseManager({
         <div className="mt-5 grid gap-3">
           {courses.length === 0 ? (
             <p className="rounded-xl border border-dashed border-[var(--line)] p-4 text-sm text-[var(--muted)]">
-              还没有可发布的课时。请先完成上方步骤 1 和步骤 2。
+              还没有可发布的课时。请先创建系列和课时。
             </p>
           ) : null}
           {courses.map((course) => (
@@ -611,7 +597,7 @@ export function AdminCourseManager({
                 </p>
                 {!course.videoAssetId ? (
                   <p className="mt-1 text-xs text-[var(--muted)]">
-                    发布前请先在步骤 3 上传视频。
+                    发布前请先上传视频。
                   </p>
                 ) : null}
               </div>

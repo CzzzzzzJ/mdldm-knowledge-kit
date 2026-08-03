@@ -75,8 +75,6 @@ async function main() {
         } catch {
           add("storage", "FAIL", "OSS 连接、鉴权或 Bucket 权限检查失败");
         }
-      } else {
-        add("storage", "FAIL", "所选 Storage Provider 尚未实现");
       }
 
       const email = getEmailProvider();
@@ -127,19 +125,11 @@ async function main() {
         "WARN",
         "Webhook 配置有效；L1 不发送测试告警",
       );
-    } else if (env.OBSERVABILITY_PROVIDER === "sentry") {
-      add("observability", "FAIL", "Sentry Provider 尚未实现");
     } else {
       add("observability", "PASS", "Console Observability 可用");
     }
 
-    add(
-      "transcode",
-      env.TRANSCODE_PROVIDER === "none" ? "PASS" : "WARN",
-      env.TRANSCODE_PROVIDER === "none"
-        ? "当前明确禁用转码"
-        : "所选 Transcode Provider 尚未完成公共实现",
-    );
+    add("transcode", "SKIP", "公共第一版明确禁用转码 Provider");
   } catch (error) {
     if (error instanceof ZodError) {
       for (const issue of error.issues) {

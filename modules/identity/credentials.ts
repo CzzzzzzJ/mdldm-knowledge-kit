@@ -21,6 +21,15 @@ export function generateOpaqueToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
+/**
+ * Generates a per-deployment bootstrap credential with at least 144 bits of
+ * entropy. The fixed prefix guarantees that the value also satisfies the
+ * human password policy without reducing the random portion.
+ */
+export function generateTemporaryPassword(): string {
+  return `MK1-${randomBytes(18).toString("base64url")}`;
+}
+
 export function hashOpaqueToken(token: string, secret: string): string {
   return createHmac("sha256", secret).update(token).digest("hex");
 }

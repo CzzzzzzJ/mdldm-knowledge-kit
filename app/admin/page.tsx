@@ -1,9 +1,17 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
+import {
+  getSiteInitializationState,
+  isInitialAdminSetupAvailable,
+  isInitialAdminSetupProtected,
+} from "@/app/lib/site-initialization-service";
 import {
   AdminShell,
   requireAdminPage,
 } from "@/components/admin-shell";
+import { InitialAdminSetupPage } from "@/components/initial-admin-setup-page";
+import { isAuthSecretConfigured } from "@/config/env";
 
 export const dynamic = "force-dynamic";
 
@@ -41,7 +49,22 @@ const quickEntries = [
 ] as const;
 
 export default async function AdminPage() {
+  const initialization = await getSiteInitializationState();
+  if (!initialization.hasAdmin) {
+    return (
+      <InitialAdminSetupPage
+        available={
+          isAuthSecretConfigured() && isInitialAdminSetupAvailable()
+        }
+        requiresSetupToken={isInitialAdminSetupProtected()}
+      />
+    );
+  }
+
   const user = await requireAdminPage("/admin");
+  if (initialization.status !== "live") {
+    redirect("/admin/setup");
+  }
 
   return (
     <AdminShell

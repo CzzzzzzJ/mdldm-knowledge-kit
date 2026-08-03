@@ -28,6 +28,7 @@ function toAccount(user: UserDocument): UserAccount {
     role: user.role,
     status: user.status,
     emailVerified: user.emailVerified,
+    requiresPasswordChange: Boolean(user.requiresPasswordChange),
   };
 }
 
@@ -105,6 +106,10 @@ export async function requireAdmin(): Promise<UserAccount> {
 
   if (!user || user.role !== "admin") {
     throw new Error("ADMIN_REQUIRED");
+  }
+
+  if (user.requiresPasswordChange) {
+    throw new Error("PASSWORD_CHANGE_REQUIRED");
   }
 
   return user;

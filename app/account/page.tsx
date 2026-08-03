@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
   MdldmActionLink,
@@ -30,6 +31,7 @@ function formatDate(date: Date | null): string {
 }
 
 export default async function AccountPage() {
+  await requirePublicSiteAccess();
   const user = await getCurrentUser();
   if (!user) {
     redirect("/login?next=/account");

@@ -2,6 +2,7 @@
   "name": "mdldm-knowledge-kit",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.14.0",
   "license": "Apache-2.0",
   "scripts": {
     "dev": "next dev",
@@ -14,7 +15,9 @@
     "test:e2e": "playwright test",
     "check": "node scripts/check.mjs",
     "release:audit": "node scripts/release-audit.mjs",
+    "quickstart:prepare": "tsx scripts/prepare-local-env.ts",
     "check-config": "tsx scripts/check-config.ts",
+    "check:serverless": "tsx scripts/check-serverless-readiness.ts",
     "validate:providers": "tsx scripts/validate-provider-config.ts",
     "create-admin": "tsx scripts/create-admin.ts",
     "create-invitation": "tsx scripts/create-invitation.ts",
@@ -51,10 +54,7 @@
     "vitest": "4.1.10"
   },
   "engines": {
-    "node": ">=20.0.0"
-  },
-  "overrides": {
-    "postcss": "8.5.22",
-    "sharp": "0.35.3"
+    "node": ">=20.0.0",
+    "pnpm": ">=10.14.0"
   }
 }

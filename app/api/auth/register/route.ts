@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
 import { registerUser } from "@/app/lib/identity-service";
+import { isSiteLive } from "@/app/lib/site-initialization-service";
 import {
   applyRequestRateLimit,
   rejectCrossOriginMutation,
@@ -10,6 +11,7 @@ import {
   emailSchema,
   passwordSchema,
 } from "@/modules/identity/credentials";
+import { isSelfServiceEmailAvailable } from "@/config/env";
 
 const registerSchema = z
   .object({
@@ -28,6 +30,23 @@ export async function POST(request: NextRequest) {
     }));
   if (rejection) {
     return rejection;
+  }
+
+  if (!(await isSiteLive())) {
+    return NextResponse.json(
+      { error: "网站仍在配置中，暂未开放注册" },
+      { status: 503 },
+    );
+  }
+
+  if (!isSelfServiceEmailAvailable()) {
+    return NextResponse.json(
+      {
+        code: "EMAIL_DELIVERY_DISABLED",
+        error: "站长尚未启用 SMTP，当前不能创建需要邮件验证的新账号",
+      },
+      { status: 503 },
+    );
   }
 
   const parsed = registerSchema.safeParse(

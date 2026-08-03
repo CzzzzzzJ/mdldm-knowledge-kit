@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  generateTemporaryPassword,
   hashOpaqueToken,
   passwordSchema,
 } from "@/modules/identity/credentials";
@@ -19,5 +20,14 @@ describe("identity credentials", () => {
     expect(hash).toBe(
       hashOpaqueToken("one-time-token", "test-secret"),
     );
+  });
+
+  it("generates a unique strong temporary password for each request", () => {
+    const first = generateTemporaryPassword();
+    const second = generateTemporaryPassword();
+
+    expect(first).toMatch(/^MK1-[A-Za-z0-9_-]{24}$/);
+    expect(passwordSchema.safeParse(first).success).toBe(true);
+    expect(second).not.toBe(first);
   });
 });

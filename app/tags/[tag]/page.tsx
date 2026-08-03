@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmActionLink,
   MdldmEmptyState,
@@ -48,6 +49,7 @@ export default async function TagPage({
 }: {
   params: Promise<{ tag: string }>;
 }) {
+  await requirePublicSiteAccess();
   const { tag: rawTag } = await params;
   const tag = readTag(rawTag);
   if (!tag) {

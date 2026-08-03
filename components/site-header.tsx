@@ -12,7 +12,7 @@ export async function SiteHeader({ site }: { site: SiteConfig }) {
   ]);
   const displayName = resolved.siteName || site.name;
   const mark = Array.from(displayName.trim()).slice(0, 2).join("").toUpperCase();
-  const isAdmin = user?.role === "admin";
+  const isSignedIn = Boolean(user);
 
   return (
     <header className="sticky top-0 z-20 border-b-2 border-[var(--ink)] bg-[var(--surface)]/95 backdrop-blur">
@@ -54,20 +54,12 @@ export async function SiteHeader({ site }: { site: SiteConfig }) {
           >
             会员与单课
           </Link>
-          {isAdmin ? (
-            <Link
-              className="focus-ring hidden whitespace-nowrap rounded-md text-[var(--ink)] underline-offset-4 hover:underline lg:block"
-              href="/setup"
-            >
-              开站指南
-            </Link>
-          ) : null}
           <MdldmActionLink
             className="min-h-9 px-3 py-2"
-            href={isAdmin ? "/admin" : "/login"}
+            href={isSignedIn ? "/account" : "/login"}
             variant="primary"
           >
-            {isAdmin ? "站长后台" : "登录"}
+            {isSignedIn ? "账户" : "登录"}
           </MdldmActionLink>
         </nav>
       </div>

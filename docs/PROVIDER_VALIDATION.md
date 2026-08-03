@@ -15,6 +15,10 @@
 不得记录真实值、域名、Bucket、AccessKey、Token、Chat ID、Webhook、项目 ID、
 用户邮箱或数据库名称。
 
+公共第一版只验证 MongoDB、Local/OSS、Console/SMTP、Manual/Mock/XorPay 与
+Console/Webhook。S3、转码和 Sentry 不进入可选配置，完整边界见
+[最低配置与能力矩阵](CAPABILITY_MATRIX.md)。
+
 ## 2. 原项目配置映射
 
 | 能力 | 原项目配置键 | 开源版配置键 | 处理 |
@@ -50,9 +54,9 @@
 仓库提供：
 
 ```bash
-npm run check-config
-npm run validate:providers
-npm run validate:providers -- --live
+pnpm check-config
+pnpm validate:providers
+pnpm validate:providers --live
 ```
 
 `--live` 只执行 L1 检查。它不会发送邮件、创建支付订单、写入 OSS 或触发告警。
@@ -69,7 +73,7 @@ L2/L3 必须使用独立 Preview 数据库、独立 OSS 前缀或 Bucket、测�
 - 阿里云 DirectMail SMTP；
 - XorPay 支付与回调；
 - Vercel 部署与定时任务形态；
-- 可选的 MPS/HLS 转码需求。
+- MPS/HLS 只作为未来扩展需求的调研输入，不作为公共 Provider。
 
 ### 不进入公共链路
 
@@ -133,3 +137,33 @@ L2/L3 必须使用独立 Preview 数据库、独立 OSS 前缀或 Bucket、测�
 
 第一轮说明了“账号和本地配置仍能连接”，没有说明新开源站已经具备生产环境。下一轮
 必须新建隔离 Preview 配置，再执行 L2/L3。
+
+### 2026-08-03 AF-05 Serverless 路径结论
+
+当前已经确认：
+
+- 第一版唯一维护的 Web 路径是 Agent + Vercel Serverless；
+- `vercel.json` 固定 pnpm 冻结安装、生产构建和 `hkg1` 函数区域；
+- Preview 必须先于 Production，二者的数据库、密钥和外部资源需要隔离；
+- `pnpm check:serverless` 可以检查仓库契约，并在显式提供 HTTPS 根地址后只读探测浅层与
+  深度健康接口；
+- Docker Compose 只提供本地 MongoDB，不是生产部署方案；
+- 当前视频知识站公开运营组合是 Atlas + OSS + SMTP + Manual，XorPay 和 Webhook 按需。
+
+当前仍未确认：
+
+- 没有使用全新隔离 Vercel、Atlas、OSS、SMTP 和支付账号完成 L2/L3；
+- 没有从至少两个中国大陆网络点完成自定义域名的页面、API 与媒体验收；
+- 没有形成可公开复用的成本、配额、账单、回滚和账号清理证据。
+
+Vercel 官方说明其没有中国大陆基础设施，`.vercel.app` 域名可能在大陆缓慢或不可访问，
+自定义域名也不能保证可用性和性能。因此 `hkg1` 只作为国内用户优先的默认函数区域，
+不能把它记录成“中国大陆可用性验证通过”。AF-05 在真实账号与大陆网络证据补齐前保持
+`IN PROGRESS`。
+
+官方参考：
+
+- [Vercel 中国大陆访问说明](https://vercel.com/kb/guide/accessing-vercel-hosted-sites-from-mainland-china)
+- [Vercel Regions](https://vercel.com/docs/regions)
+- [Vercel Environment Variables](https://vercel.com/docs/environment-variables)
+- [MongoDB Atlas 与 Vercel 集成](https://www.mongodb.com/docs/atlas/reference/partner-integrations/vercel/)

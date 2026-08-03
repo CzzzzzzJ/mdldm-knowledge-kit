@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { RedeemInvitationForm } from "@/components/identity-forms";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
@@ -8,6 +9,7 @@ import { getCurrentUser } from "@/providers/auth/session";
 export const dynamic = "force-dynamic";
 
 export default async function RedeemPage() {
+  await requirePublicSiteAccess();
   const user = await getCurrentUser();
   if (!user) {
     redirect("/login?next=/redeem");

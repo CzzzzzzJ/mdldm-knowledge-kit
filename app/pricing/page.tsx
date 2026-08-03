@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { CheckoutPanel } from "@/components/checkout-panel";
 import {
   MdldmAccessBadge,
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PricingPage() {
+  await requirePublicSiteAccess();
   const site = getSiteConfig();
   const user = await getCurrentUser();
   const provider = getPaymentProvider();

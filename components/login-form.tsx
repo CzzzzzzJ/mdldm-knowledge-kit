@@ -25,11 +25,19 @@ export function LoginForm() {
 
     const payload = (await response.json()) as {
       error?: string;
-      user?: { role: "user" | "admin" };
+      user?: {
+        role: "user" | "admin";
+        requiresPasswordChange?: boolean;
+      };
     };
     if (!response.ok) {
       setError(payload.error ?? "登录失败");
       setSubmitting(false);
+      return;
+    }
+
+    if (payload.user?.requiresPasswordChange) {
+      window.location.assign("/admin/activate");
       return;
     }
 

@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { PublicRuntimeConfig } from "@/config/env";
 import type { SetupLesson } from "@/modules/site/setup-guide";
-
-const progressStorageKey = "mdldm-operator-setup-progress-v1";
 
 interface HealthResponse {
   status: "ok" | "degraded";
@@ -15,22 +13,6 @@ interface HealthResponse {
     message: string;
   };
   warnings: string[];
-}
-
-function readSavedProgress(): string[] {
-  try {
-    const value = window.localStorage.getItem(progressStorageKey);
-    if (!value) {
-      return [];
-    }
-
-    const parsed: unknown = JSON.parse(value);
-    return Array.isArray(parsed)
-      ? parsed.filter((item): item is string => typeof item === "string")
-      : [];
-  } catch {
-    return [];
-  }
 }
 
 async function copyText(value: string) {
@@ -83,27 +65,29 @@ function providerValue(
 export function OperatorSetupExperience({
   lessons,
   initialLesson,
+  initialCompleted,
   runtime,
   configWarnings,
+  embedded = false,
 }: {
   lessons: readonly SetupLesson[];
   initialLesson: SetupLesson;
+  initialCompleted: string[];
   runtime: PublicRuntimeConfig;
   configWarnings: string[];
+  embedded?: boolean;
 }) {
   const [activeSlug, setActiveSlug] = useState(initialLesson.slug);
-  const [completed, setCompleted] = useState<string[]>([]);
+  const [completed, setCompleted] = useState<string[]>(initialCompleted);
   const [copied, setCopied] = useState(false);
+  const [progressBusy, setProgressBusy] = useState(false);
+  const [progressMessage, setProgressMessage] = useState("");
   const [health, setHealth] = useState<
     | { state: "idle" }
     | { state: "loading" }
     | { state: "ready"; data: HealthResponse }
     | { state: "error"; message: string }
   >({ state: "idle" });
-
-  useEffect(() => {
-    setCompleted(readSavedProgress());
-  }, []);
 
   const activeIndex = useMemo(
     () => Math.max(0, lessons.findIndex((lesson) => lesson.slug === activeSlug)),
@@ -122,15 +106,30 @@ export function OperatorSetupExperience({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  function toggleComplete() {
+  async function toggleComplete() {
+    setProgressBusy(true);
+    setProgressMessage("");
+    const shouldComplete = !completed.includes(lesson.slug);
     const nextCompleted = completed.includes(lesson.slug)
       ? completed.filter((slug) => slug !== lesson.slug)
       : [...completed, lesson.slug];
+    const response = await fetch("/api/admin/setup/progress", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        lesson: lesson.slug,
+        completed: shouldComplete,
+      }),
+    });
+    const payload = (await response.json()) as { error?: string };
+    if (!response.ok) {
+      setProgressMessage(payload.error ?? "教学进度保存失败");
+      setProgressBusy(false);
+      return;
+    }
     setCompleted(nextCompleted);
-    window.localStorage.setItem(
-      progressStorageKey,
-      JSON.stringify(nextCompleted),
-    );
+    setProgressMessage("进度已保存到当前知识站。");
+    setProgressBusy(false);
   }
 
   async function handleCopyPrompt() {
@@ -163,8 +162,13 @@ export function OperatorSetupExperience({
   const isComplete = completed.includes(lesson.slug);
 
   return (
-    <div className="min-h-[100dvh] bg-[var(--page)]">
-      <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--surface)]/94 backdrop-blur">
+    <div
+      className={
+        embedded ? "bg-[var(--page)]" : "min-h-[100dvh] bg-[var(--page)]"
+      }
+    >
+      {!embedded ? (
+        <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--surface)]/94 backdrop-blur">
         <div className="page-shell flex h-[4.5rem] items-center justify-between gap-5">
           <Link
             className="focus-ring flex min-w-0 items-center gap-3 rounded-lg"
@@ -198,9 +202,18 @@ export function OperatorSetupExperience({
             </Link>
           </div>
         </div>
-      </header>
+        </header>
+      ) : null}
 
-      <main className="page-shell py-6 lg:py-10">
+      <div className={embedded ? "py-6" : "page-shell py-6 lg:py-10"}>
+        {embedded ? (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-3 text-sm font-black text-[var(--accent-ink)]">
+            <span>
+              开站任务 {completed.length}/{lessons.length}
+            </span>
+            <span>进度保存在站点数据库中</span>
+          </div>
+        ) : null}
         <div className="mb-6 xl:hidden">
           <label
             className="mb-2 block text-sm font-semibold"
@@ -417,10 +430,15 @@ export function OperatorSetupExperience({
                     ? "border border-[var(--accent)] bg-[var(--surface)] text-[var(--accent)]"
                     : "bg-[var(--accent)] text-[var(--accent-ink)]"
                 }`}
-                onClick={toggleComplete}
+                disabled={progressBusy}
+                onClick={() => void toggleComplete()}
                 type="button"
               >
-                {isComplete ? "已记录教学进度" : "标记为已理解"}
+                {progressBusy
+                  ? "正在保存"
+                  : isComplete
+                    ? "已完成这项任务"
+                    : "确认完成这项任务"}
               </button>
 
               <div className="flex items-center gap-2">
@@ -444,13 +462,19 @@ export function OperatorSetupExperience({
                 ) : (
                   <Link
                     className="focus-ring whitespace-nowrap rounded-lg bg-[var(--ink)] px-4 py-3 text-sm font-semibold text-[var(--page)] transition-transform active:translate-y-px"
-                    href="/admin"
+                    href="#launch-checklist"
                   >
-                    进入当前后台
+                    查看上线检查
                   </Link>
                 )}
               </div>
             </div>
+            <p
+              aria-live="polite"
+              className="mt-3 min-h-5 text-sm font-semibold text-[var(--muted)]"
+            >
+              {progressMessage}
+            </p>
           </article>
 
           <aside className="space-y-4 xl:sticky xl:top-[6.5rem]">
@@ -525,11 +549,11 @@ export function OperatorSetupExperience({
             </section>
 
             <p className="px-1 text-xs leading-5 text-[var(--muted)]">
-              “已理解”只保存本浏览器的教学进度，不代表 Provider 已通过生产验证。
+              教学进度保存在当前知识站数据库中，但不代表 Provider 已通过生产验证。
             </p>
           </aside>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

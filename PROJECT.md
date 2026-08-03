@@ -2,7 +2,8 @@
 
 ## 1. 产品定位
 
-`mdldm Knowledge Kit` 是一套面向个人创作者的、自托管的知识产品交付与会员运营底座。
+`mdldm Knowledge Kit` 是一套面向个人创作者、由站长自行部署和控制的知识产品交付与会员
+运营底座。公共第一版只维护 Agent + Vercel Serverless 线上路径，不承诺完整生产 Docker。
 
 它不是麦当知识站的换皮源码，也不是通用 LMS、AI 工具聚合站或多租户 SaaS。它首先解决一条经过真实业务验证的闭环：
 
@@ -41,7 +42,7 @@ v0.2 的“可运营”标准进一步要求一个不了解 Next.js、但可以�
 完成有限代码改造的创作者：
 
 1. 按 README 或内置 Prompt 完成独立部署和第三方平台配置；
-2. 通过 `/setup` 完成安全初始化和首个管理员创建；
+2. 通过 `/admin` 安全创建首个管理员，再在 `/admin/setup` 完成开站配置；
 3. 不修改 TypeScript 即可设置品牌、导航、联系方式、内容和首页；
 4. 不修改配置文件即可创建会员或单课商品；
 5. 在分区后台完成课程发布、用户权益、订单和故障处理；
@@ -68,11 +69,11 @@ v0.2 的“可运营”标准进一步要求一个不了解 Next.js、但可以�
 ### Provider
 
 - Database：MongoDB；
-- Storage：Local、S3/OSS；
+- Storage：Local、OSS；
 - Payment：Manual、Mock、XorPay；
 - Email：Console、SMTP；
-- Transcode：None、FFmpeg、Aliyun MPS；
-- Observability：Console、Webhook、Sentry；
+- Transcode：公共第一版固定为 None；
+- Observability：Console、Webhook；
 - External Auth：后续可选微信。
 
 ### 私有或后续插件
@@ -83,6 +84,7 @@ v0.2 的“可运营”标准进一步要求一个不了解 Next.js、但可以�
 - 微信小程序；
 - 个人营销自动化；
 - AI 搜索和内容分类。
+- S3、FFmpeg / Aliyun MPS 与 Sentry 扩展实现。
 
 ## 5. 非目标
 
@@ -115,19 +117,16 @@ v0.2 的“可运营”标准进一步要求一个不了解 Next.js、但可以�
 | 生产 Provider | MongoDB、OSS 与 SMTP 已接入，Vercel 部署流程已记录 |
 | 支付 Provider | Manual、Mock 与 XorPay 已接入 |
 | 可观测性 Provider | 结构化 Console 与签名 Webhook 已接入 |
+| 最低配置与能力裁剪 | 已完成；默认 Manual，OSS/SMTP/XorPay/Webhook 按需启用，未启用 SDK 延迟加载 |
+| Agent + Serverless | 官方仓库契约、Preview 优先协议与脱敏检查已完成；全新账号 L2/L3 和国内多网络验收待完成 |
 | 可运行 Demo | 注册验证、双模式购买、幂等权益、课程、媒体、进度、运营总览和失败队列已可运行 |
 | 当前公开版本 | `v0.1.0` |
-| Vibe Coding 创作者可运营 | Phase 7 进行中；SiteSetting、内容发现、学习中心和后台分区处于整合阶段，一次性初始化与 L2/L3 仍未完成 |
+| Vibe Coding 创作者可运营 | Phase 7 进行中；双邮箱确认的管理员 1 号、随机临时密码、强制激活、后台开站指南、站点生命周期和上线门禁已实现，L2/L3 仍未完成 |
 
 ## 7. 事实来源
 
-完整的事实证据、风险、迁移映射和 Mermaid 拓扑见：
-
-`docs/analysis/知识站开源版-现状分析与目标拓扑-2026-07-23.md`
-
-旧站全部能力的公开边界标签见：
-
-`docs/analysis/旧站功能开源边界清单-2026-07-24.md`
+公开仓库不发布私有原项目审计、迁移分析和开发 Spec。产品边界、架构决策和当前任务分别
+以本文件、`ARCHITECTURE.md`、`docs/decisions/` 与 `TASKS.md` 为准。
 
 面向目标 AI 博主的当前差距、分阶段计划和总完成定义见：
 

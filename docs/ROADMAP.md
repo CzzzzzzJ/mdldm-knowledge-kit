@@ -78,8 +78,10 @@ flowchart LR
    详情、学习中心和基础后台分区；
 2. `Wave B / IN PROGRESS`：商品和连续学习已完成，继续补齐内容完整 CRUD、用户、
    权益和分析后台；
-3. `Wave C / TODO`：一次性 `/setup`、Provider 上线检查和任务级 Agent Prompt；
-4. `Wave D / TODO`：开源版独立 Preview、L2/L3、备份恢复和目标 AI 博主验收。
+3. `Wave C / IN PROGRESS`：一次性管理员初始化、后台开站指南、上线门禁和
+   Agent + Vercel Serverless 部署协议已完成；其余任务级 Prompt 继续补齐；
+4. `Wave D / TODO`：开源版独立 Preview、L2/L3、中国大陆多网络、备份恢复和目标
+   AI 博主验收。
 
 技术架构继续使用 `modules / providers / config` 边界，不复制原项目目录、数据或
 私有业务。详细目标、距离和完成定义见 `docs/VIBE_CODING_CREATOR_PLAN.md`，

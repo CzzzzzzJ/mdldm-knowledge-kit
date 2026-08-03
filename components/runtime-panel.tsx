@@ -59,7 +59,7 @@ export function RuntimePanel({
 
       <Link
         className="focus-ring m-1.5 block rounded-[0.7rem] bg-[var(--accent)] px-4 py-3 text-center text-sm font-semibold text-[var(--accent-ink)] transition-transform active:translate-y-px"
-        href="/setup"
+        href="/admin/setup"
       >
         开始开站
       </Link>

@@ -20,6 +20,7 @@ export interface UserRecord {
   role: UserRole;
   status: UserStatus;
   emailVerified: boolean;
+  requiresPasswordChange: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -54,6 +55,11 @@ const userSchema = new Schema<UserRecord>(
       default: "active",
     },
     emailVerified: { type: Boolean, required: true, default: false },
+    requiresPasswordChange: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   {
     strict: "throw",

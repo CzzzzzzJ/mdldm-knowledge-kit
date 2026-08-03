@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
 import { getCurrentUser } from "@/providers/auth/session";
@@ -20,6 +21,7 @@ function formatPrice(amount: number): string {
 }
 
 export default async function OrdersPage() {
+  await requirePublicSiteAccess();
   const user = await getCurrentUser();
   if (!user) {
     redirect("/login?next=/account/orders");

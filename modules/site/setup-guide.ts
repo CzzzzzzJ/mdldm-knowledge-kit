@@ -63,12 +63,12 @@ export const setupLessons: readonly SetupLesson[] = [
       {
         title: "保留可降级方案",
         detail:
-          "本地体验可以继续使用 Local Storage、Console Email 和 Mock Payment，生产上线再逐项替换。",
+          "最低组合使用 Local Storage、Console Email 和 Manual Payment；只有测试支付时才显式切换 Mock，外部能力按运营目标逐项启用。",
       },
     ],
     envKeys: [],
     validation: {
-      command: "npm run check-config",
+      command: "pnpm check-config",
       expected:
         "命令会说明当前配置是否可启动，并列出仍在使用的本地或演示 Provider。",
     },
@@ -114,7 +114,7 @@ export const setupLessons: readonly SetupLesson[] = [
     ],
     envKeys: ["APP_URL", "APP_NAME", "AUTH_SECRET", "NODE_ENV"],
     validation: {
-      command: "npm run check-config",
+      command: "pnpm check-config",
       expected:
         "生产环境会拒绝 HTTP APP_URL、弱 AUTH_SECRET 和 Mock Payment。",
     },
@@ -165,7 +165,7 @@ export const setupLessons: readonly SetupLesson[] = [
     ],
     envKeys: ["MONGODB_URI"],
     validation: {
-      command: "npm run validate:providers -- --live",
+      command: "pnpm validate:providers --live",
       expected:
         "MongoDB 显示 PASS，或者 /api/health?deep=1 的 database.status 显示 ok。",
     },
@@ -184,9 +184,9 @@ export const setupLessons: readonly SetupLesson[] = [
     slug: "storage",
     group: "基础设施",
     navLabel: "配置阿里云 OSS",
-    title: "让视频和资料绕开临时磁盘",
+    title: "需要视频和资料时，再接入持久对象存储",
     summary:
-      "OSS 保存课程视频、封面和资料，Vercel 只负责签发短期访问权限。",
+      "纯核心运行不要求 OSS；使用 Serverless 交付课程视频和资料时，OSS 保存对象，Vercel 只签发短期访问权限。",
     purpose:
       "Vercel 的运行磁盘不会长期保存文件，大视频也不适合穿过 Serverless Function。私有 OSS 配合短期签名才能兼顾稳定交付和访问控制。",
     outcome:
@@ -223,7 +223,7 @@ export const setupLessons: readonly SetupLesson[] = [
       "OSS_SESSION_TOKEN",
     ],
     validation: {
-      command: "npm run validate:providers -- --live",
+      command: "pnpm validate:providers --live",
       expected:
         "OSS 只读鉴权检查显示 PASS。正式上传前还要在隔离前缀完成一次写入和删除测试。",
     },
@@ -246,7 +246,7 @@ export const setupLessons: readonly SetupLesson[] = [
     summary:
       "SMTP 负责发送验证与重置链接，Console Email 只适合本地开发。",
     purpose:
-      "邮箱验证是账号归属和找回密码的基础。生产站如果仍使用 Console Email，链接只会出现在服务器日志里，普通用户无法完成流程。",
+      "邮箱验证是账号归属和找回密码的基础。生产站如果仍使用 Console Email，自助注册、重发验证和找回密码会明确停用，避免创建无法完成验证的账号。",
     outcome:
       "一个完成域名验证的发件地址，以及通过 SMTP Verify 和真实收件测试的邮件通道。",
     estimatedMinutes: 15,
@@ -282,7 +282,7 @@ export const setupLessons: readonly SetupLesson[] = [
       "SMTP_PASSWORD",
     ],
     validation: {
-      command: "npm run validate:providers -- --live",
+      command: "pnpm validate:providers --live",
       expected:
         "SMTP Verify 显示 PASS。它不会发送邮件，真实收件需要再完成一次隔离测试。",
     },
@@ -339,7 +339,7 @@ export const setupLessons: readonly SetupLesson[] = [
       "XORPAY_NOTIFY_URL",
     ],
     validation: {
-      command: "npm run check-config && npm run test -- tests/payment/xorpay.test.ts",
+      command: "pnpm check-config && pnpm test tests/payment/xorpay.test.ts",
       expected:
         "配置校验通过，签名、金额校验和重复回调测试全部通过。真实订单仍需人工执行。",
     },
@@ -387,7 +387,7 @@ export const setupLessons: readonly SetupLesson[] = [
     ],
     envKeys: [],
     validation: {
-      command: "npm run seed-demo && npm run dev",
+      command: "pnpm seed-demo && pnpm dev",
       expected:
         "可以从 /admin 管理内容，在 /courses 浏览课程，在 /pricing 查看两种付费模式。",
     },
@@ -442,7 +442,7 @@ export const setupLessons: readonly SetupLesson[] = [
     ],
     envKeys: [],
     validation: {
-      command: "npm run check && npm run test:e2e",
+      command: "pnpm check && pnpm test:e2e",
       expected:
         "自动化质量门通过，真实 L3 旅程另行记录测试账号、外部状态和清理结果的脱敏摘要。",
     },

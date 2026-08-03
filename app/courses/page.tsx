@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { FilterQuery, Types } from "mongoose";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmActionLink,
   MdldmButton,
@@ -73,6 +74,7 @@ export default async function CoursesPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
+  await requirePublicSiteAccess();
   const site = getSiteConfig();
   const parsedFilters = parseDiscoveryFilters(await searchParams);
   const { query, category, tag } = parsedFilters.filters;

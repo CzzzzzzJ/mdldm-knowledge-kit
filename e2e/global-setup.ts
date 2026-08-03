@@ -1,8 +1,11 @@
-import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
+import {
+  activateInitialAdminPassword,
+  initializeFirstAdmin,
+} from "@/app/lib/site-initialization-service";
 import { connectMongo } from "@/providers/database/mongodb/connection";
-import { UserModel } from "@/providers/database/mongodb/models/user";
+import { SiteInitializationModel } from "@/providers/database/mongodb/models/site-initialization";
 import { seedDemo } from "@/scripts/seed-demo";
 
 const adminEmail = "admin@example.com";
@@ -18,25 +21,38 @@ export default async function globalSetup() {
   }
   await database.dropDatabase();
 
-  const passwordHash = await bcrypt.hash(adminPassword, 12);
-
-  await UserModel.findOneAndUpdate(
-    { email: adminEmail },
-    {
-      $set: {
-        name: "E2E Admin",
-        passwordHash,
-        role: "admin",
-        status: "active",
-        emailVerified: true,
-      },
-      $setOnInsert: {
-        email: adminEmail,
-      },
-    },
-    { upsert: true, runValidators: true },
-  );
+  const initialized = await initializeFirstAdmin({
+    email: adminEmail,
+  });
+  const activation = await activateInitialAdminPassword({
+    adminId: initialized.admin._id.toString(),
+    password: adminPassword,
+  });
+  if (activation.status !== "activated") {
+    throw new Error("E2E 管理员正式密码初始化失败");
+  }
+  const admin = activation.admin;
 
   await seedDemo();
+  await SiteInitializationModel.findOneAndUpdate(
+    { singletonKey: "default" },
+    {
+      $set: {
+        status: "live",
+        ownerAdminId: admin._id,
+        completedLessons: [],
+        adminCreatedAt: new Date(),
+        launchedAt: new Date(),
+      },
+      $setOnInsert: {
+        singletonKey: "default",
+      },
+    },
+    {
+      upsert: true,
+      setDefaultsOnInsert: true,
+      runValidators: true,
+    },
+  );
   await mongoose.disconnect();
 }

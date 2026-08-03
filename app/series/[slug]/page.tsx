@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
   MdldmActionLink,
@@ -73,6 +74,7 @@ export default async function SeriesDetailPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
+  await requirePublicSiteAccess();
   const { slug } = await params;
   const series = await findPublishedSeries(slug);
   if (!series) {

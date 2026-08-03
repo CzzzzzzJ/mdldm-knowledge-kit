@@ -12,11 +12,11 @@
 
 <!-- 列出实际运行的命令和结果。 -->
 
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run test`
-- [ ] `npm run build`
-- [ ] `npm run release:audit`
+- [ ] `pnpm lint`
+- [ ] `pnpm typecheck`
+- [ ] `pnpm test`
+- [ ] `pnpm build`
+- [ ] `pnpm release:audit`
 - [ ] 高风险流程已运行 E2E，或已说明不适用原因
 
 ## 安全与公开边界
