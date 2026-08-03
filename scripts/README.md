@@ -10,6 +10,10 @@
 - `check-config`：启动前检查最低核心和已经选择的 Provider，只输出脱敏能力状态与变量名；
 - `validate:providers`：默认执行无外部副作用的 L0 检查，增加 `--live` 后执行 L1 连接；
 - `quickstart:prepare`：创建本地 `.env.local` 并安全生成身份密钥，不输出密钥值；
+- `agent:status`：输出脱敏的项目版本、生命周期、Provider 名称、能力状态和推荐 Agent
+  任务；读取失败返回 `BLOCKED / unknown`，不输出底层连接错误或配置值；
+- `doctor`：执行 Agent-first 仓库、工具链、生命周期和能力诊断；增加 `--issue` 时只生成
+  经过隐私扫描的本地 Markdown 草稿，不登录或提交 GitHub；
 - 数据备份与恢复当前使用 Atlas 或 MongoDB Database Tools，见 `docs/BACKUP_AND_RECOVERY.md`。
 
 脚本默认应可重复执行，并在破坏性操作前明确目标和影响。
@@ -30,6 +34,31 @@ pnpm check:serverless --url https://preview.example.com/
 
 远程模式只读取 `/api/health` 和 `/api/health?deep=1`，不替代 Provider L2/L3 或中国大陆
 多网络验收。
+
+## `agent-status.ts`
+
+```bash
+pnpm agent:status
+```
+
+该命令用于 Agent 在修改或排障前判断站点处于 `uninitialized`、`configuring`、`live` 还是
+`unknown`。输出不包含 APP_URL、APP_NAME、邮箱、URI、Token、Bucket、环境变量值或业务
+数据。完整任务 Prompt 与审批边界见 `AGENT_TASKS.md`。
+
+## `doctor.ts`
+
+```bash
+pnpm run doctor
+pnpm run doctor --issue
+```
+
+默认输出版本、Node/pnpm、生命周期、Provider 名称、能力状态、变量名和固定检查结果。
+`--issue` 把草稿写入被 Git 忽略的 `.mdldm/`；输出路径是仓库相对路径，不包含本机用户
+目录。命令不会调用 GitHub，必须由人类检查草稿并自行提交。URI、Token、邮箱、Bucket、
+域名、环境变量值和真实业务记录会触发隐私扫描阻断。
+
+pnpm 10 自带同名 `doctor` 内置命令，因此这里必须保留 `run`；直接执行 `pnpm doctor`
+不会进入仓库脚本。
 
 `create-invitation` 只在终端显示一次明文邀请码；数据库保存 HMAC 摘要、短提示、权益范围、有效期和使用上限。
 

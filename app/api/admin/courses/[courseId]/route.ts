@@ -3,9 +3,10 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
-import { CourseModel } from "@/providers/database/mongodb/models/series";
+import {
+  attachCourseVideo,
+  CatalogAdminError,
+} from "@/app/lib/catalog-admin-service";
 
 const updateCourseInput = z.object({
   videoAssetId: z.string().refine(isValidObjectId).nullable().optional(),
@@ -32,32 +33,17 @@ export async function PATCH(
     return NextResponse.json({ error: "课时更新格式错误" }, { status: 400 });
   }
 
-  await connectMongo();
-  if (
-    parsed.data.videoAssetId &&
-    !(await MediaAssetModel.exists({
-      _id: parsed.data.videoAssetId,
-      kind: "video",
-      status: "ready",
-    }))
-  ) {
-    return NextResponse.json({ error: "视频资产不可用" }, { status: 400 });
+  try {
+    const course = await attachCourseVideo({
+      courseId,
+      videoAssetId: parsed.data.videoAssetId,
+    });
+    return NextResponse.json({ course });
+  } catch (error) {
+    if (error instanceof CatalogAdminError) {
+      const status = error.code === "COURSE_NOT_FOUND" ? 404 : 400;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+    throw error;
   }
-
-  const course = await CourseModel.findByIdAndUpdate(
-    courseId,
-    { $set: parsed.data },
-    { new: true, runValidators: true },
-  );
-  if (!course) {
-    return NextResponse.json({ error: "课时不存在" }, { status: 404 });
-  }
-
-  return NextResponse.json({
-    course: {
-      id: course._id.toString(),
-      videoAssetId: course.videoAssetId?.toString() ?? null,
-      status: course.status,
-    },
-  });
 }

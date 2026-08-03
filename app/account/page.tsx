@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { getLearningCenter } from "@/app/lib/learning-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
@@ -13,21 +14,17 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
 import { getCurrentUser } from "@/providers/auth/session";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { EntitlementModel } from "@/providers/database/mongodb/models/entitlement";
-import { CourseProgressModel } from "@/providers/database/mongodb/models/learning";
-import { CourseModel } from "@/providers/database/mongodb/models/series";
 
 export const dynamic = "force-dynamic";
 
-function formatDate(date: Date | null): string {
+function formatDate(date: string | null): string {
   if (!date) {
     return "长期有效";
   }
 
   return new Intl.DateTimeFormat("zh-CN", {
     dateStyle: "medium",
-  }).format(date);
+  }).format(new Date(date));
 }
 
 export default async function AccountPage() {
@@ -37,47 +34,23 @@ export default async function AccountPage() {
     redirect("/login?next=/account");
   }
 
-  await connectMongo();
-  const now = new Date();
-  const [entitlements, progressRecords] = await Promise.all([
-    EntitlementModel.find({
-      userId: user.id,
-      startsAt: { $lte: now },
-      revokedAt: null,
-      $or: [{ endsAt: null }, { endsAt: { $gt: now } }],
-    })
-      .sort({ createdAt: -1 })
-      .lean(),
-    CourseProgressModel.find({ userId: user.id })
-      .sort({ lastWatchedAt: -1 })
-      .limit(6)
-      .lean(),
-  ]);
-
-  const courses = await CourseModel.find({
-    _id: { $in: progressRecords.map((progress) => progress.courseId) },
-    status: "published",
-  }).lean();
-  const courseById = new Map(
-    courses.map((course) => [course._id.toString(), course]),
-  );
-  const membership = entitlements.find(
-    (entitlement) => entitlement.type === "membership",
-  );
+  const learningCenter = await getLearningCenter(user.id);
+  const progressRecords = learningCenter.recentCourses;
+  const hasMembership = learningCenter.membershipEndsAt !== undefined;
   const site = getSiteConfig();
 
   return (
     <>
       <SiteHeader site={site} />
       <main>
-        <section className="bg-grid-pattern border-b-2 border-[var(--ink)] py-10 sm:py-14">
+        <section className="bg-grid-pattern md-theme-divider border-b-2 border-[var(--ink)] py-10 sm:py-14">
           <div className="page-shell">
-            <MdldmPanel className="relative overflow-hidden bg-[var(--accent)] p-7 sm:p-10">
+            <MdldmPanel className="md-theme-accent-panel relative overflow-hidden bg-[var(--accent)] p-7 sm:p-10">
               <div
                 aria-hidden="true"
-                className="absolute -right-6 -top-6 size-24 rounded-full border-2 border-[var(--ink)] bg-[var(--brand-blue)] shadow-[5px_5px_0_var(--hard-shadow)]"
+                className="md-theme-decoration absolute -right-6 -top-6 size-24 rounded-full border-2 border-[var(--ink)] bg-[var(--brand-blue)] shadow-[5px_5px_0_var(--hard-shadow)]"
               />
-              <p className="md-badge bg-[var(--surface)]">学习中心</p>
+              <p className="md-badge md-badge-neutral bg-[var(--surface)]">学习中心</p>
               <h1 className="relative mt-5 max-w-4xl text-4xl font-black leading-[1.06] tracking-[-0.055em] sm:text-5xl">
                 欢迎回来，{user.name}
               </h1>
@@ -115,11 +88,6 @@ export default async function AccountPage() {
               ) : (
                 <div className="mt-7 grid gap-4">
                   {progressRecords.map((progress) => {
-                    const course = courseById.get(progress.courseId.toString());
-                    if (!course) {
-                      return null;
-                    }
-
                     const percent =
                       progress.durationSeconds > 0
                         ? Math.min(
@@ -135,14 +103,14 @@ export default async function AccountPage() {
                     return (
                       <Link
                         className="focus-ring md-pressable grid gap-4 rounded-2xl border-2 border-[var(--ink)] bg-[var(--surface)] p-5 shadow-[4px_4px_0_var(--hard-shadow)] sm:grid-cols-[1fr_auto] sm:items-center"
-                        href={`/learn/${course._id.toString()}`}
-                        key={progress._id.toString()}
+                        href={`/learn/${progress.courseId}`}
+                        key={progress.progressId}
                       >
                         <span>
                           <span className="flex flex-wrap items-center gap-2">
-                            <MdldmAccessBadge level={course.accessLevel} />
+                            <MdldmAccessBadge level={progress.accessLevel} />
                             <span className="text-lg font-black">
-                              {course.title}
+                              {progress.title}
                             </span>
                           </span>
                           <span className="mt-2 block text-sm font-bold text-[var(--muted)]">
@@ -171,19 +139,16 @@ export default async function AccountPage() {
                     全站会员
                   </p>
                   <p className="mt-2 text-2xl font-black">
-                    {membership ? "当前有效" : "尚未开通"}
+                    {hasMembership ? "当前有效" : "尚未开通"}
                   </p>
                   <p className="mt-2 text-sm font-medium leading-6 text-[var(--muted)]">
-                    {membership
-                      ? `有效期至 ${formatDate(membership.endsAt)}`
+                    {hasMembership
+                      ? `有效期至 ${formatDate(learningCenter.membershipEndsAt ?? null)}`
                       : "也可以单独购买需要的课程。"}
                   </p>
                   <p className="mt-5 border-t-2 border-dashed border-[var(--line-soft)] pt-4 text-sm font-bold text-[var(--muted)]">
                     其他有效权益：
-                    {Math.max(
-                      0,
-                      entitlements.length - (membership ? 1 : 0),
-                    )}{" "}
+                    {learningCenter.otherEntitlementCount}{" "}
                     项
                   </p>
                   <MdldmActionLink

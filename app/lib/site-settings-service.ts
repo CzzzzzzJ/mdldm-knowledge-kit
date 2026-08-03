@@ -6,6 +6,7 @@ import {
   type SiteSettingsInput,
   type SiteSettingsPatch,
 } from "@/modules/site/settings";
+import { resolveSiteTheme } from "@/modules/site/themes";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import {
   SiteSettingModel,
@@ -16,6 +17,7 @@ const singletonKey = "default";
 
 function toInput(record: SiteSettingRecord): SiteSettingsInput {
   return {
+    theme: resolveSiteTheme(record.theme),
     siteName: record.siteName,
     description: record.description,
     creatorName: record.creatorName,
@@ -63,6 +65,7 @@ export async function updateSiteSettings(
 ): Promise<ResolvedSiteSettings> {
   const current = await getResolvedSiteSettings();
   const input = siteSettingsInputSchema.parse({
+    theme: current.theme,
     siteName: current.siteName,
     description: current.description,
     creatorName: current.creatorName,

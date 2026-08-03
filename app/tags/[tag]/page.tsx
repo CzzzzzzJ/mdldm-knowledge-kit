@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { listPublishedSeriesByTag } from "@/app/lib/catalog-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmActionLink,
@@ -11,15 +12,7 @@ import {
 } from "@/components/mdldm-ui";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
-import {
-  createLiteralSearchRegExp,
-  decodeTaxonomyPathSegment,
-} from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
+import { decodeTaxonomyPathSegment } from "@/modules/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -56,34 +49,7 @@ export default async function TagPage({
     notFound();
   }
 
-  const pattern = createLiteralSearchRegExp(tag, { exact: true });
-  if (!pattern) {
-    notFound();
-  }
-
-  await connectMongo();
-  const series = await SeriesModel.find({
-    status: "published",
-    tags: pattern,
-  })
-    .sort({ createdAt: -1 })
-    .lean();
-  const seriesIds = series.map((item) => item._id);
-  const courseCounts =
-    seriesIds.length === 0
-      ? []
-      : await CourseModel.aggregate<{ _id: unknown; count: number }>([
-          {
-            $match: {
-              seriesId: { $in: seriesIds },
-              status: "published",
-            },
-          },
-          { $group: { _id: "$seriesId", count: { $sum: 1 } } },
-        ]);
-  const countBySeries = new Map(
-    courseCounts.map((item) => [String(item._id), item.count]),
-  );
+  const series = await listPublishedSeriesByTag(tag);
   const site = getSiteConfig();
 
   return (
@@ -118,11 +84,11 @@ export default async function TagPage({
                 <MdldmSeriesCard
                   accessLevel={item.accessLevel}
                   category={item.category}
-                  courseCount={countBySeries.get(item._id.toString()) ?? 0}
+                  courseCount={item.courseCount}
                   coverImageUrl={item.coverImageUrl}
                   description={item.description}
                   href={`/series/${item.slug}`}
-                  key={item._id.toString()}
+                  key={item.id}
                   tags={item.tags}
                   title={item.title}
                 />

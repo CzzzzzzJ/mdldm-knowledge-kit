@@ -40,6 +40,7 @@ tmp/
 
 # local planning and private development analysis
 .local-planning/
+.mdldm/
 docs/analysis/
 
 # secrets and credentials

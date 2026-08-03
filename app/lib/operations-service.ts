@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { isValidObjectId } from "mongoose";
 
+import { getAgentContextReport } from "@/app/lib/agent-context-service";
 import type { OperationalFailureInput } from "@/modules/operations";
 import {
   sanitizeLogContext,
@@ -213,6 +214,7 @@ export async function getOperationsSummary() {
     openFailures,
     failedPaymentEvents,
     revenue,
+    agentContext,
   ] = await Promise.all([
     UserModel.countDocuments(),
     CourseModel.countDocuments(),
@@ -234,6 +236,7 @@ export async function getOperationsSummary() {
       { $match: { status: "fulfilled", currency: "CNY" } },
       { $group: { _id: null, amount: { $sum: "$amountInMinorUnits" } } },
     ]),
+    getAgentContextReport(),
   ]);
 
   const runtime = getPublicRuntimeConfig();
@@ -256,7 +259,47 @@ export async function getOperationsSummary() {
       currency: "CNY",
     },
     providers: getProviderReadiness(runtime),
+    agentContext,
   };
+}
+
+export async function listAdministrativeOrders(limit = 200) {
+  await connectMongo();
+  const orders = await OrderModel.find()
+    .sort({ createdAt: -1 })
+    .limit(Math.min(Math.max(limit, 1), 200))
+    .lean();
+  const [users, items] = await Promise.all([
+    UserModel.find({ _id: { $in: orders.map((order) => order.userId) } })
+      .select("name email")
+      .lean(),
+    OrderItemModel.find({
+      orderId: { $in: orders.map((order) => order._id) },
+    }).lean(),
+  ]);
+  const usersById = new Map(
+    users.map((user) => [
+      user._id.toString(),
+      { name: user.name, email: user.email },
+    ]),
+  );
+
+  return orders.map((order) => ({
+    id: order._id.toString(),
+    orderNumber: order.orderNumber,
+    user: usersById.get(order.userId.toString()) ?? null,
+    status: order.status,
+    fulfillmentStatus: order.fulfillmentStatus,
+    provider: order.provider,
+    paymentMethod: order.paymentMethod,
+    amountInMinorUnits: order.amountInMinorUnits,
+    currency: order.currency,
+    lastError: order.lastError,
+    createdAt: order.createdAt.toISOString(),
+    items: items
+      .filter((item) => item.orderId.toString() === order._id.toString())
+      .map((item) => ({ sku: item.sku, title: item.title })),
+  }));
 }
 
 export async function exportAdministrativeData() {

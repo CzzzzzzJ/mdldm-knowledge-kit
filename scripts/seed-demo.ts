@@ -84,6 +84,8 @@ export async function seedDemo() {
       {
         $set: {
           ...course,
+          contentType: "video",
+          articleBody: "",
           publishedAt: course.status === "published" ? new Date() : null,
         },
         $setOnInsert: {

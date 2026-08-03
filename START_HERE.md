@@ -51,6 +51,9 @@ Git，不要读取 `.local-planning` 或私有原项目，也不要在回复、�
 Agent 的权限、安全边界、逐步证据和汇报格式见
 [AGENT_QUICKSTART.md](AGENT_QUICKSTART.md)。
 
+完成本地启动后，需要部署、配置 Provider、修改品牌、发布图文或做上线验收时，使用
+[Agent 任务接口](AGENT_TASKS.md)，不要把所有目标继续塞进本地启动 Prompt。
+
 ## 唯一执行路线
 
 即使暂时不使用 Agent，也只执行下面同一条路线，不需要阅读其他部署文档。

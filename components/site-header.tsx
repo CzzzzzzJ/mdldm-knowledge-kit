@@ -15,7 +15,7 @@ export async function SiteHeader({ site }: { site: SiteConfig }) {
   const isSignedIn = Boolean(user);
 
   return (
-    <header className="sticky top-0 z-20 border-b-2 border-[var(--ink)] bg-[var(--surface)]/95 backdrop-blur">
+    <header className="site-header sticky top-0 z-20 border-b-2 border-[var(--ink)] bg-[var(--surface)]/95 backdrop-blur">
       <div className="page-shell flex h-[4.25rem] items-center justify-between gap-4">
         <Link
           className="focus-ring flex min-w-0 items-center gap-3 rounded-lg font-black"
@@ -23,7 +23,7 @@ export async function SiteHeader({ site }: { site: SiteConfig }) {
         >
           <span
             aria-hidden="true"
-            className="grid size-9 shrink-0 place-items-center rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] font-mono text-xs font-black text-[var(--accent-ink)] shadow-[3px_3px_0_var(--hard-shadow)]"
+            className="site-mark grid size-9 shrink-0 place-items-center rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] font-mono text-xs font-black text-[var(--accent-ink)] shadow-[3px_3px_0_var(--hard-shadow)]"
           >
             {mark || "MK"}
           </span>

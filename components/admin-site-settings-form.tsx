@@ -3,6 +3,10 @@
 import { useState, type FormEvent } from "react";
 
 import type { ResolvedSiteSettings } from "@/modules/site/settings";
+import {
+  siteThemeOptions,
+  type SiteThemeId,
+} from "@/modules/site/themes";
 
 interface SocialLinkDraft {
   label: string;
@@ -17,6 +21,7 @@ export function AdminSiteSettingsForm({
   const [socialLinks, setSocialLinks] = useState<SocialLinkDraft[]>(
     initialSettings.socialLinks,
   );
+  const [theme, setTheme] = useState<SiteThemeId>(initialSettings.theme);
   const [message, setMessage] = useState(
     initialSettings.source === "database"
       ? "当前显示已保存的站点设置。"
@@ -47,6 +52,7 @@ export function AdminSiteSettingsForm({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         siteName: form.get("siteName"),
+        theme,
         description: form.get("description"),
         creatorName: form.get("creatorName"),
         creatorBio: form.get("creatorBio"),
@@ -60,6 +66,7 @@ export function AdminSiteSettingsForm({
     });
     const payload = (await response.json().catch(() => null)) as {
       error?: string;
+      settings?: { theme?: SiteThemeId };
     } | null;
 
     if (!response.ok) {
@@ -68,7 +75,10 @@ export function AdminSiteSettingsForm({
       return;
     }
 
-    setMessage("站点设置已保存。公开页面会在下次请求时读取最新配置。");
+    const savedTheme = payload?.settings?.theme ?? theme;
+    setTheme(savedTheme);
+    document.documentElement.dataset.theme = savedTheme;
+    setMessage("站点设置已保存，当前页面和后续访问已经使用新主题。");
     setBusy(false);
   }
 
@@ -77,6 +87,37 @@ export function AdminSiteSettingsForm({
 
   return (
     <form className="mt-8 grid gap-8" onSubmit={(event) => void submit(event)}>
+      <fieldset className="surface grid gap-4 p-6">
+        <div>
+          <legend className="text-xl font-semibold">站点主题</legend>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            主题只改变颜色、边框、圆角和层级，不改变支付、权益、课程和后台数据。
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {siteThemeOptions.map((option) => (
+            <label
+              className="focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[var(--brand-blue)] grid cursor-pointer grid-cols-[auto_1fr] gap-3 rounded-xl border border-[var(--line)] bg-[var(--page)] p-4"
+              key={option.id}
+            >
+              <input
+                checked={theme === option.id}
+                name="theme"
+                onChange={() => setTheme(option.id)}
+                type="radio"
+                value={option.id}
+              />
+              <span>
+                <strong className="block text-sm">{option.label}</strong>
+                <span className="mt-1 block text-sm leading-6 text-[var(--muted)]">
+                  {option.description}
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
       <section className="surface grid gap-4 p-6">
         <div>
           <h2 className="text-xl font-semibold">站点品牌</h2>

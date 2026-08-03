@@ -1,6 +1,9 @@
 import { model, models, Schema, type Model } from "mongoose";
 
-import type { SiteSettingsInput } from "@/modules/site/settings";
+import {
+  type SiteSettingsInput,
+} from "@/modules/site/settings";
+import { siteThemeIds } from "@/modules/site/themes";
 
 export interface SiteSettingRecord extends SiteSettingsInput {
   singletonKey: "default";
@@ -55,6 +58,12 @@ const siteSettingSchema = new Schema<SiteSettingRecord>(
       required: true,
       default: "default",
       immutable: true,
+    },
+    theme: {
+      type: String,
+      enum: siteThemeIds,
+      required: true,
+      default: "mdldm",
     },
     siteName: {
       type: String,

@@ -130,3 +130,5 @@ export {
   type ProductAdminPatchInput,
   type ProductAdminState,
 } from "./product-admin";
+
+export * from "./queries";

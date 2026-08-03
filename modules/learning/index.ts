@@ -6,3 +6,5 @@ export interface CourseProgress {
   completed: boolean;
   lastWatchedAt: Date;
 }
+
+export * from "./queries";

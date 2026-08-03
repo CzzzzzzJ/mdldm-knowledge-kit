@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { Types } from "mongoose";
 
+import { getHomeCatalog } from "@/app/lib/catalog-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { getResolvedSiteSettings } from "@/app/lib/site-settings-service";
 import {
@@ -13,21 +13,12 @@ import {
   MdldmSeriesCard,
 } from "@/components/mdldm-ui";
 import { SiteHeader } from "@/components/site-header";
+import type { AccessLevel } from "@/modules/catalog";
 import type { SiteConfig } from "@/modules/site";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  CourseModel,
-  type CourseRecord,
-  SeriesModel,
-  type SeriesRecord,
-} from "@/providers/database/mongodb/models/series";
 
 export const dynamic = "force-dynamic";
 
-type SeriesDocument = SeriesRecord & { _id: Types.ObjectId };
-type CourseDocument = CourseRecord & { _id: Types.ObjectId };
-
-const accessLabels: Record<CourseRecord["accessLevel"], string> = {
+const accessLabels: Record<AccessLevel, string> = {
   public: "公开",
   registered: "注册可学",
   member: "会员",
@@ -54,45 +45,25 @@ export default async function HomePage() {
   await requirePublicSiteAccess();
   const settings = await getResolvedSiteSettings();
   const site = toSiteConfig(settings);
-  let featuredSeries: SeriesDocument[] = [];
-  let latestCourses: CourseDocument[] = [];
-  let latestCourseSeries: SeriesDocument[] = [];
+  let catalog: Awaited<ReturnType<typeof getHomeCatalog>> = {
+    featuredSeries: [],
+    latestCourses: [],
+  };
 
   try {
-    await connectMongo();
-    [featuredSeries, latestCourses] = await Promise.all([
-      SeriesModel.find({ status: "published" })
-        .sort({ updatedAt: -1 })
-        .limit(3)
-        .lean(),
-      CourseModel.find({ status: "published" })
-        .sort({ publishedAt: -1, updatedAt: -1 })
-        .limit(4)
-        .lean(),
-    ]);
-    latestCourseSeries = await SeriesModel.find({
-      _id: { $in: latestCourses.map((course) => course.seriesId) },
-      status: "published",
-    }).lean();
+    catalog = await getHomeCatalog();
   } catch {
-    featuredSeries = [];
-    latestCourses = [];
-    latestCourseSeries = [];
+    catalog = { featuredSeries: [], latestCourses: [] };
   }
 
-  const seriesById = new Map(
-    [...featuredSeries, ...latestCourseSeries].map((series) => [
-      series._id.toString(),
-      series,
-    ]),
-  );
+  const { featuredSeries, latestCourses } = catalog;
   const heroSeries = featuredSeries[0];
 
   return (
     <>
       <SiteHeader site={site} />
       <main>
-        <section className="bg-dot-pattern border-b-2 border-[var(--ink)]">
+        <section className="bg-dot-pattern md-theme-divider border-b-2 border-[var(--ink)]">
           <div className="page-shell grid min-h-[calc(100dvh-4.25rem)] items-center gap-10 py-10 md:grid-cols-[0.9fr_1.1fr] md:py-14 lg:gap-14">
             <div className="max-w-2xl">
               <h1 className="max-w-[12ch] text-4xl font-black leading-[1.02] tracking-[-0.06em] sm:text-5xl lg:text-6xl">
@@ -114,9 +85,9 @@ export default async function HomePage() {
             <MdldmPanel className="relative overflow-hidden bg-[var(--surface)]">
               <div
                 aria-hidden="true"
-                className="absolute -right-5 -top-5 size-20 rounded-full border-2 border-[var(--ink)] bg-[var(--brand-blue)] shadow-[4px_4px_0_var(--hard-shadow)]"
+                className="md-theme-decoration absolute -right-5 -top-5 size-20 rounded-full border-2 border-[var(--ink)] bg-[var(--brand-blue)] shadow-[4px_4px_0_var(--hard-shadow)]"
               />
-              <div className="border-b-2 border-[var(--ink)] bg-[var(--ink)] px-5 py-3 text-sm font-black text-[var(--surface)]">
+              <div className="md-theme-inverted md-theme-divider border-b-2 border-[var(--ink)] bg-[var(--ink)] px-5 py-3 text-sm font-black text-[var(--surface)]">
                 {heroSeries ? "本期推荐" : "知识站从这里开始"}
               </div>
               <MdldmCourseCover
@@ -127,7 +98,7 @@ export default async function HomePage() {
                 }
                 title={heroSeries?.title || settings.siteName}
               />
-              <div className="grid gap-4 border-t-2 border-[var(--ink)] p-6 sm:grid-cols-[1fr_auto] sm:items-end">
+              <div className="md-theme-divider grid gap-4 border-t-2 border-[var(--ink)] p-6 sm:grid-cols-[1fr_auto] sm:items-end">
                 <div>
                   <h2 className="text-2xl font-black tracking-[-0.035em]">
                     {heroSeries?.title || "把内容整理成可学习的路径"}
@@ -148,7 +119,7 @@ export default async function HomePage() {
           </div>
         </section>
 
-        <section className="border-b-2 border-[var(--ink)] bg-[var(--accent)] py-6">
+        <section className="md-theme-divider md-theme-strip border-b-2 border-[var(--ink)] bg-[var(--accent)] py-6">
           <div className="page-shell grid gap-4 font-black sm:grid-cols-3">
             <p>公开内容建立信任</p>
             <p>会员与单课两种权益</p>
@@ -184,7 +155,7 @@ export default async function HomePage() {
                   description={series.description}
                   featured={index === 0}
                   href={`/series/${series.slug}`}
-                  key={series._id.toString()}
+                  key={series.id}
                   tags={series.tags}
                   title={series.title}
                 />
@@ -193,7 +164,7 @@ export default async function HomePage() {
           )}
         </section>
 
-        <section className="border-y-2 border-[var(--ink)] bg-[var(--surface-strong)] py-16 sm:py-20">
+        <section className="md-theme-divider border-y-2 border-[var(--ink)] bg-[var(--surface-strong)] py-16 sm:py-20">
           <div className="page-shell grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
             <div className="max-w-xl">
               <h2 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
@@ -220,18 +191,17 @@ export default async function HomePage() {
             ) : (
               <div className="grid gap-4">
                 {latestCourses.map((course) => {
-                  const series = seriesById.get(course.seriesId.toString());
                   return (
                     <Link
                       className="focus-ring md-pressable grid gap-4 rounded-2xl border-2 border-[var(--ink)] bg-[var(--surface)] p-5 shadow-[4px_4px_0_var(--hard-shadow)] sm:grid-cols-[1fr_auto] sm:items-center"
-                      href={`/learn/${course._id.toString()}`}
-                      key={course._id.toString()}
+                      href={`/learn/${course.id}`}
+                      key={course.id}
                     >
                       <span>
                         <span className="flex flex-wrap items-center gap-2">
                           <MdldmAccessBadge level={course.accessLevel} />
                           <span className="text-sm font-bold text-[var(--muted)]">
-                            {series?.title ?? "课程"}
+                            {course.seriesTitle}
                           </span>
                         </span>
                         <span className="mt-3 block text-xl font-black tracking-[-0.025em]">
@@ -253,15 +223,15 @@ export default async function HomePage() {
         </section>
 
         <section className="page-shell py-16 sm:py-20">
-          <MdldmPanel className="grid gap-8 overflow-hidden bg-[var(--accent)] p-7 md:grid-cols-[0.8fr_1.2fr] md:p-10">
+          <MdldmPanel className="md-theme-accent-panel grid gap-8 overflow-hidden bg-[var(--accent)] p-7 md:grid-cols-[0.8fr_1.2fr] md:p-10">
             <div>
-              <p className="md-badge bg-[var(--surface)]">关于创作者</p>
+              <p className="md-badge md-badge-neutral bg-[var(--surface)]">关于创作者</p>
               <div className="mt-5 flex items-center gap-4">
                 {settings.avatarUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
                     alt={settings.creatorName}
-                    className="size-16 rounded-2xl border-2 border-[var(--ink)] object-cover shadow-[4px_4px_0_var(--hard-shadow)]"
+                    className="md-theme-frame size-16 rounded-2xl border-2 border-[var(--ink)] object-cover shadow-[4px_4px_0_var(--hard-shadow)]"
                     height={64}
                     loading="lazy"
                     src={settings.avatarUrl}

@@ -132,11 +132,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    Draft["创建系列和草稿课时"] --> Upload["上传封面、视频和资料"]
+    Draft["创建系列和草稿课时"] --> Type{"内容类型"}
+    Type -->|"Article"| Article["填写纯文本正文"]
+    Type -->|"Video"| Upload["上传视频和资料"]
     Upload --> Asset["生成 MediaAsset"]
-    Asset --> Transcode["可选转码"]
-    Transcode --> Verify["验证可播放"]
-    Verify --> Publish["发布课程"]
+    Asset --> Verify["验证可播放"]
+    Article --> Gate["发布要求与权益检查"]
+    Verify --> Gate
+    Gate --> Publish["发布课程"]
     Publish --> Notify["可选通知会员"]
 ```
 
@@ -247,3 +250,33 @@ flowchart LR
 - 公共第一版不接受 S3、FFmpeg、Aliyun MPS 或 Sentry 作为配置值，扩展实现需要独立 ADR、
   健康检查与验收；
 - 原项目只作为配置结构与运营旅程参考，真实值和私有插件不进入公共核心。
+- Agent 先通过 `pnpm agent:status` 或受保护的 `/api/admin/agent-context` 读取同一份脱敏
+  生命周期与能力事实；接口不返回站点域名、环境变量值、邮箱、URI、Token、Bucket 或
+  业务数据；
+- 后台故障交给 Agent 时只传递 category、code、Provider 和累计次数，detail、sourceId
+  与原始载荷继续留在受保护后台；外部写入和发布仍由站长批准。
+- `pnpm run doctor` 在 Operations 领域生成版本、能力、Provider 名称和固定检查结果；
+  `pnpm run doctor --issue` 只在本地 `.mdldm/` 写入通过隐私扫描的草稿，不调用 GitHub，
+  公开 Issue 必须由用户人工检查并提交，见 ADR 0017。
+- SiteSetting 只保存 `mdldm / minimal` 白名单主题；根布局把结果映射为 `data-theme`，共享
+  页面继续消费同一组语义 Token。主题不复制页面，也不得改变支付、权益和权限语义，
+  见 ADR 0018。
+
+## 7. Query Service 与安全 DTO 边界
+
+```text
+Page / Route Handler / Client Component
+  -> Application Service / Query Service
+  -> Domain rule + Repository Port
+  -> MongoDB Repository / Provider Adapter
+```
+
+- Page、Route Handler 和 Client Component 禁止直接导入 MongoDB Model；
+- Catalog、User、Learning 和 Commerce 读模型通过 Query Service 暴露；
+- Query Repository Port 位于 `modules/*/queries.ts`，MongoDB 实现位于
+  `providers/database/mongodb/repositories/`；
+- Page 只接收字符串 ID、ISO 日期和必要业务字段，不接收 Mongoose Document；
+- 学习权限由 Learning Query Service 与 Entitlement 领域规则计算，页面不自行判断；
+- Course 使用 `video / article` 白名单内容类型；Article 正文只在 Learning Query Service
+  完成 Entitlement 判断后进入 DTO，未授权响应使用 `articleBody: null`，见 ADR 0020；
+- 新增功能按真实需求渐进收紧命令侧 Port，不做一次性全仓重写，见 ADR 0019。

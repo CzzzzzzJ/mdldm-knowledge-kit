@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { isValidObjectId } from "mongoose";
 import { notFound } from "next/navigation";
 
-import { canCurrentUserAccessCourse } from "@/app/lib/course-access";
+import { getLessonForViewer } from "@/app/lib/learning-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
@@ -15,13 +14,7 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { VideoPlayer } from "@/components/video-player";
 import { getSiteConfig } from "@/config/site.config";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
-import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
-import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
+import { getCurrentUser } from "@/providers/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -32,38 +25,18 @@ export default async function LearnPage({
 }) {
   await requirePublicSiteAccess();
   const { courseId } = await params;
-  if (!isValidObjectId(courseId)) {
-    notFound();
-  }
-
-  await connectMongo();
-  const course = await CourseModel.findOne({
-    _id: courseId,
-    status: "published",
+  const lesson = await getLessonForViewer({
+    courseId,
+    viewer: await getCurrentUser(),
   });
-  if (!course) {
+  if (!lesson) {
     notFound();
   }
 
-  const [series, materials, allowed, seriesCourses] = await Promise.all([
-    SeriesModel.findById(course.seriesId).lean(),
-    CourseMaterialModel.find({ courseId: course._id })
-      .sort({ position: 1 })
-      .lean(),
-    canCurrentUserAccessCourse(course),
-    CourseModel.find({
-      seriesId: course.seriesId,
-      status: "published",
-    })
-      .sort({ position: 1 })
-      .lean(),
-  ]);
-
-  const asset = course.videoAssetId
-    ? await MediaAssetModel.findById(course.videoAssetId).lean()
-    : null;
+  const { course, series, materials, allowed, seriesCourses } = lesson;
+  const asset = lesson.videoAsset;
   const currentIndex = seriesCourses.findIndex(
-    (item) => item._id.toString() === course._id.toString(),
+    (item) => item.id === course.id,
   );
   const previousCourse =
     currentIndex > 0 ? seriesCourses[currentIndex - 1] : null;
@@ -109,6 +82,19 @@ export default async function LearnPage({
                 description="登录后系统会检查全站会员、系列权益或单课购买记录。"
                 title="这节课需要有效权益"
               />
+            ) : course.contentType === "article" ? (
+              <MdldmPanel className="p-6 sm:p-8">
+                <div className="border-b-2 border-[var(--ink)] pb-4">
+                  <p className="eyebrow">图文课程</p>
+                  <h2 className="mt-2 text-2xl font-black">{course.title}</h2>
+                </div>
+                <div
+                  className="mt-6 whitespace-pre-wrap text-base font-medium leading-8 text-[var(--ink)]"
+                  data-testid="article-body"
+                >
+                  {course.articleBody}
+                </div>
+              </MdldmPanel>
             ) : asset?.status === "ready" ? (
               <MdldmPanel className="overflow-hidden bg-[var(--ink)]">
                 <div className="border-b-2 border-[var(--ink)] bg-[var(--accent)] px-5 py-3 font-black text-[var(--accent-ink)]">
@@ -116,8 +102,8 @@ export default async function LearnPage({
                 </div>
                 <div className="p-3 sm:p-4">
                   <VideoPlayer
-                    assetId={asset._id.toString()}
-                    courseId={course._id.toString()}
+                    assetId={asset.id}
+                    courseId={course.id}
                     title={course.title}
                   />
                 </div>
@@ -137,7 +123,7 @@ export default async function LearnPage({
                 {previousCourse ? (
                   <Link
                     className="focus-ring md-pressable rounded-2xl border-2 border-[var(--ink)] bg-[var(--surface)] p-5 shadow-[4px_4px_0_var(--hard-shadow)]"
-                    href={`/learn/${previousCourse._id.toString()}`}
+                    href={`/learn/${previousCourse.id}`}
                   >
                     <span className="text-sm font-black text-[var(--muted)]">
                       上一课
@@ -152,7 +138,7 @@ export default async function LearnPage({
                 {nextCourse ? (
                   <Link
                     className="focus-ring md-pressable rounded-2xl border-2 border-[var(--ink)] bg-[var(--accent)] p-5 shadow-[4px_4px_0_var(--hard-shadow)] sm:text-right"
-                    href={`/learn/${nextCourse._id.toString()}`}
+                    href={`/learn/${nextCourse.id}`}
                   >
                     <span className="text-sm font-black">下一课</span>
                     <span className="mt-1 block font-black">
@@ -173,7 +159,7 @@ export default async function LearnPage({
               <nav className="mt-4 grid gap-3" aria-label="系列课程">
                 {seriesCourses.map((item, index) => {
                   const isCurrent =
-                    item._id.toString() === course._id.toString();
+                    item.id === course.id;
                   return (
                     <Link
                       aria-current={isCurrent ? "page" : undefined}
@@ -182,8 +168,8 @@ export default async function LearnPage({
                           ? "focus-ring rounded-xl border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-3 text-sm font-black shadow-[3px_3px_0_var(--hard-shadow)]"
                           : "focus-ring rounded-xl border-2 border-[var(--ink)] bg-[var(--surface)] px-4 py-3 text-sm font-bold hover:bg-[var(--surface-strong)]"
                       }
-                      href={`/learn/${item._id.toString()}`}
-                      key={item._id.toString()}
+                      href={`/learn/${item.id}`}
+                      key={item.id}
                     >
                       <span className="mr-2 font-mono">{index + 1}</span>
                       {item.title}
@@ -208,8 +194,8 @@ export default async function LearnPage({
                   {materials.map((material) => (
                     <a
                       className="focus-ring md-pressable rounded-xl border-2 border-[var(--ink)] bg-[var(--surface)] px-4 py-3 text-sm font-black shadow-[3px_3px_0_var(--hard-shadow)]"
-                      href={`/api/materials/${material._id.toString()}/download`}
-                      key={material._id.toString()}
+                      href={`/api/materials/${material.id}/download`}
+                      key={material.id}
                     >
                       {material.title}
                     </a>

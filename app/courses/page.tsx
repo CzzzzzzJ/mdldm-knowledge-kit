@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { FilterQuery, Types } from "mongoose";
 
+import { browsePublishedSeries } from "@/app/lib/catalog-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmActionLink,
@@ -14,18 +14,7 @@ import {
 } from "@/components/mdldm-ui";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
-import {
-  createLiteralSearchRegExp,
-  normalizeCategory,
-  parseDiscoveryFilters,
-} from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  CourseModel,
-  type CourseRecord,
-  SeriesModel,
-  type SeriesRecord,
-} from "@/providers/database/mongodb/models/series";
+import { parseDiscoveryFilters } from "@/modules/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -35,8 +24,6 @@ export const metadata: Metadata = {
 };
 
 type SearchParams = Record<string, string | string[] | undefined>;
-type SeriesDocument = SeriesRecord & { _id: Types.ObjectId };
-type CourseDocument = CourseRecord & { _id: Types.ObjectId };
 
 function createCoursesHref(
   filters: {
@@ -59,16 +46,6 @@ function createCoursesHref(
   return query ? `/courses?${query}` : "/courses";
 }
 
-function normalizeFacetValues(values: unknown[]): string[] {
-  const normalized = values
-    .map((value) => normalizeCategory(value))
-    .filter(Boolean);
-
-  return Array.from(new Set(normalized)).sort((left, right) =>
-    left.localeCompare(right, "zh-CN"),
-  );
-}
-
 export default async function CoursesPage({
   searchParams,
 }: {
@@ -78,77 +55,18 @@ export default async function CoursesPage({
   const site = getSiteConfig();
   const parsedFilters = parseDiscoveryFilters(await searchParams);
   const { query, category, tag } = parsedFilters.filters;
-  let series: SeriesDocument[] = [];
-  let courses: CourseDocument[] = [];
+  let series: Awaited<ReturnType<typeof browsePublishedSeries>>["series"] = [];
   let categories: string[] = [];
   let tags: string[] = [];
   let loadFailed = false;
 
   try {
-    await connectMongo();
-    const seriesFilter: FilterQuery<SeriesRecord> = { status: "published" };
-    const constraints: Array<FilterQuery<SeriesRecord>> = [];
-    const categoryPattern = createLiteralSearchRegExp(category, {
-      exact: true,
-    });
-    const tagPattern = createLiteralSearchRegExp(tag, { exact: true });
-    const queryPattern = createLiteralSearchRegExp(query);
-
-    if (categoryPattern) {
-      constraints.push({ category: categoryPattern });
-    }
-    if (tagPattern) {
-      constraints.push({ tags: tagPattern });
-    }
-    if (queryPattern) {
-      const matchingSeriesIds = await CourseModel.distinct("seriesId", {
-        status: "published",
-        $or: [{ title: queryPattern }, { summary: queryPattern }],
-      });
-      constraints.push({
-        $or: [
-          { title: queryPattern },
-          { description: queryPattern },
-          { category: queryPattern },
-          { tags: queryPattern },
-          { _id: { $in: matchingSeriesIds } },
-        ],
-      });
-    }
-    if (constraints.length > 0) {
-      seriesFilter.$and = constraints;
-    }
-
-    const [seriesResult, categoryResult, tagResult] = await Promise.all([
-      SeriesModel.find(seriesFilter).sort({ createdAt: -1 }).lean(),
-      SeriesModel.distinct("category", { status: "published" }),
-      SeriesModel.distinct("tags", { status: "published" }),
-    ]);
-
-    series = seriesResult;
-    categories = normalizeFacetValues(categoryResult);
-    tags = normalizeFacetValues(tagResult).slice(0, 24);
-
-    const seriesIds = series.map((item) => item._id);
-    courses =
-      seriesIds.length === 0
-        ? []
-        : await CourseModel.find({
-            seriesId: { $in: seriesIds },
-            status: "published",
-          })
-            .sort({ seriesId: 1, position: 1 })
-            .lean();
+    const result = await browsePublishedSeries({ query, category, tag });
+    series = result.series;
+    categories = result.categories;
+    tags = result.tags;
   } catch {
     loadFailed = true;
-  }
-
-  const coursesBySeries = new Map<string, CourseDocument[]>();
-  for (const course of courses) {
-    const seriesId = course.seriesId.toString();
-    const existing = coursesBySeries.get(seriesId) ?? [];
-    existing.push(course);
-    coursesBySeries.set(seriesId, existing);
   }
 
   const hasFilters = Boolean(query || category || tag);
@@ -281,14 +199,12 @@ export default async function CoursesPage({
                 <MdldmSeriesCard
                   accessLevel={item.accessLevel}
                   category={item.category}
-                  courseCount={
-                    coursesBySeries.get(item._id.toString())?.length ?? 0
-                  }
+                  courseCount={item.courseCount}
                   coverImageUrl={item.coverImageUrl}
                   description={item.description}
                   featured={index === 0 && !hasFilters}
                   href={`/series/${item.slug}`}
-                  key={item._id.toString()}
+                  key={item.id}
                   tags={item.tags}
                   title={item.title}
                 />

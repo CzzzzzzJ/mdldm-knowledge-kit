@@ -1,15 +1,13 @@
-import bcrypt from "bcryptjs";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 
+import { authenticateUser } from "@/app/lib/identity-service";
 import {
   getClientAddress,
   rejectCrossOriginMutation,
 } from "@/app/lib/request-security";
 import { emailSchema } from "@/modules/identity/credentials";
 import { createSession } from "@/providers/auth/session";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { UserModel } from "@/providers/database/mongodb/models/user";
 import {
   clearRateLimit,
   consumeRateLimit,
@@ -48,26 +46,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "邮箱或密码格式错误" }, { status: 400 });
   }
 
-  await connectMongo();
-  const user = await UserModel.findOne({ email: parsed.data.email }).select(
-    "+passwordHash",
-  );
-
-  if (
-    !user ||
-    user.status !== "active" ||
-    !(await bcrypt.compare(parsed.data.password, user.passwordHash))
-  ) {
+  const authentication = await authenticateUser(parsed.data);
+  if (!authentication.ok && authentication.reason === "invalid") {
     return NextResponse.json({ error: "邮箱或密码错误" }, { status: 401 });
   }
 
-  if (!user.emailVerified) {
+  if (!authentication.ok) {
     return NextResponse.json(
       { error: "请先完成邮箱验证", code: "EMAIL_NOT_VERIFIED" },
       { status: 403 },
     );
   }
 
+  const { user } = authentication;
   await createSession(user);
   await clearRateLimit(rateLimitKey);
 

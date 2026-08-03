@@ -10,14 +10,22 @@ const requiredFiles = [
   "START_HERE.md",
   "AGENT_QUICKSTART.md",
   "AGENT_SERVERLESS_DEPLOY.md",
+  "AGENT_TASKS.md",
+  ".github/ISSUE_TEMPLATE/01-bug.yml",
+  ".github/ISSUE_TEMPLATE/02-feature.yml",
+  ".github/ISSUE_TEMPLATE/03-agent-report.yml",
+  ".github/ISSUE_TEMPLATE/04-explore-submission.yml",
   "CHANGELOG.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
   "THIRD_PARTY_NOTICES.md",
+  "TRADEMARKS.md",
   ".env.example",
+  "docs/README.md",
   "docs/DEPLOYMENT.md",
   "docs/BACKUP_AND_RECOVERY.md",
-  "docs/FRESH_INSTALL_CHECK.md",
+  "docs/PAID_PRACTICE_GUIDE.md",
+  "docs/assets/README.md",
   "docs/UPGRADING.md",
   "docs/RELEASE.md",
 ];
@@ -150,6 +158,24 @@ async function auditTextFiles(files, findings) {
   }
 }
 
+async function auditDocumentationAssets(files, findings) {
+  const manifestPath = "docs/assets/README.md";
+  if (!files.includes(manifestPath)) {
+    return;
+  }
+
+  const manifest = await readFile(path.join(root, manifestPath), "utf8");
+  for (const file of files) {
+    if (!file.startsWith("docs/assets/") || file === manifestPath) {
+      continue;
+    }
+    const fileName = path.basename(file);
+    if (!manifest.includes(`\`${fileName}\``)) {
+      addFinding(findings, file, "文档素材未在 docs/assets/README.md 记录来源与分发结论");
+    }
+  }
+}
+
 async function main() {
   const findings = [];
   const files = listCandidateFiles();
@@ -164,7 +190,7 @@ async function main() {
   for (const file of files) {
     if (
       (/^\.env(?:\.|$)/.test(file) && file !== ".env.example") ||
-      /(^|\/)(?:data|uploads|playwright-report|test-results|\.local-planning)\//.test(file) ||
+      /(^|\/)(?:data|uploads|playwright-report|test-results|\.local-planning|\.mdldm)\//.test(file) ||
       /^docs\/analysis\//.test(file) ||
       /(^|\/)(?:credentials|service-account)[^/]*\.json$/i.test(file)
     ) {
@@ -173,6 +199,7 @@ async function main() {
   }
 
   await auditTextFiles(files, findings);
+  await auditDocumentationAssets(files, findings);
 
   const packageJson = JSON.parse(
     await readFile(path.join(root, "package.json"), "utf8"),

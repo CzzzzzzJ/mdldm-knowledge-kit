@@ -35,6 +35,14 @@ Demo 管理员默认由部署者首次访问 `/admin` 时创建。`pnpm create-a
 
 ![mdldm Knowledge Kit 首页](assets/home.png)
 
+### 课程搜索、分类与 Tag
+
+![mdldm Knowledge Kit 课程目录](assets/courses.png)
+
+### 全站会员与单课购买
+
+![mdldm Knowledge Kit 会员与单课页面](assets/pricing.png)
+
 ### 课程交付后台
 
 ![mdldm Knowledge Kit 运营后台](assets/admin-operations.png)

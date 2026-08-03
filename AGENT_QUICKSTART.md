@@ -6,6 +6,9 @@
 用户入口和逐步解释见 [START_HERE.md](START_HERE.md)。本协议定义 Agent 应该读取什么、
 允许做什么、如何证明完成，以及失败时如何汇报。
 
+本文件只处理本地启动；部署、Provider、品牌、图文和上线验收请从
+[AGENT_TASKS.md](AGENT_TASKS.md) 选择对应任务 Prompt。
+
 ## 1. 任务范围
 
 本任务只包含：

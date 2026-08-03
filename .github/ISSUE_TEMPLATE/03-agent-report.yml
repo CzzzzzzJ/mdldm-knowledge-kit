@@ -1,0 +1,58 @@
+name: Agent report
+description: 使用本地脱敏 Doctor 草稿报告可复现问题
+title: "[Agent Report]: "
+labels:
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先运行 `pnpm run doctor --issue`。它只在 `.mdldm/` 生成本地草稿，不登录 GitHub，也不会自动提交。
+        请人工检查后，只粘贴脱敏草稿。安全漏洞请改用 [Private Security Advisory](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new)，不要公开披露。
+  - type: textarea
+    id: goal
+    attributes:
+      label: 希望 Agent 帮你完成什么
+      description: 用一句话说明目标和当前阻断，不要粘贴环境变量值或平台后台截图。
+      placeholder: 我按 15 分钟启动流程运行到……，希望能够……
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 最小复现步骤
+      description: 从全新 Clone 或明确版本开始，写出别人可以重复执行的命令与页面操作。
+      placeholder: |
+        1. pnpm install --frozen-lockfile
+        2. ...
+        3. 观察到 ...
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: 脱敏 Doctor 草稿
+      description: 粘贴 `.mdldm/agent-report-*.md` 中的 Doctor 报告；不要追加原始日志或真实配置。
+      render: markdown
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果与验收方式
+      description: 写清修复后要看到的行为、命令或测试结果。
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: 提交前人工确认
+      options:
+        - label: 我运行了 `pnpm run doctor --issue`，并人工检查了生成的本地草稿。
+          required: true
+        - label: 报告不包含 URI、Token、邮箱、Bucket、域名、密钥、用户、订单或真实业务数据。
+          required: true
+        - label: 这不是安全漏洞；安全漏洞会通过 Private Security Advisory 私密报告。
+          required: true
+        - label: 我理解 Doctor 没有自动提交，本次公开 Issue 是我本人确认后的操作。
+          required: true

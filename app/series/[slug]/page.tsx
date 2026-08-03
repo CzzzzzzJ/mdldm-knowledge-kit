@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { findPublishedSeriesBySlug } from "@/app/lib/catalog-query-service";
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import {
   MdldmAccessBadge,
@@ -16,11 +17,6 @@ import {
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
 import type { AccessLevel } from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
 
 export const dynamic = "force-dynamic";
 
@@ -32,23 +28,6 @@ const accessLabels: Record<AccessLevel, string> = {
   series: "需要系列权益",
 };
 
-function isValidSeriesSlug(slug: string): boolean {
-  return (
-    slug.length > 0 &&
-    slug.length <= 120 &&
-    /^[a-z0-9]+(?:-[a-z0-9]+)*$/u.test(slug)
-  );
-}
-
-async function findPublishedSeries(slug: string) {
-  if (!isValidSeriesSlug(slug)) {
-    return null;
-  }
-
-  await connectMongo();
-  return SeriesModel.findOne({ slug, status: "published" }).lean();
-}
-
 export async function generateMetadata({
   params,
 }: {
@@ -57,11 +36,11 @@ export async function generateMetadata({
   const { slug } = await params;
 
   try {
-    const series = await findPublishedSeries(slug);
-    return series
+    const result = await findPublishedSeriesBySlug(slug);
+    return result
       ? {
-          title: series.title,
-          description: series.description.slice(0, 160),
+          title: result.series.title,
+          description: result.series.description.slice(0, 160),
         }
       : { title: "系列未找到" };
   } catch {
@@ -76,17 +55,11 @@ export default async function SeriesDetailPage({
 }) {
   await requirePublicSiteAccess();
   const { slug } = await params;
-  const series = await findPublishedSeries(slug);
-  if (!series) {
+  const result = await findPublishedSeriesBySlug(slug);
+  if (!result) {
     notFound();
   }
-
-  const courses = await CourseModel.find({
-    seriesId: series._id,
-    status: "published",
-  })
-    .sort({ position: 1 })
-    .lean();
+  const { series, courses } = result;
   const site = getSiteConfig();
   const tags = series.tags ?? [];
   const firstCourse = courses[0];
@@ -127,7 +100,7 @@ export default async function SeriesDetailPage({
               {firstCourse ? (
                 <MdldmActionLink
                   className="mt-8"
-                  href={`/learn/${firstCourse._id.toString()}`}
+                  href={`/learn/${firstCourse.id}`}
                   variant="accent"
                 >
                   开始学习
@@ -166,10 +139,10 @@ export default async function SeriesDetailPage({
           ) : (
             <ol className="mt-8 grid gap-4">
               {courses.map((course, index) => (
-                <li key={course._id.toString()}>
+                <li key={course.id}>
                   <Link
                     className="focus-ring md-pressable grid gap-4 rounded-2xl border-2 border-[var(--ink)] bg-[var(--surface)] p-5 shadow-[4px_4px_0_var(--hard-shadow)] sm:grid-cols-[3rem_1fr_auto] sm:items-center"
-                    href={`/learn/${course._id.toString()}`}
+                    href={`/learn/${course.id}`}
                   >
                     <span className="grid size-10 place-items-center rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] font-mono text-sm font-black">
                       {String(index + 1).padStart(2, "0")}

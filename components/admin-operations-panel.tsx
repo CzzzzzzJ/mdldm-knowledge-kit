@@ -2,6 +2,11 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import {
+  createAgentDiagnosticPrompt,
+  createOperationalFailureAgentPrompt,
+  type AgentContextReport,
+} from "@/modules/site/agent-context";
 import type { ProviderReadiness } from "@/providers/readiness";
 
 interface OperationsSummary {
@@ -23,6 +28,7 @@ interface OperationsSummary {
     currency: string;
   };
   providers: Record<string, ProviderReadiness>;
+  agentContext: AgentContextReport;
 }
 
 interface OperationFailure {
@@ -56,11 +62,45 @@ const providerStatusLabels: Record<ProviderReadiness["status"], string> = {
   disabled: "未启用",
 };
 
+const lifecycleLabels: Record<
+  AgentContextReport["lifecycle"]["status"],
+  string
+> = {
+  unknown: "无法判断",
+  uninitialized: "等待创建管理员",
+  configuring: "配置中",
+  live: "已开站",
+};
+
+async function copyText(value: string) {
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return;
+    } catch {
+      // Fall through for embedded browsers that expose but deny Clipboard API.
+    }
+  }
+
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.append(textarea);
+  textarea.select();
+  const copied = document.execCommand("copy");
+  textarea.remove();
+  if (!copied) {
+    throw new Error("浏览器拒绝复制");
+  }
+}
+
 export function AdminOperationsPanel() {
   const [summary, setSummary] = useState<OperationsSummary | null>(null);
   const [failures, setFailures] = useState<OperationFailure[]>([]);
   const [message, setMessage] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState("");
 
   const load = useCallback(async () => {
     const [summaryResponse, failuresResponse] = await Promise.all([
@@ -122,6 +162,16 @@ export function AdminOperationsPanel() {
     }
   }
 
+  async function copyAgentPrompt(value: string) {
+    try {
+      await copyText(value);
+      setCopyMessage("已复制脱敏 Prompt，可以交给当前仓库中的 Agent。");
+      window.setTimeout(() => setCopyMessage(""), 2400);
+    } catch {
+      setCopyMessage("浏览器未允许复制，请打开脱敏 JSON 后手动交给 Agent。");
+    }
+  }
+
   return (
     <section className="mt-10" aria-labelledby="operations-title">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -158,6 +208,74 @@ export function AdminOperationsPanel() {
             ? `最近检查：${new Date(summary.checkedAt).toLocaleString("zh-CN")}`
             : "正在读取运营状态…")}
       </p>
+
+      {message && !summary ? (
+        <div className="surface mt-4 flex flex-wrap items-center justify-between gap-3 p-4">
+          <p className="text-sm text-[var(--muted)]">
+            运维总览暂时无法读取。复制固定错误码给 Agent，不会复制页面错误详情。
+          </p>
+          <button
+            className="rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-2 text-sm font-black"
+            onClick={() =>
+              void copyAgentPrompt(
+                createOperationalFailureAgentPrompt({
+                  category: "operations",
+                  code: "ADMIN_OPERATIONS_LOAD_FAILED",
+                  provider: null,
+                  occurrenceCount: 1,
+                }),
+              )
+            }
+            type="button"
+          >
+            交给 Agent
+          </button>
+        </div>
+      ) : null}
+
+      {summary ? (
+        <article className="surface mt-5 grid gap-5 p-5 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div>
+            <p className="font-mono text-xs text-[var(--accent)]">
+              AGENT CONTEXT
+            </p>
+            <h3 className="mt-2 text-xl font-semibold">交给 Agent 排查</h3>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              生命周期：{lifecycleLabels[summary.agentContext.lifecycle.status]}
+              ，开站任务 {summary.agentContext.lifecycle.completedSetupLessons ?? "未知"}/
+              {summary.agentContext.lifecycle.totalSetupLessons}；推荐任务：
+              {summary.agentContext.agent.recommendedTask}。
+            </p>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              这里只生成 Provider 名称、状态和变量名，不包含邮箱、URI、Token、Bucket、域名或业务数据。
+            </p>
+            <p aria-live="polite" className="mt-2 text-sm font-medium">
+              {copyMessage}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              className="rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] px-4 py-2 text-sm font-black shadow-[3px_3px_0_var(--hard-shadow)]"
+              onClick={() =>
+                void copyAgentPrompt(
+                  createAgentDiagnosticPrompt(summary.agentContext),
+                )
+              }
+              type="button"
+            >
+              复制给 Agent
+            </button>
+            <a
+              className="rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-semibold"
+              href="/api/admin/agent-context"
+              rel="noreferrer"
+              target="_blank"
+            >
+              查看脱敏 JSON
+            </a>
+          </div>
+        </article>
+      ) : null}
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {metricLabels.map(([key, label]) => (
@@ -258,14 +376,32 @@ export function AdminOperationsPanel() {
                   {new Date(failure.lastOccurredAt).toLocaleString("zh-CN")}
                 </p>
               </div>
-              <button
-                className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-semibold"
-                disabled={busyId === failure.id}
-                onClick={() => void resolveFailure(failure.id)}
-                type="button"
-              >
-                记录处理结果
-              </button>
+              <div className="flex flex-wrap gap-2 lg:flex-col">
+                <button
+                  className="rounded-lg border-2 border-[var(--ink)] bg-[var(--accent)] px-3 py-2 text-sm font-black"
+                  onClick={() =>
+                    void copyAgentPrompt(
+                      createOperationalFailureAgentPrompt({
+                        category: failure.category,
+                        code: failure.code,
+                        provider: failure.provider,
+                        occurrenceCount: failure.occurrenceCount,
+                      }),
+                    )
+                  }
+                  type="button"
+                >
+                  交给 Agent
+                </button>
+                <button
+                  className="rounded-lg border border-[var(--line)] px-3 py-2 text-sm font-semibold"
+                  disabled={busyId === failure.id}
+                  onClick={() => void resolveFailure(failure.id)}
+                  type="button"
+                >
+                  记录处理结果
+                </button>
+              </div>
             </article>
           ))
         )}

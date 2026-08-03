@@ -44,7 +44,7 @@ export default async function PricingPage() {
             >
               <MdldmPanel className="bg-[var(--accent)] p-7 sm:p-8">
                 <MdldmAccessBadge
-                  className="bg-[var(--surface)]"
+                  className="md-badge-neutral bg-[var(--surface)]"
                   label="适合持续学习"
                 />
                 <h2 className="mt-5 text-3xl font-black tracking-[-0.04em]">

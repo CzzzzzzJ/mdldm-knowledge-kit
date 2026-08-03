@@ -126,12 +126,38 @@
 - IN PROGRESS：完成 AF-05 的 Agent + Vercel Serverless 唯一线上协议、`hkg1` 仓库契约、
   Preview/Production 双确认、只读健康检查、脱敏报告与本地 Docker 边界；全新隔离账号
   L2/L3 和至少两个中国大陆网络点的真实验收仍待完成；
-- TODO：在最后的 README P0 重构中只暴露 AF-02 这一条推荐启动旅程；
+- DONE：完成 AF-07 Agent-first 接口，提供六类任务 Prompt、统一权限/敏感信息/审批/
+  质量与回滚契约、`pnpm agent:status`、受保护的脱敏状态 API 和后台“交给 Agent”入口；
+- DONE：完成 AF-08 Agent Doctor 与 Issue，提供 `pnpm run doctor`、本地隐私扫描、只生成
+  不提交的 Agent Report 草稿、Explore Submission、README 反馈入口和私密 Advisory 分流；
+- DONE：完成 AF-10 两主题首版，SiteSetting 可在麦当 mdldm 与极简知识库间切换，旧记录
+  安全回落，统一语义 Token 覆盖深浅模式且不改变支付、权益和内容结构；
+- DONE：完成 AF-11 工程边界首轮收口，Page、Route Handler 和 Client Component
+  不再直接导入 MongoDB Model，建立 Catalog、User、Learning 和 Commerce Query
+  Service、Repository Port、安全 DTO 与架构回归测试，认证、支付查询、内容发布、
+  学习权限和媒体交付优先迁入服务端用例；
+- DONE：实现 Article 图文课纯文本正文、无视频发布检查、后台创建与学习页阅读，并确保
+  未授权 DTO 不返回正文、媒体或资料；
+- IN PROGRESS：完成 AF-12 测试分层；L1-L3 独立命令和 CI 门禁、Mock/Manual 隔离 L4、
+  图文/视频/会员/单课/Doctor/Explore 契约已通过；当前为 36 个 Vitest 文件 / 133 项测试、
+  12 项自动支付主旅程 E2E 和 1 项 Manual E2E，L5 真实 Provider、备份恢复和国内网络仍待
+  站长在隔离环境验收；
+- DONE：完成 AF-13 公开入口治理：README 只面向采用者，收口为本地启动、Agent 协议、
+  Serverless 部署和后台开站四步主线；删除重复路线图、内部阶段分析、历史安装报告与
+  重复许可证说明，保留稳定 ADR，并补齐商标、素材许可和付费实践授权边界；历史对象
+  扫描未发现密钥、真实邮箱或带凭据 MongoDB URI，但能看到早期 `docs/analysis` 路径和
+  一条本机绝对路径；README 已补充作者联系方式、联系事项分流、X、个人微信、临时交流群
+  与中文平台统一搜索入口；已用隔离虚构 Demo 重新截取首页、课程、双付费模式和站长后台，
+  并经发起者授权补充 `mdldm.club` 公开首页参考图及独立品牌授权说明；
+  因共享历史重写需要维护者明确确认，本阶段未自动改写 Git 历史；
+- TODO：公开下一版本前由维护者决定是否重写已共享的 Git 历史以彻底移除早期
+  `docs/analysis` 对象；若执行，需要单独备份、重写标签并协调所有 Fork/Clone，不能在
+  常规功能提交中顺手 force-push；
 - IN PROGRESS：补齐课程和系列的编辑、排序、预览、安全删除与 Demo 清理；
 - IN PROGRESS：补齐用户、权益和分析后台；
 - TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 配置，并按需验证 XorPay；
 - DONE：实现一次性首个管理员初始化，`/setup` 兼容重定向到 `/admin/setup`；
-- TODO：提供部署、Provider、品牌改造、内容迁移和上线验收的任务级 Agent Prompt；
+- DONE：提供本地启动、部署、Provider、品牌改造、图文发布和上线验收的任务级 Agent Prompt；
 - TODO：使用隔离第三方测试账号完成 L2 验证；
 - TODO：邀请未参与开发、稍懂 Vibe Coding 的 AI 博主完成全新部署和 L3 验收；
 - TODO：发布面向运营就绪的 `v0.2.0`。
