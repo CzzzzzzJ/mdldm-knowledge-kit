@@ -245,7 +245,7 @@ export function MdldmSeriesCard({
       )}
     >
       <MdldmCourseCover
-        className="border-b-2 border-[var(--ink)]"
+        className="md-cover-divider border-b-2 border-[var(--ink)]"
         compact
         imageUrl={coverImageUrl}
         title={title}
@@ -319,7 +319,7 @@ export function MdldmFooter({
   supportEmail: string;
 }) {
   return (
-    <footer className="border-t-2 border-[var(--ink)] bg-[var(--surface)] py-8">
+    <footer className="md-footer border-t-2 border-[var(--ink)] bg-[var(--surface)] py-8">
       <div className="page-shell flex flex-col gap-3 text-sm font-bold text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
         <p>{siteName}</p>
         <a className="md-text-link" href={`mailto:${supportEmail}`}>

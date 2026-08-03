@@ -173,6 +173,7 @@ test("publishes administrator site settings to the public homepage", async ({
   expect(currentResponse.ok()).toBe(true);
   const currentPayload = (await currentResponse.json()) as {
     settings: {
+      theme: "mdldm" | "minimal";
       siteName: string;
       description: string;
       creatorName: string;
@@ -187,6 +188,7 @@ test("publishes administrator site settings to the public homepage", async ({
   };
   const current = currentPayload.settings;
   const original = {
+    theme: current.theme,
     siteName: current.siteName,
     description: current.description,
     creatorName: current.creatorName,
@@ -203,7 +205,7 @@ test("publishes administrator site settings to the public homepage", async ({
   try {
     const update = await page.request.patch("/api/admin/site", {
       headers: { Origin: e2eOrigin },
-      data: { homeTitle: title },
+      data: { homeTitle: title, theme: "minimal" },
     });
     expect(update.ok()).toBe(true);
 
@@ -211,6 +213,7 @@ test("publishes administrator site settings to the public homepage", async ({
     await expect(
       page.getByRole("heading", { level: 1, name: title }),
     ).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("data-theme", "minimal");
   } finally {
     const restore = await page.request.patch("/api/admin/site", {
       headers: { Origin: e2eOrigin },
@@ -223,6 +226,11 @@ test("publishes administrator site settings to the public homepage", async ({
 test("shows operational metrics, failure queue and protected data export", async ({
   page,
 }) => {
+  const protectedAgentContext = await page.request.get(
+    "/api/admin/agent-context",
+  );
+  expect(protectedAgentContext.status()).toBe(403);
+
   const adminLogin = await page.request.post("/api/auth/login", {
     headers: { Origin: e2eOrigin },
     data: {
@@ -270,6 +278,12 @@ test("shows operational metrics, failure queue and protected data export", async
   await expect(
     page.getByRole("heading", { name: "运营与故障总览" }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "交给 Agent 排查" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "交给 Agent" }).first(),
+  ).toBeVisible();
   await expect(page.getByText("E2E 虚构存储故障")).toBeVisible();
 
   const summary = await page.request.get("/api/admin/operations/summary");
@@ -280,7 +294,23 @@ test("shows operational metrics, failure queue and protected data export", async
       courses: expect.any(Number),
       openFailures: expect.any(Number),
     },
+    agentContext: {
+      scope: "agent-context",
+      lifecycle: {
+        status: expect.stringMatching(/^(configuring|live)$/),
+      },
+      agent: {
+        taskGuide: "AGENT_TASKS.md",
+      },
+    },
   });
+
+  const agentContext = await page.request.get("/api/admin/agent-context");
+  expect(agentContext.ok()).toBe(true);
+  const agentContextBody = await agentContext.text();
+  expect(agentContextBody).toContain('"scope":"agent-context"');
+  expect(agentContextBody).not.toContain("admin@example.com");
+  expect(agentContextBody).not.toContain("mongodb://");
 
   const exported = await page.request.get("/api/admin/export");
   expect(exported.ok()).toBe(true);

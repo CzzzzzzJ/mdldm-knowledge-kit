@@ -14,7 +14,8 @@
 > 当前版本：`v0.1.0 / Phase 7 operator-ready in progress`
 >
 > 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
-> SiteSetting、内容发现、系列详情、学习中心、后台分区和一次性管理员初始化已经整合；
+> SiteSetting、内容发现、系列详情、学习中心、后台分区、两套主题、Agent 诊断、
+> Query Service 工程边界和一次性管理员初始化已经整合；
 > 独立第三方账号 L2/L3 与中国大陆多网络验收尚未完成。因此当前版本仍是可运行的开发底座，
 > 不是已经通过目标用户验收的开箱即营成品。
 
@@ -33,6 +34,7 @@
 - 安全播放、资料下载、断点续播和学习进度；
 - 课程、用户、权益、订单、媒体与系统状态后台；
 - 可替换的支付、存储、邮件、转码和监控 Provider。
+- 可在后台切换的麦当 mdldm 与极简知识库主题。
 
 目标站长可以借助 Codex 或其他 Agent 完成 Fork、部署、第三方密钥配置、视觉改造和
 故障排查；站点品牌、课程、商品、用户权益和订单等日常经营事实必须由后台管理，不应
@@ -67,6 +69,7 @@
 - [15 分钟唯一启动入口](START_HERE.md)
 - [交给 Agent 的本地启动协议](AGENT_QUICKSTART.md)
 - [Agent + Serverless 唯一线上协议](AGENT_SERVERLESS_DEPLOY.md)
+- [六类 Agent 任务 Prompt 与安全边界](AGENT_TASKS.md)
 - [项目定义](PROJECT.md)
 - [开发任务](TASKS.md)
 - [架构总览](ARCHITECTURE.md)
@@ -108,7 +111,34 @@
 中的 Prompt。系统会让站长两次确认自己的邮箱，将其作为管理员 1 号，并强制轮换只展示
 一次的随机临时密码。
 
+本地启动以外的部署、Provider、品牌改造、图文发布和上线验收任务统一从
+[`AGENT_TASKS.md`](AGENT_TASKS.md) 选择。Agent 可先运行 `pnpm agent:status` 获取不含
+域名、邮箱、URI、Token、Bucket 和环境变量值的生命周期与能力状态。
+
 Docker Compose 只用于启动本地 MongoDB，不是生产部署方案。
+
+站长可以在 `/admin/site` 选择 `麦当 mdldm` 或 `极简知识库`。两套主题共享页面与业务
+组件，只切换经过审核的语义 Token；主题不会改变支付价格、Entitlement、课程权限或后台
+数据。默认继续使用麦当 mdldm 风格，旧站点设置无需迁移即可安全回落到默认主题。
+
+## 反馈、Agent 报告与 Explore
+
+遇到问题时，先运行 `pnpm run doctor` 获取版本、能力、Provider 名称和检查结果。需要交给
+维护者复现时运行 `pnpm run doctor --issue`；该命令只在被 Git 忽略的 `.mdldm/` 目录生成
+脱敏 Markdown 草稿，**不会登录 GitHub，也不会创建或提交 Issue**。请先人工检查草稿，
+再由你本人决定是否提交：
+
+- [报告可复现错误](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=01-bug.yml)
+- [提出功能建议](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=02-feature.yml)
+- [提交脱敏 Agent Report](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=03-agent-report.yml)
+- [申请加入 Explore Guide](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=04-explore-submission.yml)
+- [私密报告安全漏洞](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new)
+
+Doctor 不输出 URI、Token、邮箱、Bucket、域名、环境变量值、真实用户或订单数据；
+安全漏洞不得走公开 Issue，继续使用 Private Security Advisory。
+
+这里必须写 `pnpm run doctor`：pnpm 10 自带同名内置命令，直接执行 `pnpm doctor` 不会
+调用本项目脚本。
 
 ## 生产部署与第三方平台
 

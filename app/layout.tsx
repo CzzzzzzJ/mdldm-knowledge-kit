@@ -19,13 +19,15 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const site = await getResolvedSiteSettings();
+
   return (
-    <html lang="zh-CN">
+    <html data-theme={site.theme} lang="zh-CN">
       <body className={`${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
       </body>

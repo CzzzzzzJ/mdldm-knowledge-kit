@@ -30,7 +30,7 @@
 | --- | --- | --- | --- |
 | 领域与安全底座 | 基本完成 | 身份、Entitlement、服务端定价、支付幂等、MediaAsset、学习进度 | 继续保持测试和安全边界 |
 | Provider 适配 | 官方路径已冻结、未生产验收 | MongoDB、OSS、SMTP、Manual/Mock/XorPay、Agent + Vercel Serverless 协议、脱敏检查 | 开源版独立 Preview、L2/L3 与中国大陆多网络验收 |
-| 品牌与站点设置 | 基础完成 | SiteSetting 已接入公开首页、元信息、页头、创作者资料和管理员表单 | Logo 上传和推荐内容编排 |
+| 品牌与站点设置 | 基础完成 | SiteSetting 已接入公开首页、元信息、页头、创作者资料、麦当/极简两套主题和管理员表单 | Logo 上传和推荐内容编排 |
 | 内容发现 | 基础完成 | 搜索、分类、Tag、系列详情、Tag 聚合和兼容旧数据的展示链路 | 内容完整编辑、排序、预览和安全删除 |
 | 学员体验 | 基础完成 | 学习中心、系列目录、上一课/下一课、订单和安全入口 | 已购内容筛选、移动端播放器细节和更完整空状态 |
 | 运营后台 | 进行中 | 已拆出站点、内容、商品、用户、订单、系统分区，站长可修改自己的密码 | 权益、分析，以及内容完整编辑/排序/预览 |
@@ -144,7 +144,12 @@ Prompt 都不能把“命令执行成功”当成第三方生产链路已通过�
 - 文档写清 Agent 可编辑文件、数据迁移边界、质量命令和回滚点。
 
 已完成：Agent + Vercel Serverless 唯一线上协议、Preview/Production 双确认、只读技术
-检查、脱敏报告和本地 Docker 边界。仍未完成：其余任务级 Prompt、全新隔离账号 L2/L3
+检查、脱敏报告、本地 Docker 边界，以及本地启动、部署、Provider、品牌、图文和上线
+验收六类任务 Prompt；`pnpm agent:status` 与后台使用同一份脱敏生命周期事实；
+`pnpm run doctor --issue` 只生成通过隐私扫描的本地草稿，Agent Report 与 Explore Submission
+都保留人工提交确认点；麦当 mdldm 与极简主题已共享语义 Token；AF-11 已将
+Page、Route Handler 和 Client Component 与 MongoDB Model 解耦，建立 Query Service、
+Repository Port、安全 DTO 和架构回归测试。仍未完成：全新隔离账号 L2/L3
 和中国大陆多网络真实验收。
 
 完成定义：

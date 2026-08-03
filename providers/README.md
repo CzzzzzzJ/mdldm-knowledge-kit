@@ -15,6 +15,8 @@
 当前实现：
 
 - `database/mongodb`：MongoDB 连接、健康检查和严格 Schema；
+- `database/mongodb/repositories`：Catalog、User、Learning 和 Commerce Query Port 的
+  MongoDB 映射实现；
 - `storage/local`：本地媒体写入、路径隔离、存在性检查和删除；
 - `storage/oss`：阿里云 OSS 写入、HEAD、短期上传和读取签名；
 - `email/console`：本地输出验证和找回链接；

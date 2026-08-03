@@ -83,6 +83,27 @@ curl "http://localhost:3000/api/health?deep=1"
 
 健康检查不会返回 MongoDB URI、认证密钥或 Provider 凭据。
 
+Agent 在修改或排障前可以读取脱敏生命周期和能力状态：
+
+```bash
+pnpm agent:status
+```
+
+该命令不输出 APP_URL、APP_NAME、邮箱、URI、Token、Bucket、环境变量值或业务数据；
+生命周期为 `unknown` 时应先修复配置或数据库连接。任务级 Prompt 见
+[`AGENT_TASKS.md`](../AGENT_TASKS.md)。
+
+需要生成可分享的脱敏诊断时运行：
+
+```bash
+pnpm run doctor
+pnpm run doctor --issue
+```
+
+第二条命令只在 `.mdldm/` 写入本地 Issue 草稿，不会访问 GitHub。人工检查并确认不含
+URI、Token、邮箱、Bucket、域名和真实数据后，才可以由用户本人提交 Agent Report；
+安全漏洞继续通过 Private Security Advisory 私密报告。
+
 ## 质量检查
 
 ```bash
@@ -91,6 +112,15 @@ pnpm release:audit
 ```
 
 `pnpm check` 会依次执行 Lint、类型检查、单测与生产构建。构建步骤使用隔离的 HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产配置；真实部署变量仍必须单独通过 `pnpm check-config`。
+
+## Agent 修改数据查询时的边界
+
+- 页面、Route Handler 和 Client Component 不直接导入 `providers/database/mongodb/models`；
+- 课程、用户、学习和商品查询优先扩展现有 `*-query-service.ts`；
+- 需要新查询时，先在 `modules/*/queries.ts` 定义安全 DTO 与 Port，再在
+  `providers/database/mongodb/repositories/` 实现 MongoDB 映射；
+- 价格只从服务端 Product 读取，权限只由 Entitlement 规则判断；
+- 运行 `pnpm test` 时的架构测试会阻止 Model 重新渗透到 Web 入口。
 
 首次运行浏览器测试前安装 Chromium：
 

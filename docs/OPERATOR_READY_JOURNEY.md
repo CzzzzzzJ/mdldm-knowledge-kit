@@ -61,7 +61,7 @@ Fork / Clone
   → 设置正式密码并完成账号激活
   → 进入 /admin/setup
   → 运行自动配置检查
-  → 设置站点品牌和联系方式
+  → 选择主题并设置站点品牌和联系方式
   → 创建全站会员或单课商品
   → 创建系列与第一节课程
   → 上传封面、视频和资料
@@ -97,14 +97,15 @@ Fork / Clone
 | --- | --- |
 | `/admin` | 今日待办、经营概览、异常和快捷入口 |
 | `/admin/setup` | 首次开站任务、Agent Prompt、真实状态和上线门禁 |
-| `/admin/site` | 品牌、首页、导航、页脚和联系方式 |
+| `/admin/site` | 麦当/极简主题、品牌、首页、导航、页脚和联系方式 |
 | `/admin/catalog` | 系列、课程、媒体、资料、排序和发布 |
 | `/admin/products` | 会员、单课商品、价格、期限和上下架 |
 | `/admin/users` | 用户状态、注册时间、会员与已购课程 |
 | `/admin/entitlements` | 邀请码、人工授权、到期和撤销 |
 | `/admin/orders` | 订单、支付、履约、人工确认和重试 |
 | `/admin/analytics` | 注册、购买、学习和完课的基础指标 |
-| `/admin/system` | Provider 状态、失败队列、备份和上线检查 |
+| `/admin/system` | Provider 状态、失败队列、脱敏 Agent 交接、备份和上线检查 |
+| `/api/admin/agent-context` | 仅管理员可读的生命周期、Provider 名称和 Agent 任务 JSON，不含密钥或业务标识 |
 
 页面可以先共用一个应用，但路由与信息架构必须按运营任务拆分，不能继续把所有
 表单堆在一张管理员页面中。

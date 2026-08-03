@@ -3,11 +3,11 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
+import {
+  CatalogAdminError,
+  createCourseMaterial,
+} from "@/app/lib/catalog-admin-service";
 import { accessLevels } from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
-import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
-import { CourseModel } from "@/providers/database/mongodb/models/series";
 
 const materialInput = z.object({
   courseId: z.string().refine(isValidObjectId),
@@ -30,28 +30,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "课程资料格式错误" }, { status: 400 });
   }
 
-  await connectMongo();
-  const [course, asset] = await Promise.all([
-    CourseModel.exists({ _id: parsed.data.courseId }),
-    MediaAssetModel.exists({
-      _id: parsed.data.mediaAssetId,
-      kind: "document",
-      status: "ready",
-    }),
-  ]);
-
-  if (!course || !asset) {
-    return NextResponse.json({ error: "课程或资料资产不存在" }, { status: 404 });
+  try {
+    const material = await createCourseMaterial(parsed.data);
+    return NextResponse.json({ material }, { status: 201 });
+  } catch (error) {
+    if (error instanceof CatalogAdminError) {
+      return NextResponse.json({ error: error.message }, { status: 404 });
+    }
+    throw error;
   }
-
-  const material = await CourseMaterialModel.create(parsed.data);
-  return NextResponse.json(
-    {
-      material: {
-        id: material._id.toString(),
-        title: material.title,
-      },
-    },
-    { status: 201 },
-  );
 }

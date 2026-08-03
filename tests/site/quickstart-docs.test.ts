@@ -24,7 +24,10 @@ describe("Agent-first quickstart contract", () => {
   });
 
   it("gives the Agent a bounded protocol and redacted report format", async () => {
-    const agentQuickstart = await readProjectFile("AGENT_QUICKSTART.md");
+    const [agentQuickstart, agentTasks] = await Promise.all([
+      readProjectFile("AGENT_QUICKSTART.md"),
+      readProjectFile("AGENT_TASKS.md"),
+    ]);
     const packageJson = JSON.parse(
       await readProjectFile("package.json"),
     ) as { scripts?: Record<string, string> };
@@ -36,6 +39,63 @@ describe("Agent-first quickstart contract", () => {
     expect(packageJson.scripts?.["quickstart:prepare"]).toBe(
       "tsx scripts/prepare-local-env.ts",
     );
+    expect(packageJson.scripts?.["agent:status"]).toBe(
+      "tsx scripts/agent-status.ts",
+    );
+    expect(packageJson.scripts?.doctor).toBe("tsx scripts/doctor.ts");
+    for (const task of [
+      "标准本地启动 Prompt",
+      "Agent + Serverless 部署 Prompt",
+      "Provider 配置 Prompt",
+      "品牌改造 Prompt",
+      "图文发布 Prompt",
+      "上线验收 Prompt",
+    ]) {
+      expect(agentTasks).toContain(task);
+    }
+    expect(agentTasks).toContain("敏感信息禁区");
+    expect(agentTasks).toContain("必须由用户确认的外部动作");
+    expect(agentTasks).toContain("质量命令与回滚点");
+    expect(agentTasks).toContain("当前 v0.1 基线可能");
+    expect(agentTasks).toContain("返回 BLOCKED");
+  });
+
+  it("keeps Doctor drafts local and exposes human-reviewed feedback routes", async () => {
+    const [
+      readme,
+      agentReport,
+      exploreSubmission,
+      issueConfig,
+      gitignore,
+      releaseAudit,
+    ] = await Promise.all([
+      readProjectFile("README.md"),
+      readProjectFile(".github/ISSUE_TEMPLATE/03-agent-report.yml"),
+      readProjectFile(".github/ISSUE_TEMPLATE/04-explore-submission.yml"),
+      readProjectFile(".github/ISSUE_TEMPLATE/config.yml"),
+      readProjectFile(".gitignore"),
+      readProjectFile("scripts/release-audit.mjs"),
+    ]);
+
+    expect(readme).toContain("pnpm run doctor --issue");
+    expect(readme).toContain("pnpm 10 自带同名内置命令");
+    expect(readme).toContain("不会登录 GitHub，也不会创建或提交 Issue");
+    for (const template of [
+      "01-bug.yml",
+      "02-feature.yml",
+      "03-agent-report.yml",
+      "04-explore-submission.yml",
+    ]) {
+      expect(readme).toContain(template);
+    }
+    expect(agentReport).toContain("pnpm run doctor --issue");
+    expect(agentReport).toContain("本次公开 Issue 是我本人确认后的操作");
+    expect(agentReport).toContain("Private Security Advisory");
+    expect(exploreSubmission).toContain("我授权项目在 Explore Guide 中展示");
+    expect(exploreSubmission).toContain("不要提交后台地址");
+    expect(issueConfig).toContain("security/advisories/new");
+    expect(gitignore).toContain(".mdldm/");
+    expect(releaseAudit).toContain(".mdldm");
   });
 
   it("keeps the minimum capability contract aligned across env and docs", async () => {

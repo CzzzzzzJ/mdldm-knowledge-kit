@@ -3,12 +3,11 @@ import { isValidObjectId } from "mongoose";
 import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
-import { accessLevels } from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
 import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
+  CatalogAdminError,
+  createCourse,
+} from "@/app/lib/catalog-admin-service";
+import { accessLevels } from "@/modules/catalog";
 
 const courseInput = z.object({
   seriesId: z.string().refine(isValidObjectId),
@@ -35,35 +34,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "课时数据格式错误" }, { status: 400 });
   }
 
-  await connectMongo();
-  if (!(await SeriesModel.exists({ _id: parsed.data.seriesId }))) {
-    return NextResponse.json({ error: "系列不存在" }, { status: 404 });
+  try {
+    const course = await createCourse(parsed.data);
+    return NextResponse.json({ course }, { status: 201 });
+  } catch (error) {
+    if (error instanceof CatalogAdminError) {
+      const status = error.code === "SERIES_NOT_FOUND" ? 404 : 409;
+      return NextResponse.json({ error: error.message }, { status });
+    }
+    throw error;
   }
-
-  if (
-    await CourseModel.exists({
-      seriesId: parsed.data.seriesId,
-      slug: parsed.data.slug,
-    })
-  ) {
-    return NextResponse.json({ error: "当前系列内 slug 已存在" }, { status: 409 });
-  }
-
-  const course = await CourseModel.create({
-    ...parsed.data,
-    videoAssetId: null,
-    status: "draft",
-    publishedAt: null,
-  });
-
-  return NextResponse.json(
-    {
-      course: {
-        id: course._id.toString(),
-        title: course.title,
-        status: course.status,
-      },
-    },
-    { status: 201 },
-  );
 }

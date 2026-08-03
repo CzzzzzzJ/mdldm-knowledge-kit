@@ -2,9 +2,8 @@ import {
   AdminShell,
   requireAdminPage,
 } from "@/components/admin-shell";
+import { listAdminUsers } from "@/app/lib/user-query-service";
 import { ChangePasswordForm } from "@/components/identity-forms";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { UserModel } from "@/providers/database/mongodb/models/user";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +17,7 @@ function formatDate(value: Date): string {
 
 export default async function AdminUsersPage() {
   const admin = await requireAdminPage("/admin/users");
-  await connectMongo();
-  const users = await UserModel.find()
-    .select("name email role status emailVerified createdAt")
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .lean();
+  const users = await listAdminUsers();
 
   return (
     <AdminShell
@@ -47,7 +41,7 @@ export default async function AdminUsersPage() {
             {users.map((user) => (
               <article
                 className="grid gap-4 border-2 border-[var(--ink)] bg-[var(--surface)] p-5 sm:grid-cols-[1fr_auto] sm:items-center"
-                key={user._id.toString()}
+                key={user.id}
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -68,7 +62,7 @@ export default async function AdminUsersPage() {
                     {user.emailVerified ? "邮箱已验证" : "邮箱未验证"}
                   </p>
                   <p className="mt-1 text-xs text-[var(--muted)]">
-                    注册于 {formatDate(user.createdAt)}
+                    注册于 {formatDate(new Date(user.createdAt))}
                   </p>
                 </div>
               </article>

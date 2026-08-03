@@ -6,9 +6,11 @@ import {
   siteSettingsInputSchema,
   siteSettingsPatchSchema,
 } from "@/modules/site/settings";
+import { resolveSiteTheme } from "@/modules/site/themes";
 import { SiteSettingModel } from "@/providers/database/mongodb/models/site-setting";
 
 const validSettings = {
+  theme: "mdldm" as const,
   siteName: "创作者知识站",
   description: "把公开内容整理成可持续学习的课程。",
   creatorName: "Demo Creator",
@@ -35,6 +37,7 @@ describe("site settings", () => {
     });
 
     expect(parsed.siteName).toBe("创作者知识站");
+    expect(parsed.theme).toBe("mdldm");
     expect(parsed.avatarUrl).toBeNull();
     expect(parsed.socialLinks).toHaveLength(1);
   });
@@ -70,6 +73,18 @@ describe("site settings", () => {
       siteSettingsPatchSchema.parse({ homeTitle: "新的首页标题" }),
     ).toEqual({ homeTitle: "新的首页标题" });
     expect(siteSettingsPatchSchema.safeParse({}).success).toBe(false);
+    expect(siteSettingsPatchSchema.parse({ theme: "minimal" })).toEqual({
+      theme: "minimal",
+    });
+    expect(siteSettingsPatchSchema.safeParse({ theme: "custom-css" }).success).toBe(
+      false,
+    );
+  });
+
+  it("falls back old or unknown records to the mdldm theme", () => {
+    expect(resolveSiteTheme(undefined)).toBe("mdldm");
+    expect(resolveSiteTheme("legacy-theme")).toBe("mdldm");
+    expect(resolveSiteTheme("minimal")).toBe("minimal");
   });
 
   it("limits public social links to eight entries", () => {
@@ -104,6 +119,7 @@ describe("site settings", () => {
       creatorName: "Existing Creator",
       supportEmail: "creator@example.com",
       homeTitle: "把 AI 学会，也把它做成作品",
+      theme: "mdldm",
       source: "config",
     });
   });

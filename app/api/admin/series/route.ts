@@ -3,11 +3,13 @@ import { z } from "zod";
 
 import { authorizeAdminMutation } from "@/app/lib/admin-api";
 import {
+  CatalogAdminError,
+  createSeries,
+} from "@/app/lib/catalog-admin-service";
+import {
   accessLevels,
   seriesDiscoveryMetadataSchema,
 } from "@/modules/catalog";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { SeriesModel } from "@/providers/database/mongodb/models/series";
 
 const seriesInput = z.object({
   title: z.string().trim().min(1).max(120),
@@ -47,26 +49,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  await connectMongo();
-  const exists = await SeriesModel.exists({ slug: parsed.data.slug });
-  if (exists) {
-    return NextResponse.json({ error: "系列 slug 已存在" }, { status: 409 });
+  try {
+    const series = await createSeries({
+      title: parsed.data.title,
+      slug: parsed.data.slug,
+      description: parsed.data.description,
+      accessLevel: parsed.data.accessLevel,
+      metadata: metadata.data,
+    });
+    return NextResponse.json({ series }, { status: 201 });
+  } catch (error) {
+    if (error instanceof CatalogAdminError) {
+      return NextResponse.json({ error: error.message }, { status: 409 });
+    }
+    throw error;
   }
-
-  const series = await SeriesModel.create({
-    ...parsed.data,
-    ...metadata.data,
-    status: "draft",
-  });
-
-  return NextResponse.json(
-    {
-      series: {
-        id: series._id.toString(),
-        title: series.title,
-        status: series.status,
-      },
-    },
-    { status: 201 },
-  );
 }

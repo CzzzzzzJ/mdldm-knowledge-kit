@@ -17,3 +17,4 @@ export interface CourseAccessPolicy {
 }
 
 export * from "./discovery";
+export * from "./queries";

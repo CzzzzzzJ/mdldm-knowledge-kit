@@ -1,0 +1,76 @@
+name: Explore submission
+description: 申请把基于本项目搭建的公开知识站加入 Explore Guide
+title: "[Explore]: "
+labels:
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Explore 只收录站长主动提交并明确授权公开展示的站点。不要提交后台地址、测试账号、付费内容原文、用户数据或第三方平台配置。
+  - type: input
+    id: site_name
+    attributes:
+      label: 公开展示名称
+      placeholder: 你的知识站名称
+    validations:
+      required: true
+  - type: input
+    id: site_url
+    attributes:
+      label: 公开访问地址
+      description: 只填写任何访客都可以安全访问的 HTTPS 首页。
+      placeholder: https://example.com
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: 一句话介绍与目标读者
+      description: 说明这个知识站帮助谁解决什么问题。
+    validations:
+      required: true
+  - type: dropdown
+    id: content_type
+    attributes:
+      label: 主要内容类型
+      options:
+        - 图文知识站
+        - 视频课程站
+        - 图文与视频混合
+        - 会员社区配套站
+        - 其他
+    validations:
+      required: true
+  - type: input
+    id: theme
+    attributes:
+      label: 主题与改造方向
+      description: 例如默认 Neo-brutalism、个人品牌主题、极简图文主题。
+    validations:
+      required: true
+  - type: textarea
+    id: build_notes
+    attributes:
+      label: 你如何使用本项目
+      description: 可写使用的版本、保留的能力、Agent 改造重点和给后来者的一条建议。
+    validations:
+      required: true
+  - type: textarea
+    id: assets
+    attributes:
+      label: 可公开使用的截图或素材
+      description: 可拖入首页截图；请先确认你拥有素材权利，且截图不含后台、用户或订单数据。
+  - type: checkboxes
+    id: authorization
+    attributes:
+      label: 收录与授权确认
+      options:
+        - label: 我是该站点的所有者，或已获得所有者授权提交。
+          required: true
+        - label: 我授权项目在 Explore Guide 中展示上述名称、简介、链接和已提交截图。
+          required: true
+        - label: 公开页面和素材不包含未授权内容、用户数据、测试账号或敏感配置。
+          required: true
+        - label: 如站点失效、转让或我希望撤下，会主动提交 Issue 通知维护者。
+          required: true

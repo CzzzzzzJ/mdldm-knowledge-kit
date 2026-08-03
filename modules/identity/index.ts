@@ -13,3 +13,5 @@ export interface UserAccount {
   emailVerified: boolean;
   requiresPasswordChange: boolean;
 }
+
+export * from "./queries";

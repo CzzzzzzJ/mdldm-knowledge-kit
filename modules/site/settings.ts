@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 import type { SiteConfig } from "@/modules/site";
+import { siteThemeIds } from "@/modules/site/themes";
+
+export const siteThemeSchema = z.enum(siteThemeIds);
 
 const httpUrlSchema = z
   .string()
@@ -26,6 +29,7 @@ export const socialLinkSchema = z
 
 export const siteSettingsInputSchema = z
   .object({
+    theme: siteThemeSchema,
     siteName: z.string().trim().min(1).max(80),
     description: z.string().trim().min(1).max(500),
     creatorName: z.string().trim().min(1).max(80),
@@ -56,6 +60,7 @@ export interface ResolvedSiteSettings extends SiteSettingsInput {
 
 export function getDefaultSiteSettings(site: SiteConfig): ResolvedSiteSettings {
   return {
+    theme: "mdldm",
     siteName: site.name,
     description: site.description,
     creatorName: site.creator.name,

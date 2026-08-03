@@ -119,6 +119,9 @@ v0.2 的“可运营”标准进一步要求一个不了解 Next.js、但可以�
 | 可观测性 Provider | 结构化 Console 与签名 Webhook 已接入 |
 | 最低配置与能力裁剪 | 已完成；默认 Manual，OSS/SMTP/XorPay/Webhook 按需启用，未启用 SDK 延迟加载 |
 | Agent + Serverless | 官方仓库契约、Preview 优先协议与脱敏检查已完成；全新账号 L2/L3 和国内多网络验收待完成 |
+| Agent-first 接口 | 六类任务 Prompt、脱敏生命周期状态、后台故障交接、Doctor 与人工确认的 Issue 草稿已完成 |
+| 内置主题 | 麦当 mdldm 与极简知识库两套白名单主题已接入 SiteSetting 和共享语义 Token |
+| 工程边界 | AF-11 首轮已完成；Web 入口无直连 Model，核心查询通过 Query Service、Repository Port 和安全 DTO |
 | 可运行 Demo | 注册验证、双模式购买、幂等权益、课程、媒体、进度、运营总览和失败队列已可运行 |
 | 当前公开版本 | `v0.1.0` |
 | Vibe Coding 创作者可运营 | Phase 7 进行中；双邮箱确认的管理员 1 号、随机临时密码、强制激活、后台开站指南、站点生命周期和上线门禁已实现，L2/L3 仍未完成 |

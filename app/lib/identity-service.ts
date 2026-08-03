@@ -32,6 +32,28 @@ function tokenExpiry(purpose: IdentityTokenPurpose): Date {
   return new Date(Date.now() + lifetimeMs);
 }
 
+export async function authenticateUser(input: {
+  email: string;
+  password: string;
+}): Promise<
+  | { ok: true; user: UserDocument }
+  | { ok: false; reason: "invalid" | "email_not_verified" }
+> {
+  await connectMongo();
+  const user = await UserModel.findOne({
+    email: input.email,
+    status: "active",
+  }).select("+passwordHash");
+
+  if (!user || !(await bcrypt.compare(input.password, user.passwordHash))) {
+    return { ok: false, reason: "invalid" };
+  }
+  if (!user.emailVerified) {
+    return { ok: false, reason: "email_not_verified" };
+  }
+  return { ok: true, user };
+}
+
 async function issueIdentityToken(
   user: UserDocument,
   purpose: IdentityTokenPurpose,

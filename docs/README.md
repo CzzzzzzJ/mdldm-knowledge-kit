@@ -13,6 +13,8 @@
 - `DEMO.md`：虚构演示数据、账号和主流程验收路径；
 - `DEPLOYMENT.md`：Vercel 与第三方 Provider 配置流程；
 - `../AGENT_SERVERLESS_DEPLOY.md`：Agent + Serverless 唯一线上执行协议与脱敏报告格式；
+- `../AGENT_TASKS.md`：六类任务 Prompt、可编辑范围、敏感禁区、外部审批、质量和回滚契约；
+- `../README.md#反馈agent-报告与-explore`：Doctor、Agent Report、Explore Submission 与安全反馈入口；
 - `BACKUP_AND_RECOVERY.md`：Atlas、MongoDB 和 OSS 备份恢复基线；
 - `UPGRADING.md`：版本升级、数据备份、验证和回滚；
 - `RELEASE.md`：版本号、发布门禁和 GitHub Release 流程；

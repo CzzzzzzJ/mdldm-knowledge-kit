@@ -73,7 +73,21 @@
 - 高危依赖升级优先处理；
 - Release 必须可追溯到通过质量门的提交。
 
-## 8. 发布阻断条件
+## 8. Agent 接口
+
+- Agent 状态接口只返回版本、生命周期、Provider 名称、能力状态和变量名；
+- 不向 Agent 状态、Prompt 或公开 Issue 写入站点域名、环境变量值、邮箱、URI、Token、
+  Bucket、支付回调原文和业务数据；
+- 后台故障交接只包含固定分类、错误码、Provider 和次数，不复制详情与 sourceId；
+- 第三方登录、资源创建、真实写入、付费、发信、Production 发布和外部提交必须由用户
+  明确批准；
+- 生命周期无法读取时返回 `BLOCKED / unknown`，不能推断已经上线。
+- Doctor 只输出固定检查码和脱敏事实；不输出底层异常、Git 文件列表或本机绝对路径；
+- `pnpm run doctor --issue` 必须先通过隐私扫描，只写入被忽略的本地草稿；Doctor 不得调用
+  GitHub，公开 Issue 只能由用户人工确认后提交；
+- 安全漏洞、密钥暴露和可利用细节只能通过 Private Security Advisory 私密报告。
+
+## 9. 发布阻断条件
 
 以下任一项存在时不得公开发布：
 

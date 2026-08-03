@@ -16,6 +16,8 @@
     "check": "node scripts/check.mjs",
     "release:audit": "node scripts/release-audit.mjs",
     "quickstart:prepare": "tsx scripts/prepare-local-env.ts",
+    "agent:status": "tsx scripts/agent-status.ts",
+    "doctor": "tsx scripts/doctor.ts",
     "check-config": "tsx scripts/check-config.ts",
     "check:serverless": "tsx scripts/check-serverless-readiness.ts",
     "validate:providers": "tsx scripts/validate-provider-config.ts",

@@ -78,8 +78,10 @@ flowchart LR
    详情、学习中心和基础后台分区；
 2. `Wave B / IN PROGRESS`：商品和连续学习已完成，继续补齐内容完整 CRUD、用户、
    权益和分析后台；
-3. `Wave C / IN PROGRESS`：一次性管理员初始化、后台开站指南、上线门禁和
-   Agent + Vercel Serverless 部署协议已完成；其余任务级 Prompt 继续补齐；
+3. `Wave C / IN PROGRESS`：一次性管理员初始化、后台开站指南、上线门禁、六类任务级
+   Prompt、脱敏生命周期接口、Agent Doctor、人工确认的 Issue 草稿、两套主题、
+   Query Service 工程边界和 Agent + Vercel Serverless 部署协议已完成；继续完成
+   全新隔离账号和目标用户验收；
 4. `Wave D / TODO`：开源版独立 Preview、L2/L3、中国大陆多网络、备份恢复和目标
    AI 博主验收。
 

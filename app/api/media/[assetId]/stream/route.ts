@@ -3,13 +3,9 @@ import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
 
 import { NextResponse, type NextRequest } from "next/server";
-import { isValidObjectId } from "mongoose";
 
-import { canCurrentUserAccessCourse } from "@/app/lib/course-access";
+import { getVideoAssetForViewer } from "@/app/lib/media-delivery-service";
 import { parseByteRange } from "@/modules/media/range";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
-import { CourseModel } from "@/providers/database/mongodb/models/series";
 import { getStorageProvider } from "@/providers/storage";
 
 export async function GET(
@@ -17,31 +13,14 @@ export async function GET(
   context: { params: Promise<{ assetId: string }> },
 ) {
   const { assetId } = await context.params;
-  if (!isValidObjectId(assetId)) {
+  const delivery = await getVideoAssetForViewer(assetId);
+  if (!delivery.ok) {
+    if (delivery.reason === "forbidden") {
+      return NextResponse.json({ error: "无权播放此课程" }, { status: 403 });
+    }
     return NextResponse.json({ error: "媒体不存在" }, { status: 404 });
   }
-
-  await connectMongo();
-  const [asset, courses] = await Promise.all([
-    MediaAssetModel.findById(assetId),
-    CourseModel.find({ videoAssetId: assetId, status: "published" }),
-  ]);
-
-  if (
-    !asset ||
-    courses.length === 0 ||
-    asset.status !== "ready" ||
-    asset.kind !== "video"
-  ) {
-    return NextResponse.json({ error: "媒体不存在" }, { status: 404 });
-  }
-
-  const accessDecisions = await Promise.all(
-    courses.map((course) => canCurrentUserAccessCourse(course)),
-  );
-  if (!accessDecisions.some(Boolean)) {
-    return NextResponse.json({ error: "无权播放此课程" }, { status: 403 });
-  }
+  const { asset } = delivery;
 
   const storage = getStorageProvider();
   if (storage.name !== asset.provider) {

@@ -2,14 +2,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
+import { listOrdersForUser } from "@/app/lib/user-query-service";
 import { SiteHeader } from "@/components/site-header";
 import { getSiteConfig } from "@/config/site.config";
 import { getCurrentUser } from "@/providers/auth/session";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  OrderItemModel,
-  OrderModel,
-} from "@/providers/database/mongodb/models/commerce";
 
 export const dynamic = "force-dynamic";
 
@@ -27,14 +23,7 @@ export default async function OrdersPage() {
     redirect("/login?next=/account/orders");
   }
 
-  await connectMongo();
-  const orders = await OrderModel.find({ userId: user.id })
-    .sort({ createdAt: -1 })
-    .limit(100)
-    .lean();
-  const items = await OrderItemModel.find({
-    orderId: { $in: orders.map((order) => order._id) },
-  }).lean();
+  const orders = await listOrdersForUser(user.id);
   const site = getSiteConfig();
 
   return (
@@ -59,24 +48,21 @@ export default async function OrdersPage() {
             </section>
           ) : (
             orders.map((order) => {
-              const orderItems = items.filter(
-                (item) => item.orderId.toString() === order._id.toString(),
-              );
               return (
                 <article
                   className="surface grid gap-4 p-6 md:grid-cols-[1fr_auto] md:items-center"
-                  key={order._id.toString()}
+                  key={order.id}
                 >
                   <div>
                     <p className="font-mono text-xs text-[var(--muted)]">
                       {order.orderNumber}
                     </p>
                     <h2 className="mt-2 text-xl font-semibold">
-                      {orderItems.map((item) => item.title).join("、")}
+                      {order.titles.join("、")}
                     </h2>
                     <p className="mt-2 text-sm text-[var(--muted)]">
                       {order.provider} / {order.paymentMethod} ·{" "}
-                      {order.createdAt.toLocaleString("zh-CN")}
+                      {new Date(order.createdAt).toLocaleString("zh-CN")}
                     </p>
                   </div>
                   <div className="md:text-right">

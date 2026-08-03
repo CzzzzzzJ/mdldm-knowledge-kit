@@ -10,6 +10,11 @@ const requiredFiles = [
   "START_HERE.md",
   "AGENT_QUICKSTART.md",
   "AGENT_SERVERLESS_DEPLOY.md",
+  "AGENT_TASKS.md",
+  ".github/ISSUE_TEMPLATE/01-bug.yml",
+  ".github/ISSUE_TEMPLATE/02-feature.yml",
+  ".github/ISSUE_TEMPLATE/03-agent-report.yml",
+  ".github/ISSUE_TEMPLATE/04-explore-submission.yml",
   "CHANGELOG.md",
   "CONTRIBUTING.md",
   "SECURITY.md",
@@ -164,7 +169,7 @@ async function main() {
   for (const file of files) {
     if (
       (/^\.env(?:\.|$)/.test(file) && file !== ".env.example") ||
-      /(^|\/)(?:data|uploads|playwright-report|test-results|\.local-planning)\//.test(file) ||
+      /(^|\/)(?:data|uploads|playwright-report|test-results|\.local-planning|\.mdldm)\//.test(file) ||
       /^docs\/analysis\//.test(file) ||
       /(^|\/)(?:credentials|service-account)[^/]*\.json$/i.test(file)
     ) {

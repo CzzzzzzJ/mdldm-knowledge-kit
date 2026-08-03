@@ -1,5 +1,11 @@
 # 升级与回滚
 
+## SiteSetting 主题字段
+
+新增的 `theme` 只接受 `mdldm` 和 `minimal`。旧数据库记录没有该字段时，应用会读取为
+`mdldm`；站长下次在 `/admin/site` 保存设置时会自动写入默认值，不需要直接修改 MongoDB。
+回滚到不认识主题字段的旧版本前仍应先备份数据库，但该字段不会改变支付、订单或权益数据。
+
 ## 升级前
 
 1. 阅读 `CHANGELOG.md` 和目标版本 Release Notes；

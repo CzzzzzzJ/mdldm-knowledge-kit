@@ -126,12 +126,22 @@
 - IN PROGRESS：完成 AF-05 的 Agent + Vercel Serverless 唯一线上协议、`hkg1` 仓库契约、
   Preview/Production 双确认、只读健康检查、脱敏报告与本地 Docker 边界；全新隔离账号
   L2/L3 和至少两个中国大陆网络点的真实验收仍待完成；
+- DONE：完成 AF-07 Agent-first 接口，提供六类任务 Prompt、统一权限/敏感信息/审批/
+  质量与回滚契约、`pnpm agent:status`、受保护的脱敏状态 API 和后台“交给 Agent”入口；
+- DONE：完成 AF-08 Agent Doctor 与 Issue，提供 `pnpm run doctor`、本地隐私扫描、只生成
+  不提交的 Agent Report 草稿、Explore Submission、README 反馈入口和私密 Advisory 分流；
+- DONE：完成 AF-10 两主题首版，SiteSetting 可在麦当 mdldm 与极简知识库间切换，旧记录
+  安全回落，统一语义 Token 覆盖深浅模式且不改变支付、权益和内容结构；
+- DONE：完成 AF-11 工程边界首轮收口，Page、Route Handler 和 Client Component
+  不再直接导入 MongoDB Model，建立 Catalog、User、Learning 和 Commerce Query
+  Service、Repository Port、安全 DTO 与架构回归测试，认证、支付查询、内容发布、
+  学习权限和媒体交付优先迁入服务端用例；
 - TODO：在最后的 README P0 重构中只暴露 AF-02 这一条推荐启动旅程；
 - IN PROGRESS：补齐课程和系列的编辑、排序、预览、安全删除与 Demo 清理；
 - IN PROGRESS：补齐用户、权益和分析后台；
 - TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 配置，并按需验证 XorPay；
 - DONE：实现一次性首个管理员初始化，`/setup` 兼容重定向到 `/admin/setup`；
-- TODO：提供部署、Provider、品牌改造、内容迁移和上线验收的任务级 Agent Prompt；
+- DONE：提供本地启动、部署、Provider、品牌改造、图文发布和上线验收的任务级 Agent Prompt；
 - TODO：使用隔离第三方测试账号完成 L2 验证；
 - TODO：邀请未参与开发、稍懂 Vibe Coding 的 AI 博主完成全新部署和 L3 验收；
 - TODO：发布面向运营就绪的 `v0.2.0`。

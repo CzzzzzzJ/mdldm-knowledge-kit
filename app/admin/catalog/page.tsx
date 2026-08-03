@@ -1,24 +1,16 @@
 import { AdminCourseManager } from "@/components/admin-course-manager";
+import { listAdminCatalog } from "@/app/lib/catalog-query-service";
 import {
   AdminShell,
   requireAdminPage,
 } from "@/components/admin-shell";
-import { connectMongo } from "@/providers/database/mongodb/connection";
-import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCatalogPage() {
   const user = await requireAdminPage("/admin/catalog");
 
-  await connectMongo();
-  const [seriesRecords, courseRecords] = await Promise.all([
-    SeriesModel.find().sort({ createdAt: -1 }).lean(),
-    CourseModel.find().sort({ createdAt: -1 }).lean(),
-  ]);
+  const catalog = await listAdminCatalog();
 
   return (
     <AdminShell
@@ -28,16 +20,16 @@ export default async function AdminCatalogPage() {
       title="内容管理"
     >
       <AdminCourseManager
-        courses={courseRecords.map((course) => ({
-          id: course._id.toString(),
-          seriesId: course.seriesId.toString(),
+        courses={catalog.courses.map((course) => ({
+          id: course.id,
+          seriesId: course.seriesId,
           title: course.title,
           status: course.status,
           accessLevel: course.accessLevel,
           videoAssetId: course.videoAssetId?.toString() ?? null,
         }))}
-        series={seriesRecords.map((item) => ({
-          id: item._id.toString(),
+        series={catalog.series.map((item) => ({
+          id: item.id,
           title: item.title,
           status: item.status,
         }))}
