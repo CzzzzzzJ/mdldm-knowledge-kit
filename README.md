@@ -34,6 +34,33 @@
 
 **不录视频，也可以在这里发布和销售文档型教程。** Article 图文课与 Video 视频课使用同一套商品、订单和权益系统。
 
+## 现在的开源版长什么样
+
+下面不是设计稿，而是使用隔离 Demo 数据真实运行后的页面。
+
+<table>
+  <tr>
+    <th width="50%">课程发现：搜索、分类与 Tag</th>
+    <th width="50%">交易入口：全站会员与单课购买</th>
+  </tr>
+  <tr>
+    <td><img src="docs/assets/courses.png" alt="mdldm Knowledge Kit 课程搜索与标签页面" /></td>
+    <td><img src="docs/assets/pricing.png" alt="mdldm Knowledge Kit 全站会员与单课购买页面" /></td>
+  </tr>
+</table>
+
+![mdldm Knowledge Kit 站长运营后台](docs/assets/admin-operations.png)
+
+站长后台不出现在公开导航中。首次部署后从 `/admin` 创建管理员 1 号，再在后台完成品牌、内容、商品、用户、订单与系统配置。
+
+## 它从哪里来
+
+开源版不是一套与真实运营脱节的模板，而是从 [麦当mdldm 的知识站](https://www.mdldm.club/) 中重新抽离公共能力、统一视觉 Token 和运营流程。下面是当前主站的公开首页；真实用户、订单、评价、私有课程正文和第三方配置不会进入本仓库。
+
+[![麦当mdldm 知识主站公开首页](docs/assets/mdldm-club-home.png)](https://www.mdldm.club/)
+
+主站截图只用于说明项目来源和设计关系，不表示主站源码、课程封面、人物形象或品牌资产随 Apache-2.0 开放授权，具体边界见 [商标与品牌使用说明](TRADEMARKS.md) 和 [素材清单](docs/assets/README.md)。
+
 ## 它适不适合你
 
 | 适合 | 暂不适合 |

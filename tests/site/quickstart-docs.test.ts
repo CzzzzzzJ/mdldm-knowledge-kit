@@ -100,13 +100,21 @@ describe("Agent-first quickstart contract", () => {
   });
 
   it("keeps the public README adopter-first and routes advanced documentation", async () => {
-    const [readme, docsIndex, paidGuide, trademarks, releaseAudit] =
+    const [
+      readme,
+      docsIndex,
+      paidGuide,
+      trademarks,
+      releaseAudit,
+      assetManifest,
+    ] =
       await Promise.all([
         readProjectFile("README.md"),
         readProjectFile("docs/README.md"),
         readProjectFile("docs/PAID_PRACTICE_GUIDE.md"),
         readProjectFile("TRADEMARKS.md"),
         readProjectFile("scripts/release-audit.mjs"),
+        readProjectFile("docs/assets/README.md"),
       ]);
 
     for (const entry of [
@@ -128,6 +136,19 @@ describe("Agent-first quickstart contract", () => {
       "docs/assets/wechat-group-mdldm-kit-2026-08-10.jpg",
     );
     expect(readme).toContain("2026 年 8 月 10 日前");
+    for (const screenshot of [
+      "docs/assets/home.png",
+      "docs/assets/courses.png",
+      "docs/assets/pricing.png",
+      "docs/assets/admin-operations.png",
+      "docs/assets/mdldm-club-home.png",
+    ]) {
+      expect(readme).toContain(screenshot);
+      expect(assetManifest).toContain(screenshot.replace("docs/assets/", ""));
+    }
+    expect(readme).toContain("不是设计稿");
+    expect(readme).toContain("不表示主站源码");
+    expect(assetManifest).toContain("不因此纳入 Apache-2.0 授权");
     expect(readme).not.toContain("VIBE_CODING_CREATOR_PLAN");
     expect(readme).not.toContain("OPERATOR_READY_JOURNEY");
     expect(docsIndex).toContain("第一次使用");
