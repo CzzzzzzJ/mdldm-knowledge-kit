@@ -60,6 +60,7 @@
 - DONE：Manual Payment Provider；
 - DONE：Mock Payment Provider；
 - DONE：XorPay Adapter；
+- DONE：隔离并记录 XorPay 强制 MD5 线协议的安全边界，业务载荷摘要继续使用 SHA-256；
 - DONE：Webhook 验签、幂等和失败重放；
 - DONE：支付与授权事务边界；
 - DONE：订单后台。

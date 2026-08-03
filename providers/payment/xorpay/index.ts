@@ -30,6 +30,16 @@ const xorPayResponseSchema = z
   })
   .passthrough();
 
+function createXorPayProtocolSignature(payload: string): string {
+  // XorPay's wire protocol mandates this legacy MD5 signature. Keep it
+  // isolated here: passwords, tokens, stored payload digests and all other
+  // integrity checks must use their dedicated modern algorithms.
+  return createHash("md5")
+    .update(payload, "utf8")
+    .digest("hex")
+    .toLowerCase();
+}
+
 export function createXorPayRequestSignature(input: {
   name: string;
   payType: string;
@@ -38,13 +48,9 @@ export function createXorPayRequestSignature(input: {
   notifyUrl: string;
   appSecret: string;
 }): string {
-  return createHash("md5")
-    .update(
-      `${input.name}${input.payType}${input.price}${input.orderNumber}${input.notifyUrl}${input.appSecret}`,
-      "utf8",
-    )
-    .digest("hex")
-    .toLowerCase();
+  return createXorPayProtocolSignature(
+    `${input.name}${input.payType}${input.price}${input.orderNumber}${input.notifyUrl}${input.appSecret}`,
+  );
 }
 
 export function createXorPayCallbackSignature(input: {
@@ -54,13 +60,9 @@ export function createXorPayCallbackSignature(input: {
   paidTime: string;
   appSecret: string;
 }): string {
-  return createHash("md5")
-    .update(
-      `${input.providerOrderId}${input.orderNumber}${input.paidPrice}${input.paidTime}${input.appSecret}`,
-      "utf8",
-    )
-    .digest("hex")
-    .toLowerCase();
+  return createXorPayProtocolSignature(
+    `${input.providerOrderId}${input.orderNumber}${input.paidPrice}${input.paidTime}${input.appSecret}`,
+  );
 }
 
 function signaturesMatch(received: string, expected: string): boolean {

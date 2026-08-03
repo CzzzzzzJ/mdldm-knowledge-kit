@@ -7,6 +7,8 @@ import { SiteHeader } from "@/components/site-header";
 import { isSelfServiceEmailAvailable } from "@/config/env";
 import { getSiteConfig } from "@/config/site.config";
 
+export const dynamic = "force-dynamic";
+
 export default async function RegisterPage() {
   await requirePublicSiteAccess();
   const site = getSiteConfig();
