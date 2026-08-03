@@ -2,9 +2,20 @@ import { defineConfig, devices } from "@playwright/test";
 
 const port = 3210;
 const testClientIp = `2001:db8::${Date.now().toString(16)}`;
+const testMongoUri =
+  process.env.E2E_MONGODB_URI ??
+  "mongodb://127.0.0.1:27017/mdldm_knowledge_kit_e2e";
+const testAuthSecret =
+  process.env.E2E_AUTH_SECRET ??
+  "playwright-local-secret-value-with-more-than-32-characters";
+
+process.env.MONGODB_URI = testMongoUri;
+process.env.AUTH_SECRET = testAuthSecret;
+process.env.PAYMENT_PROVIDER = "mock";
 
 export default defineConfig({
   testDir: "./e2e",
+  globalSetup: "./e2e/global-setup.ts",
   timeout: 180_000,
   expect: {
     timeout: 15_000,
@@ -27,13 +38,13 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npm run dev -- --turbopack --hostname 127.0.0.1 --port ${port}`,
+    command: `pnpm dev --turbopack --hostname 127.0.0.1 --port ${port}`,
     env: {
       ...process.env,
       NEXT_DIST_DIR: ".next-e2e",
-      AUTH_SECRET:
-        process.env.AUTH_SECRET ??
-        "playwright-local-secret-value-with-more-than-32-characters",
+      MONGODB_URI: testMongoUri,
+      AUTH_SECRET: testAuthSecret,
+      PAYMENT_PROVIDER: "mock",
     },
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: !process.env.CI,

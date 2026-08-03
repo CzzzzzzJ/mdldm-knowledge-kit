@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import type { ProviderReadiness } from "@/providers/readiness";
+
 interface OperationsSummary {
   checkedAt: string;
   metrics: {
@@ -20,7 +22,7 @@ interface OperationsSummary {
     revenueInMinorUnits: number;
     currency: string;
   };
-  providers: Record<string, { provider: string; status: string }>;
+  providers: Record<string, ProviderReadiness>;
 }
 
 interface OperationFailure {
@@ -47,6 +49,12 @@ const metricLabels: Array<
   ["media", "媒体"],
   ["progress", "学习记录"],
 ];
+
+const providerStatusLabels: Record<ProviderReadiness["status"], string> = {
+  ready: "可用",
+  limited: "有限模式",
+  disabled: "未启用",
+};
 
 export function AdminOperationsPanel() {
   const [summary, setSummary] = useState<OperationsSummary | null>(null);
@@ -156,7 +164,7 @@ export function AdminOperationsPanel() {
           <article className="surface p-4" key={key}>
             <p className="text-sm text-[var(--muted)]">{label}</p>
             <p className="mt-2 text-3xl font-semibold">
-              {summary?.metrics[key] ?? "—"}
+              {summary?.metrics[key] ?? "暂无"}
             </p>
           </article>
         ))}
@@ -167,8 +175,8 @@ export function AdminOperationsPanel() {
           <article className="surface p-5">
             <p className="font-semibold">关键结果</p>
             <p className="mt-3 text-sm text-[var(--muted)]">
-              已发布 {summary.metrics.publishedCourses} 门课程 · 支付成功{" "}
-              {summary.metrics.paidOrders} 笔 · 完课{" "}
+              已发布 {summary.metrics.publishedCourses} 门课程，支付成功{" "}
+              {summary.metrics.paidOrders} 笔，完课{" "}
               {summary.metrics.completedProgress} 条
             </p>
             <p className="mt-2 text-sm text-[var(--muted)]">
@@ -177,15 +185,37 @@ export function AdminOperationsPanel() {
             </p>
           </article>
           <article className="surface p-5">
-            <p className="font-semibold">Provider 状态</p>
-            <div className="mt-3 flex flex-wrap gap-2">
+            <p className="font-semibold">能力状态</p>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              只展示 Provider 名称、启用条件和变量名，不返回任何配置值。
+            </p>
+            <div className="mt-4 grid gap-3">
               {Object.entries(summary.providers).map(([kind, readiness]) => (
-                <span
-                  className="rounded-full border border-[var(--line)] px-3 py-1 font-mono text-xs"
+                <div
+                  className="rounded-xl border border-[var(--line)] p-4"
                   key={kind}
                 >
-                  {kind}: {readiness.provider} / {readiness.status}
-                </span>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-semibold">{readiness.label}</p>
+                      <p className="mt-1 font-mono text-xs text-[var(--muted)]">
+                        {kind} / {readiness.provider}
+                      </p>
+                    </div>
+                    <span className="rounded-full border border-[var(--line)] px-3 py-1 text-xs font-semibold">
+                      {providerStatusLabels[readiness.status]}
+                    </span>
+                  </div>
+                  <p className="mt-3 text-sm text-[var(--muted)]">
+                    {readiness.detail}
+                  </p>
+                  <p className="mt-2 text-sm">下一步：{readiness.action}</p>
+                  {readiness.requiredEnv.length > 0 ? (
+                    <p className="mt-2 font-mono text-xs text-[var(--muted)]">
+                      启用条件：{readiness.requiredEnv.join(" · ")}
+                    </p>
+                  ) : null}
+                </div>
               ))}
             </div>
           </article>
@@ -216,15 +246,15 @@ export function AdminOperationsPanel() {
             >
               <div>
                 <p className="font-mono text-xs text-[var(--accent)]">
-                  {failure.category} · {failure.severity} · {failure.code}
+                  {failure.category} / {failure.severity} / {failure.code}
                 </p>
                 <p className="mt-2 font-semibold">{failure.summary}</p>
                 <p className="mt-1 text-sm text-[var(--muted)]">
                   {failure.detail}
                 </p>
                 <p className="mt-2 font-mono text-xs text-[var(--muted)]">
-                  {failure.provider ?? "internal"} · 累计{" "}
-                  {failure.occurrenceCount} 次 ·{" "}
+                  {failure.provider ?? "internal"}，累计{" "}
+                  {failure.occurrenceCount} 次，{" "}
                   {new Date(failure.lastOccurredAt).toLocaleString("zh-CN")}
                 </p>
               </div>

@@ -94,7 +94,7 @@ main()
   .catch((error: unknown) => {
     if (error instanceof z.ZodError) {
       console.error(
-        '用法：npm run create-invitation -- --type membership --duration-days 365 --max-redemptions 1 --admin-email "admin@example.com"',
+        '用法：pnpm create-invitation --type membership --duration-days 365 --max-redemptions 1 --admin-email "admin@example.com"',
       );
       for (const issue of error.issues) {
         console.error(`- ${issue.path.join(".")}: ${issue.message}`);

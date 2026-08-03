@@ -21,15 +21,19 @@ jobs:
       PAYMENT_PROVIDER: manual
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run check-config
-      - run: npm run check
-      - run: npm run release:audit
-      - run: npm audit --audit-level=moderate
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check-config
+      - run: pnpm check:serverless
+      - run: pnpm check
+      - run: pnpm release:audit
+      - run: pnpm audit --audit-level=moderate
 
   smoke:
     runs-on: ubuntu-latest
@@ -48,13 +52,16 @@ jobs:
       MONGODB_URI: mongodb://127.0.0.1:27017/mdldm_knowledge_kit_test
     steps:
       - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
       - uses: actions/setup-node@v6
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - run: npm run create-admin -- --name "Demo Admin" --email admin@example.com --password local-demo-admin-password-2026
-      - run: npm run seed-demo
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e
+      - run: pnpm create-admin --name "Demo Admin" --email admin@example.com --password local-demo-admin-password-2026
+      - run: pnpm seed-demo
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm test:e2e

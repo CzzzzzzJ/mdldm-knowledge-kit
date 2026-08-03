@@ -8,6 +8,7 @@ import {
   rejectCrossOriginMutation,
 } from "@/app/lib/request-security";
 import { emailSchema } from "@/modules/identity/credentials";
+import { isSelfServiceEmailAvailable } from "@/config/env";
 
 const schema = z.object({ email: emailSchema }).strict();
 
@@ -20,6 +21,16 @@ export async function POST(request: NextRequest) {
     }));
   if (rejection) {
     return rejection;
+  }
+
+  if (!isSelfServiceEmailAvailable()) {
+    return NextResponse.json(
+      {
+        code: "EMAIL_DELIVERY_DISABLED",
+        error: "站长尚未启用 SMTP，当前不能发送密码重置邮件",
+      },
+      { status: 503 },
+    );
   }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));

@@ -5,6 +5,7 @@ import {
   CommerceError,
   createCheckout,
 } from "@/app/lib/commerce-service";
+import { isSiteLive } from "@/app/lib/site-initialization-service";
 import { structuredLog } from "@/app/lib/operations-service";
 import {
   applyRequestRateLimit,
@@ -29,6 +30,13 @@ export async function POST(request: NextRequest) {
     }));
   if (rejection) {
     return rejection;
+  }
+
+  if (!(await isSiteLive())) {
+    return NextResponse.json(
+      { error: "网站仍在配置中，暂未开放购买" },
+      { status: 503 },
+    );
   }
 
   const user = await getCurrentUser();

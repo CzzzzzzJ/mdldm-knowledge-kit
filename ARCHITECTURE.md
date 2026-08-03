@@ -26,12 +26,12 @@ flowchart TB
 
     Mongo["MongoDB Adapter"]
     LocalStorage["Local Storage Adapter"]
-    ObjectStorage["OSS / S3 Adapter"]
+    ObjectStorage["OSS Adapter"]
     ManualPay["Manual / Mock Payment"]
     XorPay["XorPay Adapter"]
     Mail["Console / SMTP Adapter"]
-    Video["None / FFmpeg / MPS"]
-    Alerts["Console / Webhook / Sentry"]
+    Video["None<br/>扩展转码暂不公开"]
+    Alerts["Console / Webhook"]
     WeChat["WeChat Adapter"]
 
     UI --> API
@@ -119,9 +119,13 @@ flowchart LR
     Clone["克隆仓库"] --> Env["复制 .env.example"]
     Env --> Check["运行 check-config"]
     Check --> DB["启动 MongoDB / Docker"]
-    DB --> Admin["创建首个管理员"]
-    Admin --> Seed["可选导入 Demo 课程"]
-    Seed --> Run["启动知识站"]
+    DB --> Start["启动知识站"]
+    Start --> Admin["在 /admin 两次确认自己的邮箱"]
+    Admin --> Credential["保存只展示一次的随机临时密码"]
+    Credential --> Activate["设置正式密码并激活管理员 1 号"]
+    Activate --> Setup["在 /admin/setup 完成开站任务"]
+    Setup --> Seed["可选导入 Demo 课程"]
+    Seed --> Launch["通过上线检查后开放网站"]
 ```
 
 ### 内容发布
@@ -172,7 +176,6 @@ mdldm-knowledge-kit/
 │   ├── payment/xorpay/
 │   ├── email/console/
 │   ├── email/smtp/
-│   ├── transcode/ffmpeg/
 │   └── observability/webhook/
 ├── config/
 ├── models/
@@ -183,11 +186,11 @@ mdldm-knowledge-kit/
 
 第一阶段保持一个 Next.js 仓库，不提前拆成复杂 Monorepo。
 
-## 5. 当前生产部署拓扑
+## 5. 推荐生产部署拓扑
 
 ```mermaid
 flowchart LR
-    Browser["浏览器"] --> Vercel["Vercel / Next.js"]
+    Browser["浏览器"] --> Vercel["Vercel / Next.js<br/>hkg1 默认区域"]
     Vercel --> Atlas["MongoDB Atlas"]
     Vercel --> SMTP["SMTP / 阿里云邮件推送"]
     Vercel --> XorPay["XorPay"]
@@ -203,3 +206,44 @@ flowchart LR
 - SMTP 只通过 Email Port 调用；
 - XorPay 只负责支付协议，价格校验、PaymentEvent 和 Entitlement 仍在服务端领域流程；
 - Preview 与 Production 必须使用隔离的数据和密钥。
+- 第一版只维护 Agent + Vercel Serverless；Docker Compose 只提供本地 MongoDB；
+- Preview 通过后才能申请 Production，两次外部变更分别由站长确认；
+- `hkg1` 不属于中国大陆，也不提供大陆访问保证；正式上线前必须用自定义域名完成至少
+  两个中国大陆网络点的首页、登录、后台、学习页和媒体验收；
+- Agent 通过 `pnpm check:serverless` 读取脱敏技术状态，真实账号 L2/L3 与大陆网络证据
+  仍由站长确认和保存。
+
+这张图描述推荐目标，不代表公共仓库已经绑定真实第三方账号。每个部署者都必须在
+自己的隔离环境中完成 Provider 验证。
+
+## 6. Phase 7 初始化与运营配置边界
+
+```mermaid
+flowchart LR
+    Secrets["Environment / Secret Manager<br/>URI、密钥、Provider 选择"]
+    Bootstrap["一次性 /admin<br/>双邮箱确认并创建管理员 1 号"]
+    Activate["/admin/activate<br/>轮换临时密码"]
+    Setup["受保护的 /admin/setup<br/>配置教学、就绪检查、正式开站"]
+    Settings["SiteSetting / Product<br/>品牌、导航、商品、运营规则"]
+    Admin["运营后台<br/>内容、用户、权益、订单、系统"]
+    Public["用户端<br/>首页、系列、学习、账户"]
+
+    Secrets --> Bootstrap
+    Bootstrap --> Activate
+    Activate --> Setup
+    Setup --> Settings
+    Settings --> Admin
+    Settings --> Public
+```
+
+- `/admin` 的首次管理员入口只在尚无管理员时开放，站长两次输入自己的邮箱；生产环境还需要一次性初始化口令；
+- 系统生成每次部署独立的随机临时密码，只返回并展示一次；完成正式密码轮换前，其他后台页面和接口拒绝访问；
+- `/admin/setup` 不保存或展示第三方密钥，只读取 Provider 健康状态和业务就绪事实；
+- 初始化状态与首个管理员创建必须具备一次性安全边界；
+- SiteSetting 和 Product 是服务端事实，不能被客户端直接决定；
+- 环境变量变更需要重新部署，日常运营设置不需要修改代码；
+- 最低配置与按需能力的公开契约见 `docs/CAPABILITY_MATRIX.md`；未选择的外部能力不参与
+  专属变量校验，并通过动态导入避免加载 OSS 与 SMTP SDK；
+- 公共第一版不接受 S3、FFmpeg、Aliyun MPS 或 Sentry 作为配置值，扩展实现需要独立 ADR、
+  健康检查与验收；
+- 原项目只作为配置结构与运营旅程参考，真实值和私有插件不进入公共核心。

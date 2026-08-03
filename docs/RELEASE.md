@@ -10,11 +10,12 @@
 ## 发布清单
 
 1. 更新 `CHANGELOG.md`、README 状态、文档和 `.env.example`；
-2. 运行 `npm ci`；
-3. 运行 `npm run check-config`、`npm run check`、`npm run release:audit`；
-4. 在空数据库执行 `create-admin`、`seed-demo` 和完整 E2E；
+2. 运行 `pnpm install --frozen-lockfile`；
+3. 运行 `pnpm check-config`、`pnpm check`、`pnpm release:audit`；
+4. 在空数据库通过 `/admin` 双邮箱确认创建管理员 1 号，验证临时密码一次性展示并完成
+   正式密码轮换，再执行 `seed-demo` 和完整 E2E；
 5. 从远端仓库克隆到隔离目录，完成 15 分钟安装演练；
-6. 确认 `npm audit --audit-level=moderate` 为 0；
+6. 确认 `pnpm audit --audit-level=moderate` 为 0；
 7. 确认 GitHub CI 与 CodeQL 通过；
 8. 创建带签名说明的 annotated tag；
 9. 推送标签并创建 GitHub Release；

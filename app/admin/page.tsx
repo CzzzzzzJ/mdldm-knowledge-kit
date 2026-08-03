@@ -1,63 +1,118 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { AdminCourseManager } from "@/components/admin-course-manager";
-import { AdminOperationsPanel } from "@/components/admin-operations-panel";
-import { AdminOrderManager } from "@/components/admin-order-manager";
-import { SiteHeader } from "@/components/site-header";
-import { getSiteConfig } from "@/config/site.config";
-import { getCurrentUser } from "@/providers/auth/session";
-import { connectMongo } from "@/providers/database/mongodb/connection";
 import {
-  CourseModel,
-  SeriesModel,
-} from "@/providers/database/mongodb/models/series";
+  getSiteInitializationState,
+  isInitialAdminSetupAvailable,
+  isInitialAdminSetupProtected,
+} from "@/app/lib/site-initialization-service";
+import {
+  AdminShell,
+  requireAdminPage,
+} from "@/components/admin-shell";
+import { InitialAdminSetupPage } from "@/components/initial-admin-setup-page";
+import { isAuthSecretConfigured } from "@/config/env";
 
 export const dynamic = "force-dynamic";
 
+const quickEntries = [
+  {
+    href: "/admin/site",
+    title: "设置站点",
+    description: "更新品牌、创作者资料、导航和首页展示，让知识站真正属于你。",
+    action: "前往站点设置",
+  },
+  {
+    href: "/admin/catalog",
+    title: "发布内容",
+    description: "创建课程系列和课时，上传视频与资料，并完成上线前检查。",
+    action: "管理课程内容",
+  },
+  {
+    href: "/admin/products",
+    title: "配置商品",
+    description: "设置全站会员、单课和系列商品的价格、期限、权益目标与上下架状态。",
+    action: "管理商品",
+  },
+  {
+    href: "/admin/orders",
+    title: "处理订单",
+    description: "查看最近订单，确认人工收款，并重试未完成的权益发放。",
+    action: "查看订单",
+  },
+  {
+    href: "/admin/system",
+    title: "检查系统",
+    description: "查看 Provider、运营数据和失败队列，按提示定位主要故障。",
+    action: "打开系统状态",
+  },
+] as const;
+
 export default async function AdminPage() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "admin") {
-    redirect("/login?next=/admin");
+  const initialization = await getSiteInitializationState();
+  if (!initialization.hasAdmin) {
+    return (
+      <InitialAdminSetupPage
+        available={
+          isAuthSecretConfigured() && isInitialAdminSetupAvailable()
+        }
+        requiresSetupToken={isInitialAdminSetupProtected()}
+      />
+    );
   }
 
-  await connectMongo();
-  const [seriesRecords, courseRecords] = await Promise.all([
-    SeriesModel.find().sort({ createdAt: -1 }).lean(),
-    CourseModel.find().sort({ createdAt: -1 }).lean(),
-  ]);
-
-  const site = getSiteConfig();
+  const user = await requireAdminPage("/admin");
+  if (initialization.status !== "live") {
+    redirect("/admin/setup");
+  }
 
   return (
-    <>
-      <SiteHeader site={site} />
-      <main className="page-shell py-12">
-        <p className="font-mono text-xs text-[var(--accent)]">ADMIN</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.045em]">
-          课程交付后台
-        </h1>
-        <p className="mt-3 text-[var(--muted)]">
-          当前管理员：{user.email}
-        </p>
+    <AdminShell
+      active="overview"
+      currentUserEmail={user.email}
+      description="从这里进入每个运营分区。第一次开站建议按站点、内容、订单、系统的顺序完成检查。"
+      title="运营总览"
+    >
+      <section aria-labelledby="quick-entries-title" className="mt-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2
+              className="text-2xl font-semibold tracking-[-0.035em]"
+              id="quick-entries-title"
+            >
+              今天要做什么
+            </h2>
+            <p className="mt-2 text-sm text-[var(--muted)]">
+              每个分区只处理一类工作，减少在同一页里来回寻找功能。
+            </p>
+          </div>
+          <Link
+            className="focus-ring rounded-lg border border-[var(--line)] px-4 py-2 text-sm font-medium text-[var(--muted)] transition-colors hover:text-[var(--ink)]"
+            href="/"
+          >
+            查看公开站点
+          </Link>
+        </div>
 
-        <AdminOperationsPanel />
-        <AdminCourseManager
-          courses={courseRecords.map((course) => ({
-            id: course._id.toString(),
-            seriesId: course.seriesId.toString(),
-            title: course.title,
-            status: course.status,
-            accessLevel: course.accessLevel,
-            videoAssetId: course.videoAssetId?.toString() ?? null,
-          }))}
-          series={seriesRecords.map((item) => ({
-            id: item._id.toString(),
-            title: item.title,
-            status: item.status,
-          }))}
-        />
-        <AdminOrderManager />
-      </main>
-    </>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          {quickEntries.map((entry) => (
+            <article className="surface flex min-h-56 flex-col p-6" key={entry.href}>
+              <h3 className="text-2xl font-semibold tracking-[-0.035em]">
+                {entry.title}
+              </h3>
+              <p className="mt-3 max-w-md text-sm leading-6 text-[var(--muted)]">
+                {entry.description}
+              </p>
+              <Link
+                className="focus-ring mt-auto pt-8 text-sm font-semibold text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)]"
+                href={entry.href}
+              >
+                {entry.action} →
+              </Link>
+            </article>
+          ))}
+        </div>
+      </section>
+    </AdminShell>
   );
 }

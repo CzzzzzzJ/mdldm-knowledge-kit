@@ -3,26 +3,28 @@
 ## 环境要求
 
 - Node.js 20 或更高版本，CI 使用 Node.js 22；
-- npm 10 或更高版本；
+- pnpm 10.14.0（由 `packageManager` 固定）；
 - Docker Desktop，用于启动本地 MongoDB；
-- ffmpeg，用于生成完全合成的 Demo MP4。
+- ffmpeg（可选），只在生成完全合成的 Demo MP4 时使用，不是站点启动依赖。
+
+应用构建只使用 pnpm。`vercel.json` 已显式固定冻结安装和生产构建命令；当前
+`docker-compose.yml` 只启动本地 MongoDB，不负责构建或部署应用。
+线上只维护 [`Agent + Vercel Serverless`](../AGENT_SERVERLESS_DEPLOY.md) 路径。
 
 ## 首次启动
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 cp .env.example .env.local
 docker compose up -d mongodb
-npm run check-config
-npm run create-admin -- \
-  --name "Admin" \
-  --email "admin@example.com" \
-  --password "replace-with-a-strong-password-2026"
-npm run seed-demo
-npm run dev
+pnpm check-config
+pnpm dev
 ```
 
-打开 `http://localhost:3000`。
+打开 `http://localhost:3000/admin`，两次输入并确认自己的邮箱。这个邮箱会成为
+“管理员 1 号”的登录账号；系统会生成只展示一次的随机临时密码并自动登录。保存临时
+密码后设置正式密码，才能进入 `/admin/setup`。需要虚构示例课程时再运行
+`pnpm seed-demo`。
 
 `.env.local` 中的 `AUTH_SECRET` 必须替换为本机生成的随机值：
 
@@ -30,23 +32,33 @@ npm run dev
 openssl rand -hex 32
 ```
 
-默认 `EMAIL_PROVIDER=console`。注册、验证和找回密码邮件不会真的发出，操作链接会打印在运行开发服务器的终端。
+默认 `EMAIL_PROVIDER=console`、`PAYMENT_PROVIDER=manual`。开发环境的验证和找回密码
+链接会打印在运行服务器的终端；Manual Payment 不连接外部支付平台。
 
-## 创建或检查管理员
+## 管理员脚本回退
 
 ```bash
-npm run create-admin -- \
+pnpm create-admin \
   --name "Admin" \
   --email "admin@example.com" \
   --password "replace-with-a-strong-password-2026"
 ```
 
-脚本不会静默把已有普通用户提升为管理员，也不会重置已有管理员密码。
+默认应从 `/admin` 创建首个管理员。脚本只用于本地自动化和故障恢复，不会静默把
+已有普通用户提升为管理员，也不会默认重置已有管理员密码。只有明确恢复同一个管理员
+时，才允许显式增加 `--reset-existing`；执行后所有旧会话会失效：
+
+```bash
+pnpm create-admin \
+  --email "admin@example.com" \
+  --password "replace-with-a-new-strong-password-2026" \
+  --reset-existing
+```
 
 ## 创建邀请码
 
 ```bash
-npm run create-invitation -- \
+pnpm create-invitation \
   --type membership \
   --duration-days 365 \
   --max-redemptions 1 \
@@ -74,17 +86,17 @@ curl "http://localhost:3000/api/health?deep=1"
 ## 质量检查
 
 ```bash
-npm run check
-npm run release:audit
+pnpm check
+pnpm release:audit
 ```
 
-`npm run check` 会依次执行 Lint、类型检查、单测与生产构建。构建步骤使用隔离的 HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产配置；真实部署变量仍必须单独通过 `npm run check-config`。
+`pnpm check` 会依次执行 Lint、类型检查、单测与生产构建。构建步骤使用隔离的 HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产配置；真实部署变量仍必须单独通过 `pnpm check-config`。
 
 首次运行浏览器测试前安装 Chromium：
 
 ```bash
-npx playwright install chromium
-npm run test:e2e
+pnpm exec playwright install chromium
+pnpm test:e2e
 ```
 
 ## 当前限制
@@ -93,5 +105,9 @@ npm run test:e2e
 - Local / OSS Storage 与 Console / SMTP Email 已实现；
 - Vercel、MongoDB Atlas、阿里云 OSS 和邮件推送配置见 `docs/DEPLOYMENT.md`；
 - Product、订单、支付回调、Manual/Mock/XorPay 与签名 Webhook 已实现；
-- 转码 Provider、S3 Adapter 与 Sentry Adapter 尚未实现；
+- 公共配置只暴露已实现的 Local/OSS、Console/SMTP、Manual/Mock/XorPay、
+  Console/Webhook；转码固定为 None；
+- S3、FFmpeg/MPS 转码与 Sentry 不作为公共第一版配置值；
 - 未完成的 OSS 直传任务会保留 `pending` MediaAsset，当前需要管理员核查或清理。
+
+完整能力关闭行为与环境组合见 [最低配置与能力矩阵](CAPABILITY_MATRIX.md)。

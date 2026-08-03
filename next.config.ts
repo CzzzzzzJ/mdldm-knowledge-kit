@@ -21,7 +21,7 @@ const securityHeaders = [
         process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"
       }`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      "img-src 'self' data: blob: https:",
       "font-src 'self'",
       "connect-src 'self' https:",
       "media-src 'self' blob: https:",

@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -7,7 +9,7 @@ import {
 } from "@/providers/payment/xorpay";
 
 describe("XorPay provider protocol", () => {
-  it("signs payment requests in the documented field order", () => {
+  it("keeps the provider-mandated MD5 wire signature in the documented field order", () => {
     expect(
       createXorPayRequestSignature({
         name: "全站年度会员",
@@ -45,6 +47,7 @@ describe("XorPay provider protocol", () => {
       amountInMinorUnits: 49_900,
       currency: "CNY",
       transactionId: "transaction-1",
+      payloadDigest: createHash("sha256").update(body).digest("hex"),
     });
   });
 

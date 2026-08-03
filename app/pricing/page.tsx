@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
 import { CheckoutPanel } from "@/components/checkout-panel";
+import {
+  MdldmAccessBadge,
+  MdldmFooter,
+  MdldmPageIntro,
+  MdldmPanel,
+} from "@/components/mdldm-ui";
 import { SiteHeader } from "@/components/site-header";
 import { listActiveProducts } from "@/app/lib/commerce-service";
 import { getSiteConfig } from "@/config/site.config";
@@ -14,6 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function PricingPage() {
+  await requirePublicSiteAccess();
   const site = getSiteConfig();
   const user = await getCurrentUser();
   const provider = getPaymentProvider();
@@ -22,31 +30,75 @@ export default async function PricingPage() {
   return (
     <>
       <SiteHeader site={site} />
-      <main className="page-shell py-16">
-        <p className="font-mono text-xs text-[var(--accent)]">
-          {provider.name.toUpperCase()} PAYMENT
-        </p>
-        <h1 className="mt-3 text-5xl font-semibold tracking-[-0.05em]">
-          选择你的权益
-        </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-[var(--muted)]">
-          全站会员和单课购买共用同一套订单、支付事件与权益发放流程。
-        </p>
+      <main>
+        <section className="bg-grid-pattern border-b-2 border-[var(--ink)] py-12 sm:py-16">
+          <div className="page-shell">
+            <MdldmPageIntro
+              description="经常学习可以选择全站会员，只需要一门内容也可以单独购买。"
+              title="选择适合你的学习方式"
+            />
 
-        <CheckoutPanel
-          paymentMethods={[...provider.supportedMethods]}
-          products={products.map((product) => ({
-            id: product.sku,
-            title: product.title,
-            description: product.description,
-            amountInMinorUnits: product.amountInMinorUnits,
-            currency: product.currency,
-            entitlementType: product.entitlementType,
-            durationDays: product.entitlementDurationDays,
-          }))}
-          signedIn={user !== null}
-        />
+            <div
+              aria-label="购买方式说明"
+              className="mt-10 grid gap-6 lg:grid-cols-[1.08fr_0.92fr]"
+            >
+              <MdldmPanel className="bg-[var(--accent)] p-7 sm:p-8">
+                <MdldmAccessBadge
+                  className="bg-[var(--surface)]"
+                  label="适合持续学习"
+                />
+                <h2 className="mt-5 text-3xl font-black tracking-[-0.04em]">
+                  全站会员
+                </h2>
+                <p className="mt-4 max-w-xl font-bold leading-7 text-[var(--accent-ink)]">
+                  在会员有效期内学习所有会员内容。后续新增的会员课程也会自动开放。
+                </p>
+              </MdldmPanel>
+              <MdldmPanel className="overflow-hidden bg-[var(--surface)]">
+                <div className="h-4 border-b-2 border-[var(--ink)] bg-[var(--brand-blue)]" />
+                <div className="p-7 sm:p-8">
+                  <MdldmAccessBadge label="适合明确目标" />
+                  <h2 className="mt-5 text-3xl font-black tracking-[-0.04em]">
+                    单课购买
+                  </h2>
+                  <p className="mt-4 max-w-xl font-medium leading-7 text-[var(--muted)]">
+                    只为指定课程付费。访问范围和有效期以商品说明为准，不要求开通会员。
+                  </p>
+                </div>
+              </MdldmPanel>
+            </div>
+          </div>
+        </section>
+
+        <section className="page-shell py-12 sm:py-16">
+          <div className="mb-7">
+            <h2 className="text-3xl font-black tracking-[-0.04em]">
+              当前可选方案
+            </h2>
+            <p className="mt-2 text-sm font-bold text-[var(--muted)]">
+              支付方式由站长配置，当前使用 {provider.name}。
+            </p>
+          </div>
+
+          <CheckoutPanel
+            paymentMethods={[...provider.supportedMethods]}
+            products={products.map((product) => ({
+              id: product.sku,
+              title: product.title,
+              description: product.description,
+              amountInMinorUnits: product.amountInMinorUnits,
+              currency: product.currency,
+              entitlementType: product.entitlementType,
+              durationDays: product.entitlementDurationDays,
+            }))}
+            signedIn={user !== null}
+          />
+        </section>
       </main>
+      <MdldmFooter
+        siteName={site.name}
+        supportEmail={site.creator.supportEmail}
+      />
     </>
   );
 }

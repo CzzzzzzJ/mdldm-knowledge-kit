@@ -9,13 +9,13 @@
 ## 本地准备
 
 ```bash
-npm ci
+pnpm install --frozen-lockfile
 cp .env.example .env.local
 docker compose up -d mongodb
-npm run check-config
+pnpm check-config
 ```
 
-需要完整 Demo 时，再创建虚构管理员并运行 `npm run seed-demo`。详细步骤见 `README.md` 和 `docs/DEVELOPMENT.md`。
+需要完整 Demo 时，再创建虚构管理员并运行 `pnpm seed-demo`。详细步骤见 `README.md` 和 `docs/DEVELOPMENT.md`。
 
 ## 开发流程
 
@@ -23,7 +23,7 @@ npm run check-config
 2. 如涉及模型、模块或 Provider 边界，先提交 ADR；
 3. 从最新 `main` 创建独立分支完成实现；
 4. 补充测试和文档；
-5. 运行 `npm run check`、`npm run release:audit`，高风险变更还要运行 E2E；
+5. 运行 `pnpm check`、`pnpm release:audit`，高风险变更还要运行 E2E；
 6. 提交 Pull Request，说明动机、行为变化、验证结果和风险。
 
 建议使用 Conventional Commits，例如：

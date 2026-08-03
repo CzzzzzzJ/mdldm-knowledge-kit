@@ -8,6 +8,7 @@ flowchart LR
     P3 --> P4["Phase 4<br/>交易与支付"]
     P4 --> P5["Phase 5<br/>后台与监控"]
     P5 --> P6["Phase 6<br/>公开发布"]
+    P6 --> P7["Phase 7<br/>Vibe Coding 创作者可运营"]
 ```
 
 ## Phase 0：边界与治理
@@ -62,5 +63,29 @@ flowchart LR
 关键交付：15 分钟全新安装验收、虚构 Demo 与截图、升级和回滚手册、公开发布审计、GitHub 社区模板与 `v0.1.0` Release。
 
 发布门槛：一名不了解原项目的贡献者可以只读 README 跑通完整主流程。
+
+## Phase 7：Vibe Coding 创作者可运营
+
+目标：让不了解 Next.js、但稍懂 Git、环境变量和 Vibe Coding 的 AI 博主，在 Agent
+协助下完成部署与个性化；第三方平台配置完成后，通过后台完成站点初始化、品牌设置、
+商品配置、课程发布、用户与订单运营。
+
+状态：进行中。
+
+实施 Wave：
+
+1. `Wave A / DONE`：SiteSetting 公共接入、品牌首页、搜索、分类、Tag、系列
+   详情、学习中心和基础后台分区；
+2. `Wave B / IN PROGRESS`：商品和连续学习已完成，继续补齐内容完整 CRUD、用户、
+   权益和分析后台；
+3. `Wave C / IN PROGRESS`：一次性管理员初始化、后台开站指南、上线门禁和
+   Agent + Vercel Serverless 部署协议已完成；其余任务级 Prompt 继续补齐；
+4. `Wave D / TODO`：开源版独立 Preview、L2/L3、中国大陆多网络、备份恢复和目标
+   AI 博主验收。
+
+技术架构继续使用 `modules / providers / config` 边界，不复制原项目目录、数据或
+私有业务。详细目标、距离和完成定义见 `docs/VIBE_CODING_CREATOR_PLAN.md`，
+用户旅程见 `docs/OPERATOR_READY_JOURNEY.md`，Provider 验证见
+`docs/PROVIDER_VALIDATION.md`。
 
 具体任务状态以仓库根目录 `TASKS.md` 为准。

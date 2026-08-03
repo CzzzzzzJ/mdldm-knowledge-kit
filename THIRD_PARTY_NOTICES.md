@@ -18,6 +18,6 @@ Direct runtime dependencies:
 | `react-dom` | MIT |
 | `zod` | MIT |
 
-Exact installed versions and transitive packages are locked in `package-lock.json`. Installed packages include their license files in `node_modules`; redistributors are responsible for preserving notices and satisfying the licenses applicable to the form they distribute.
+Exact installed versions and transitive packages are locked in `pnpm-lock.yaml`. Installed packages include their license files in `node_modules`; redistributors are responsible for preserving notices and satisfying the licenses applicable to the form they distribute.
 
 This notice is informational and does not replace the license text of any dependency.

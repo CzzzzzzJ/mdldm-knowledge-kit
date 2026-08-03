@@ -6,6 +6,7 @@ node_modules/
 # build output
 .next/
 .next-e2e/
+.next-local-preview/
 out/
 dist/
 build/
@@ -21,7 +22,6 @@ test-results/
 
 # logs
 *.log
-npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -37,6 +37,10 @@ yarn-error.log*
 data/
 uploads/
 tmp/
+
+# local planning and private development analysis
+.local-planning/
+docs/analysis/
 
 # secrets and credentials
 *.pem

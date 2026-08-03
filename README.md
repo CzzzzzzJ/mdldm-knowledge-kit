@@ -5,13 +5,18 @@
 [![Release](https://img.shields.io/github/v/release/CzzzzzzJ/mdldm-knowledge-kit)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/releases/latest)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-一套面向个人创作者的、自托管的知识产品交付与会员运营底座。
+一套由个人创作者自行部署和控制的知识产品交付与会员运营底座。当前重点是把它交到一名
+稍懂 Git、环境变量和 Vibe Coding 的 AI 博主手中，让他通过后台配置和少量 Agent
+协作，把项目改造成自己的知识站。
 
 项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
 
-> 当前版本：`v0.1.0 / Phase 6 public release`
+> 当前版本：`v0.1.0 / Phase 7 operator-ready in progress`
 >
 > 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
+> SiteSetting、内容发现、系列详情、学习中心、后台分区和一次性管理员初始化已经整合；
+> 独立第三方账号 L2/L3 与中国大陆多网络验收尚未完成。因此当前版本仍是可运行的开发底座，
+> 不是已经通过目标用户验收的开箱即营成品。
 
 ![虚构 Demo 首页](docs/assets/home.png)
 
@@ -28,6 +33,11 @@
 - 安全播放、资料下载、断点续播和学习进度；
 - 课程、用户、权益、订单、媒体与系统状态后台；
 - 可替换的支付、存储、邮件、转码和监控 Provider。
+
+目标站长可以借助 Codex 或其他 Agent 完成 Fork、部署、第三方密钥配置、视觉改造和
+故障排查；站点品牌、课程、商品、用户权益和订单等日常经营事实必须由后台管理，不应
+长期依赖修改 TypeScript。当前差距、实施 Wave 和验收门槛见
+[Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)。
 
 ## v0.1 边界
 
@@ -54,12 +64,16 @@
 
 ## 文档入口
 
+- [15 分钟唯一启动入口](START_HERE.md)
+- [交给 Agent 的本地启动协议](AGENT_QUICKSTART.md)
+- [Agent + Serverless 唯一线上协议](AGENT_SERVERLESS_DEPLOY.md)
 - [项目定义](PROJECT.md)
 - [开发任务](TASKS.md)
 - [架构总览](ARCHITECTURE.md)
-- [完整现状分析与目标拓扑](docs/analysis/知识站开源版-现状分析与目标拓扑-2026-07-23.md)
-- [原项目 Phase 1 参考审视](docs/analysis/原项目Phase1参考审视-2026-07-24.md)
 - [开发路线图](docs/ROADMAP.md)
+- [Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)
+- [Phase 7 小白可运营用户旅程](docs/OPERATOR_READY_JOURNEY.md)
+- [第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)
 - [本地开发](docs/DEVELOPMENT.md)
 - [生产部署与第三方 Provider](docs/DEPLOYMENT.md)
 - [虚构 Demo 与验收路径](docs/DEMO.md)
@@ -85,59 +99,32 @@
 - Manual / Mock / XorPay Payment
 - Structured Console / signed Webhook Observability
 
-当前可以运行“注册验证 → 会员或单课下单 → Mock 支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
+当前可以运行“注册验证 → 会员或单课下单 → 显式 Mock 测试支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
 
 ## 快速启动
 
-```bash
-git clone https://github.com/CzzzzzzJ/mdldm-knowledge-kit.git
-cd mdldm-knowledge-kit
-npm ci
-cp .env.example .env.local
-openssl rand -hex 32
-docker compose up -d mongodb
-npm run check-config
-npm run create-admin -- \
-  --name "Admin" \
-  --email "admin@example.com" \
-  --password "replace-with-a-strong-password-2026"
-npm run seed-demo
-npm run dev
-```
+本地第一次运行只走 [`START_HERE.md`](START_HERE.md)，不要从文档索引中拼装步骤。要把
+启动工作交给 Coding Agent，直接发送 [`AGENT_QUICKSTART.md`](AGENT_QUICKSTART.md)
+中的 Prompt。系统会让站长两次确认自己的邮箱，将其作为管理员 1 号，并强制轮换只展示
+一次的随机临时密码。
 
-把 `openssl` 输出写入 `.env.local` 的 `AUTH_SECRET`，再打开 `http://localhost:3000`。Console Email 会把验证与找回链接打印在运行 `npm run dev` 的服务端终端。
-
-`seed-demo` 会同步两个虚构商品：一年期全站会员和一门永久单课。打开 `/pricing`，在非生产环境中可用 Mock Payment 完整测试下单与权益发放，不会产生真实扣款。修改 `config/products.config.ts` 后运行：
-
-```bash
-npm run sync-products
-```
-
-浏览器只提交 `productId` 和支付方式；价格、币种、权益类型、目标与期限全部从服务端商品生成，并保存到 `OrderItem` 快照。
-
-创建一年期单人会员邀请码：
-
-```bash
-npm run create-invitation -- \
-  --type membership \
-  --duration-days 365 \
-  --max-redemptions 1 \
-  --admin-email "admin@example.com"
-```
-
-单课或系列邀请码使用 `--type course|series --target-id <ObjectId>`。明文邀请码只显示一次。
+Docker Compose 只用于启动本地 MongoDB，不是生产部署方案。
 
 ## 生产部署与第三方平台
 
-推荐生产组合：
+第一版只维护 [`Agent + Vercel Serverless`](AGENT_SERVERLESS_DEPLOY.md) 这一条线上路径。
+当前视频知识站公开运营组合是 `Vercel + Atlas + OSS + SMTP + Manual`；需要自动支付时
+才把 Manual 替换为 XorPay。完整生产 Docker 和其他 Web 平台不在第一版支持范围。
+
+当前推荐组合：
 
 | 能力 | 本地开发 | Vercel 推荐 |
 | --- | --- | --- |
-| Web | `npm run dev` | Vercel Next.js / Node.js 22 |
+| Web | `pnpm dev` | Vercel Next.js / Node.js 22 / `hkg1` |
 | 数据库 | Docker MongoDB | MongoDB Atlas |
 | 媒体 | Local Storage | 阿里云 OSS 私有 Bucket |
 | 邮件 | Console Email | SMTP / 阿里云邮件推送 |
-| 支付 | Mock / Manual | XorPay 或 Manual |
+| 支付 | Manual / 显式 Mock | Manual 或 XorPay |
 | 监控 | Structured Console | 签名 Webhook |
 
 ### 1. Vercel
@@ -146,9 +133,14 @@ npm run create-invitation -- \
 2. 在 Project Settings → Environment Variables 分别配置 Preview 与 Production；
 3. Production 的 `APP_URL` 必须是最终 HTTPS 域名；
 4. 配置下面的 Atlas、OSS、SMTP 变量后重新部署；
-5. 部署后访问 `/api/health?deep=1`，确认 MongoDB 为 `ok`。
+5. 先部署 Preview，再运行 `pnpm check:serverless --url <Preview HTTPS 根地址>`；
+6. 完成 L2/L3 与国内多网络验收后，另行确认 Production 发布。
 
 Vercel Functions 存在请求和响应体限制，不能使用 Local Storage 持久保存课程视频。本项目在 OSS 模式下使用浏览器直传和鉴权后的 5 分钟签名读取，媒体字节不会穿过 Vercel Function。
+
+仓库默认函数区域为香港 `hkg1`，但 Vercel 官方明确其没有中国大陆基础设施，自定义域名
+也不能保证大陆可用性和性能。正式发布前必须用自定义域名，从至少两个中国大陆网络点
+验收首页、登录、后台、学习页与媒体；没有证据时不得写成“国内生产可用”。
 
 ### 2. MongoDB Atlas
 
@@ -201,13 +193,14 @@ SMTP_PASSWORD=replace-with-smtp-password
 
 ### 5. Manual、Mock 与 XorPay
 
-本地默认使用 Mock：
+安全默认使用 Manual：
 
 ```dotenv
-PAYMENT_PROVIDER=mock
+PAYMENT_PROVIDER=manual
 ```
 
-Mock 只用于开发，生产配置校验会直接拒绝。暂时不接第三方平台时可以使用 Manual，由管理员在订单后台核对并确认：
+Mock 只有显式设置 `PAYMENT_PROVIDER=mock` 时才用于非生产测试，生产配置校验会直接拒绝。
+Manual 由管理员在订单后台核对并确认：
 
 ```dotenv
 PAYMENT_PROVIDER=manual
@@ -227,7 +220,7 @@ XORPAY_NOTIFY_URL=https://your-domain.example/api/payments/webhooks/xorpay
 1. 在 XorPay 后台取得 AID 与 App Secret；
 2. 在 Vercel Production 环境配置以上变量，不能添加 `NEXT_PUBLIC_` 前缀；
 3. 确保回调地址是公网 HTTPS，并允许 XorPay 无登录 POST；
-4. 重新部署后运行 `npm run check-config`；
+4. 重新部署后运行 `pnpm check-config`；
 5. 用隔离的低价测试商品完成一次支付宝或微信 Native 支付；
 6. 在 `/admin` 确认订单为 `fulfilled / fulfilled`，再恢复正式商品价格并重新同步。
 
@@ -255,7 +248,8 @@ Webhook 请求包含 `X-MDLDm-Timestamp` 与 `X-MDLDm-Signature`。接收方应�
 
 Slack、飞书、Teams 等平台通常有自己的消息格式和签名协议，不建议把平台机器人地址直接填入本项目。用一层 Vercel Function/Serverless 中继先校验本项目签名，再转换为目标平台格式；这样可以轮换目标平台 Webhook 而不改业务站配置。
 
-支付、邮件和存储错误会聚合到 `/admin` 的统一失败队列；未来转码 Provider 也使用同一类别。Sentry 目前只保留配置枚举，选择后会明确降级为 Console，不视为已接入。
+支付、邮件和存储错误会聚合到 `/admin` 的统一失败队列。公共第一版不接受 Sentry 与
+转码 Provider 配置值，也不会静默降级为 Console。
 
 ### 7. 必填生产变量
 
@@ -265,28 +259,33 @@ APP_URL=https://your-domain.example
 APP_NAME=mdldm Knowledge Kit
 MONGODB_URI=mongodb+srv://...
 AUTH_SECRET=replace-with-at-least-32-random-characters
-STORAGE_PROVIDER=oss
-EMAIL_PROVIDER=smtp
-PAYMENT_PROVIDER=xorpay
-XORPAY_AID=...
-XORPAY_APP_SECRET=...
+INITIAL_SETUP_TOKEN=replace-with-one-time-setup-token
 ```
 
-运行 `npm run check-config` 会拒绝生产环境中的 Mock Payment、HTTP `APP_URL`、不完整 OSS/SMTP/XorPay/Webhook 配置和弱 `AUTH_SECRET`；MongoDB 指向本机时会提示该组合不能用于 Vercel。完整步骤、安全建议、Vercel 初始化管理员命令与官方文档链接见 [生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
+这是生产最低核心。当前视频站若要公开运营，还需 OSS 与 SMTP；Manual 无需支付密钥，
+XorPay 和 Webhook 按需启用。运行 `pnpm check-config` 会拒绝生产环境中的 Mock Payment、
+HTTP `APP_URL`、不完整的已启用 Provider 和弱 `AUTH_SECRET`；`pnpm check:serverless` 检查
+唯一线上路径，但不能替代真实账号 L2/L3 与国内网络验收。完整步骤见
+[生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
 
 生产上线前同时配置 Atlas 与 OSS 备份，并实际做一次隔离恢复演练；管理员 JSON 导出不包含凭据，也不能替代完整备份。操作步骤见 [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)。
 
 ## 质量检查
 
 ```bash
-npm run check
-npm run release:audit
-npm run test:e2e
+pnpm check
+pnpm release:audit
+pnpm test:e2e
+pnpm validate:providers
 ```
 
-`release:audit` 会检查公开仓库必需文件、本机绝对路径、疑似密钥、非示例邮箱、带凭据的 MongoDB URI、误提交运行数据与依赖许可证。CI 还会执行 `npm audit`，GitHub 仓库启用了 Dependabot、Secret Scanning、Push Protection、CodeQL 与私密漏洞报告。
+`release:audit` 会检查公开仓库必需文件、本机绝对路径、疑似密钥、非示例邮箱、带凭据的 MongoDB URI、误提交运行数据与依赖许可证。CI 还会执行 `pnpm audit`，GitHub 仓库启用了 Dependabot、Secret Scanning、Push Protection、CodeQL 与私密漏洞报告。
 
-`npm run check` 的生产构建使用隔离的 HTTPS 与 Manual Payment 测试配置；正式部署仍须用真实环境变量单独运行 `npm run check-config`。
+`pnpm check` 的生产构建使用隔离的 HTTPS 与 Manual Payment 测试配置；正式部署仍须用真实环境变量单独运行 `pnpm check-config`。
+
+`pnpm validate:providers --live` 执行 MongoDB、Storage 和 Email 的无副作用
+连接检查，不发送邮件、不创建支付订单，也不写入 OSS。验证分级和当前记录见
+[第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)。
 
 ## 开发准备
 

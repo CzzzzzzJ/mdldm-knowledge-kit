@@ -13,6 +13,7 @@
 - 客户端只提交 `productId` 和支付方式，`Order` 总额完全由服务端商品计算；
 - `PaymentEvent` 作为持久化 Inbox，以 `provider + eventId` 唯一索引实现事件幂等；
 - XorPay 回调先验签，再校验订单 Provider、金额和币种；原始载荷只保存 SHA-256 摘要和必要审计字段；
+- XorPay 当前线协议要求有序字段的 MD5 签名，因此该算法只隔离在 XorPay Adapter 的协议签名函数中；它不用于密码、Token、持久化摘要或其他完整性校验，也不能在不改变 Provider 协议的情况下替换为 SHA-256；
 - 支付确认后订单先进入 `paid`，权益发放使用 `fulfillmentStatus` 单独追踪；
 - 每个 `OrderItem` 以自身 ID 作为 Entitlement 来源，并由唯一索引防止重复授权；
 - 授权失败保留 `paid + failed` 状态，由管理员重试，不回退支付事实；
@@ -38,5 +39,6 @@
 - 订单的支付状态和授权状态必须分别展示；
 - `paid + failed` 是需要运营处理的正式失败队列；
 - 回调只有在事件与权益处理成功后返回成功，失败时让 Provider 重试；
+- 安全扫描命中该条 Provider 协议兼容代码时，应按具体数据流复核并记录例外理由，不得建立仓库级弱算法忽略规则；
 - 退款回收在后续退款用例中撤销来源订单对应的 Entitlement；
 - 若部署者已使用 Replica Set，可在未来 ADR 中把单次授权内部升级为 MongoDB 事务，但不能移除事件幂等与唯一约束。

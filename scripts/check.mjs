@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 
-const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+const packageManagerCommand = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
 const buildEnv = {
   ...process.env,
   APP_URL: "https://ci.example.invalid",
@@ -10,7 +10,7 @@ const buildEnv = {
 };
 
 for (const script of ["lint", "typecheck", "test", "build"]) {
-  const result = spawnSync(npmCommand, ["run", script], {
+  const result = spawnSync(packageManagerCommand, [script], {
     env: script === "build" ? buildEnv : process.env,
     stdio: "inherit",
   });

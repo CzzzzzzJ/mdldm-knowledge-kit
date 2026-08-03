@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import type { PublicRuntimeConfig } from "@/config/env";
 
 const providerLabels: Array<{
@@ -24,11 +26,15 @@ export function RuntimePanel({
       <div className="rounded-[0.7rem] bg-[var(--surface-strong)] px-5 py-4">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="font-mono text-xs text-[var(--muted)]">RUNTIME</p>
-            <h2 className="mt-1 text-base font-semibold">本地优先基线</h2>
+            <p className="text-xs font-semibold text-[var(--muted)]">
+              站长启动台
+            </p>
+            <h2 className="mt-1 text-base font-semibold">
+              跟着当前项目完成开站
+            </h2>
           </div>
-          <span className="rounded-md bg-[var(--surface)] px-2.5 py-1 font-mono text-xs text-[var(--success)]">
-            configured
+          <span className="rounded-md bg-[var(--surface)] px-2.5 py-1 font-mono text-xs text-[var(--accent)]">
+            {runtime.environment}
           </span>
         </div>
       </div>
@@ -48,8 +54,15 @@ export function RuntimePanel({
       </dl>
 
       <div className="m-1.5 rounded-[0.7rem] border border-[var(--line)] px-4 py-3 text-sm text-[var(--muted)]">
-        MongoDB 在脚本或深度健康检查时连接，页面构建不依赖数据库在线。
+        每一项都会解释意义、具体操作、验收方法，并提供可直接交给 Codex 的 Prompt。
       </div>
+
+      <Link
+        className="focus-ring m-1.5 block rounded-[0.7rem] bg-[var(--accent)] px-4 py-3 text-center text-sm font-semibold text-[var(--accent-ink)] transition-transform active:translate-y-px"
+        href="/admin/setup"
+      >
+        开始开站
+      </Link>
     </aside>
   );
 }

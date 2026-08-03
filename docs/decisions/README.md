@@ -27,4 +27,8 @@ NNNN-short-title.md
 8. [身份验证、凭据恢复与安全边界](0008-identity-verification-and-security.md)（Accepted）；
 9. [Vercel 部署、OSS 直传与 SMTP Provider](0009-serverless-storage-and-email-providers.md)（Accepted）；
 10. [支付事件与权益发放事务边界](0010-payment-event-and-fulfillment-boundary.md)（Accepted）；
-11. [运营失败队列与告警边界](0011-operational-failure-and-alerting-boundary.md)（Accepted）。
+11. [运营失败队列与告警边界](0011-operational-failure-and-alerting-boundary.md)（Accepted）；
+12. [面向小白运营的初始化与站点设置边界](0012-operator-ready-setup-and-settings.md)（Accepted）；
+13. [首个管理员与站点生命周期](0013-first-admin-and-site-lifecycle.md)（Accepted）；
+14. [最低配置与按需能力门禁](0014-minimum-config-and-capability-gates.md)（Accepted）；
+15. [Agent-first Serverless 唯一线上路径](0015-agent-first-serverless-production-path.md)（Accepted）。

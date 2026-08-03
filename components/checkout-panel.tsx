@@ -4,6 +4,13 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 
+import {
+  MdldmAccessBadge,
+  MdldmActionLink,
+  MdldmButton,
+  MdldmPanel,
+} from "@/components/mdldm-ui";
+
 interface ProductView {
   id: string;
   title: string;
@@ -142,145 +149,155 @@ export function CheckoutPanel({
 
   if (products.length === 0) {
     return (
-      <section className="surface mt-10 p-7">
-        <h2 className="text-xl font-semibold">暂无可售商品</h2>
-        <p className="mt-2 text-[var(--muted)]">
+      <MdldmPanel className="p-7">
+        <h2 className="text-xl font-black">暂无可售商品</h2>
+        <p className="mt-2 font-medium text-[var(--muted)]">
           请先运行 Demo Seed，或在服务端商品配置中启用商品。
         </p>
-      </section>
+      </MdldmPanel>
     );
   }
 
   return (
-    <div className="mt-10 grid gap-6 lg:grid-cols-[1fr_0.85fr]">
+    <div className="grid gap-7 lg:grid-cols-[1fr_0.85fr]">
       <section className="grid gap-4">
         {products.map((product) => (
           <button
-            className={`surface focus-ring p-6 text-left transition-transform hover:-translate-y-0.5 ${
+            className={`focus-ring md-pressable rounded-2xl border-2 border-[var(--ink)] p-6 text-left shadow-[5px_5px_0_var(--hard-shadow)] ${
               selectedProduct === product.id
-                ? "outline outline-2 outline-[var(--accent)]"
-                : ""
+                ? "bg-[var(--accent)]"
+                : "bg-[var(--surface)]"
             }`}
             key={product.id}
             onClick={() => setSelectedProduct(product.id)}
             type="button"
           >
-            <span className="font-mono text-xs text-[var(--accent)]">
-              {product.entitlementType}
-            </span>
-            <span className="mt-3 block text-2xl font-semibold">
+            <MdldmAccessBadge label={product.entitlementType} />
+            <span className="mt-4 block text-2xl font-black tracking-[-0.03em]">
               {product.title}
             </span>
-            <span className="mt-2 block leading-7 text-[var(--muted)]">
+            <span className="mt-2 block font-medium leading-7 text-[var(--muted)]">
               {product.description}
             </span>
-            <span className="mt-5 block text-xl font-semibold">
+            <span className="mt-5 block text-2xl font-black">
               {formatPrice(product.amountInMinorUnits)}
             </span>
           </button>
         ))}
       </section>
 
-      <aside className="surface h-fit p-7">
-        <p className="font-mono text-xs text-[var(--accent)]">CHECKOUT</p>
-        <h2 className="mt-3 text-2xl font-semibold">
-          {selected?.title ?? "选择商品"}
-        </h2>
+      <aside className="h-fit">
+        <MdldmPanel className="overflow-hidden">
+          <div className="border-b-2 border-[var(--ink)] bg-[var(--ink)] px-7 py-4 text-sm font-black text-[var(--surface)]">
+            安全结算
+          </div>
+          <div className="p-7">
+            <h2 className="text-2xl font-black">
+              {selected?.title ?? "选择商品"}
+            </h2>
 
-        <label className="mt-6 grid gap-2 text-sm">
-          支付方式
-          <select
-            className="focus-ring rounded-lg border border-[var(--line)] bg-[var(--page)] px-3.5 py-2.5"
-            onChange={(event) => setPaymentMethod(event.target.value)}
-            value={paymentMethod}
-          >
-            {paymentMethods.map((method) => (
-              <option key={method} value={method}>
-                {method}
-              </option>
-            ))}
-          </select>
-        </label>
+            <label className="mt-6 grid gap-2 text-sm font-black">
+              支付方式
+              <select
+                className="md-field font-medium"
+                onChange={(event) => setPaymentMethod(event.target.value)}
+                value={paymentMethod}
+              >
+                {paymentMethods.map((method) => (
+                  <option key={method} value={method}>
+                    {method}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-        {signedIn ? (
-          <button
-            className="mt-5 w-full rounded-lg bg-[var(--accent)] px-4 py-3 font-semibold text-[var(--accent-ink)]"
-            disabled={busy || !selectedProduct || !paymentMethod}
-            onClick={() => void createOrder()}
-            type="button"
-          >
-            {busy ? "处理中…" : "按服务端价格创建订单"}
-          </button>
-        ) : (
-          <Link
-            className="mt-5 block rounded-lg bg-[var(--accent)] px-4 py-3 text-center font-semibold text-[var(--accent-ink)]"
-            href="/login?next=/pricing"
-          >
-            登录后购买
-          </Link>
-        )}
+            {signedIn ? (
+              <MdldmButton
+                className="mt-5 w-full"
+                disabled={busy || !selectedProduct || !paymentMethod}
+                onClick={() => void createOrder()}
+                type="button"
+                variant="accent"
+              >
+                {busy ? "处理中…" : "按服务端价格创建订单"}
+              </MdldmButton>
+            ) : (
+              <MdldmActionLink
+                className="mt-5 w-full"
+                href="/login?next=/pricing"
+                variant="accent"
+              >
+                登录后购买
+              </MdldmActionLink>
+            )}
 
-        <p aria-live="polite" className="mt-4 text-sm text-[var(--muted)]">
-          {message || "浏览器不会提交或决定最终金额。"}
-        </p>
-
-        {result ? (
-          <div className="mt-6 border-t border-[var(--line)] pt-6">
-            <p className="font-mono text-xs text-[var(--muted)]">
-              {result.order.orderNumber}
+            <p
+              aria-live="polite"
+              className="mt-4 text-sm font-medium text-[var(--muted)]"
+            >
+              {message || "浏览器不会提交或决定最终金额。"}
             </p>
-            <p className="mt-2 text-sm">
-              订单状态：{orderStatus ?? result.order.status}
-            </p>
 
-            {result.checkout.qrContent ? (
-              <div className="mt-5 inline-block rounded-xl bg-white p-3">
-                <QRCodeSVG
-                  bgColor="#ffffff"
-                  fgColor="#111827"
-                  size={196}
-                  value={result.checkout.qrContent}
-                />
+            {result ? (
+              <div className="mt-6 border-t-2 border-dashed border-[var(--line-soft)] pt-6">
+                <p className="font-mono text-xs font-bold text-[var(--muted)]">
+                  {result.order.orderNumber}
+                </p>
+                <p className="mt-2 text-sm font-bold">
+                  订单状态：{orderStatus ?? result.order.status}
+                </p>
+
+                {result.checkout.qrContent ? (
+                  <div className="mt-5 inline-block rounded-xl border-2 border-[var(--ink)] bg-white p-3 shadow-[4px_4px_0_var(--hard-shadow)]">
+                    <QRCodeSVG
+                      bgColor="#ffffff"
+                      fgColor="#151515"
+                      size={196}
+                      value={result.checkout.qrContent}
+                    />
+                  </div>
+                ) : null}
+
+                {result.checkout.instructions ? (
+                  <p className="mt-4 whitespace-pre-wrap text-sm font-medium leading-6 text-[var(--muted)]">
+                    {result.checkout.instructions}
+                  </p>
+                ) : null}
+
+                {result.checkout.paymentUrl ? (
+                  <a
+                    className="md-action md-action-secondary mt-4 w-full"
+                    href={result.checkout.paymentUrl}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    打开支付链接
+                  </a>
+                ) : null}
+
+                {result.checkout.mode === "mock" &&
+                orderStatus !== "fulfilled" ? (
+                  <MdldmButton
+                    className="mt-4 w-full"
+                    disabled={busy}
+                    onClick={() => void confirmMockPayment()}
+                    type="button"
+                    variant="secondary"
+                  >
+                    完成 Mock 支付
+                  </MdldmButton>
+                ) : null}
+
+                <Link
+                  className="md-text-link mt-5"
+                  href="/account/orders"
+                >
+                  查看我的订单
+                </Link>
               </div>
             ) : null}
-
-            {result.checkout.instructions ? (
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-[var(--muted)]">
-                {result.checkout.instructions}
-              </p>
-            ) : null}
-
-            {result.checkout.paymentUrl ? (
-              <a
-                className="mt-4 block rounded-lg border border-[var(--line)] px-4 py-2.5 text-center text-sm font-semibold"
-                href={result.checkout.paymentUrl}
-                rel="noreferrer"
-                target="_blank"
-              >
-                打开支付链接
-              </a>
-            ) : null}
-
-            {result.checkout.mode === "mock" &&
-            orderStatus !== "fulfilled" ? (
-              <button
-                className="mt-4 w-full rounded-lg border border-[var(--line)] px-4 py-2.5 text-sm font-semibold"
-                disabled={busy}
-                onClick={() => void confirmMockPayment()}
-                type="button"
-              >
-                完成 Mock 支付
-              </button>
-            ) : null}
-
-            <Link
-              className="mt-4 block text-sm font-semibold text-[var(--accent)]"
-              href="/account/orders"
-            >
-              查看我的订单 →
-            </Link>
           </div>
-        ) : null}
+        </MdldmPanel>
       </aside>
     </div>
   );

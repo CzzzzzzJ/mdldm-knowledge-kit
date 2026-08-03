@@ -5,8 +5,6 @@ import { readFile, unlink } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import mongoose from "mongoose";
-
 import { syncConfiguredProducts } from "@/app/lib/commerce-service";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
@@ -20,7 +18,7 @@ import { getStorageProvider } from "@/providers/storage";
 
 loadEnvConfig(process.cwd());
 
-async function main() {
+export async function seedDemo() {
   await connectMongo();
   const owner = await UserModel.findOne({ role: "admin", status: "active" });
   if (!owner) {
@@ -35,6 +33,9 @@ async function main() {
       $set: {
         title: "创作者知识产品入门",
         description: "一套完全虚构的 Demo 系列，用于验证发布与学习闭环。",
+        category: "创作者运营",
+        tags: ["知识产品", "内容运营", "Vibe Coding"],
+        coverImageUrl: "",
         status: "published",
         accessLevel: "public",
       },
@@ -215,12 +216,3 @@ async function main() {
     `Demo 数据已就绪：1 个系列，${demoCourses.length} 节课程，1 个视频，1 份资料，${productSync.synced} 个商品`,
   );
 }
-
-main()
-  .catch((error: unknown) => {
-    console.error(error);
-    process.exitCode = 1;
-  })
-  .finally(async () => {
-    await mongoose.disconnect();
-  });

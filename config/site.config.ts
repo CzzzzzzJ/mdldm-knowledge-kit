@@ -10,7 +10,7 @@ export function getSiteConfig(): SiteConfig {
     url: env.APP_URL,
     locale: "zh-CN",
     creator: {
-      name: "Demo Creator",
+      name: "示例创作者",
       supportEmail: "support@example.com",
     },
   };

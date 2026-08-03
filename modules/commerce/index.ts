@@ -121,3 +121,12 @@ export function calculateEntitlementWindow(input: {
     ),
   };
 }
+
+export {
+  productAdminCreateSchema,
+  productAdminPatchSchema,
+  productAdminStateSchema,
+  type ProductAdminCreateInput,
+  type ProductAdminPatchInput,
+  type ProductAdminState,
+} from "./product-admin";

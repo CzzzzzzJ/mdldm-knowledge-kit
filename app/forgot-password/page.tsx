@@ -1,5 +1,7 @@
+import { EmailCapabilityNotice } from "@/components/email-capability-notice";
 import { ForgotPasswordForm } from "@/components/identity-forms";
 import { SiteHeader } from "@/components/site-header";
+import { isSelfServiceEmailAvailable } from "@/config/env";
 import { getSiteConfig } from "@/config/site.config";
 
 export default function ForgotPasswordPage() {
@@ -12,7 +14,11 @@ export default function ForgotPasswordPage() {
           <h1 className="text-4xl font-semibold tracking-[-0.045em]">
             找回密码
           </h1>
-          <ForgotPasswordForm />
+          {isSelfServiceEmailAvailable() ? (
+            <ForgotPasswordForm />
+          ) : (
+            <EmailCapabilityNotice />
+          )}
         </div>
       </main>
     </>

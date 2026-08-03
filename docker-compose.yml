@@ -1,3 +1,6 @@
+# 本文件只为本地开发提供 MongoDB，不是生产部署或自维护 Docker 方案。
+x-mdldm-scope: local-mongodb-only
+
 services:
   mongodb:
     image: mongo:7.0

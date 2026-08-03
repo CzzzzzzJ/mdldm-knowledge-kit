@@ -37,6 +37,15 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "请先登录" }, { status: 401 });
   }
+  if (user.requiresPasswordChange) {
+    return NextResponse.json(
+      {
+        error: "请先完成管理员 1 号激活",
+        code: "PASSWORD_CHANGE_REQUIRED",
+      },
+      { status: 409 },
+    );
+  }
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {

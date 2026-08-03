@@ -30,6 +30,7 @@ const envSchema = z
       .min(1)
       .default("mongodb://localhost:27017/mdldm_knowledge_kit"),
     AUTH_SECRET: z.string().optional(),
+    INITIAL_SETUP_TOKEN: optionalSecretString,
     SESSION_COOKIE_NAME: z
       .string()
       .regex(/^[a-zA-Z0-9_-]+$/)
@@ -53,7 +54,7 @@ const envSchema = z
       .min(1_048_576)
       .max(2_147_483_648)
       .default(536_870_912),
-    STORAGE_PROVIDER: z.enum(["local", "s3", "oss"]).default("local"),
+    STORAGE_PROVIDER: z.enum(["local", "oss"]).default("local"),
     LOCAL_STORAGE_PATH: z.string().min(1).default("./uploads"),
     OSS_REGION: optionalEnvString,
     OSS_BUCKET: optionalEnvString,
@@ -70,7 +71,7 @@ const envSchema = z
     SMTP_PASSWORD: optionalEnvString,
     PAYMENT_PROVIDER: z
       .enum(["manual", "mock", "xorpay"])
-      .default("mock"),
+      .default("manual"),
     MANUAL_PAYMENT_INSTRUCTIONS: z
       .string()
       .trim()
@@ -86,11 +87,9 @@ const envSchema = z
           : value,
       z.string().url().optional(),
     ),
-    TRANSCODE_PROVIDER: z
-      .enum(["none", "ffmpeg", "aliyun-mps"])
-      .default("none"),
+    TRANSCODE_PROVIDER: z.literal("none").default("none"),
     OBSERVABILITY_PROVIDER: z
-      .enum(["console", "webhook", "sentry"])
+      .enum(["console", "webhook"])
       .default("console"),
     OBSERVABILITY_WEBHOOK_URL: z.preprocess(
       (value) =>
@@ -245,7 +244,58 @@ export interface PublicRuntimeConfig {
 let cachedEnv: ServerEnv | undefined;
 
 export function parseEnv(input: NodeJS.ProcessEnv): ServerEnv {
-  return envSchema.parse(input);
+  const selectedStorage = input.STORAGE_PROVIDER || "local";
+  const selectedEmail = input.EMAIL_PROVIDER || "console";
+  const selectedPayment = input.PAYMENT_PROVIDER || "manual";
+  const selectedObservability = input.OBSERVABILITY_PROVIDER || "console";
+  const normalized: NodeJS.ProcessEnv = { ...input };
+
+  if (selectedStorage !== "oss") {
+    for (const key of [
+      "OSS_REGION",
+      "OSS_BUCKET",
+      "OSS_ENDPOINT",
+      "OSS_ACCESS_KEY_ID",
+      "OSS_ACCESS_KEY_SECRET",
+      "OSS_SESSION_TOKEN",
+    ]) {
+      delete normalized[key];
+    }
+  }
+
+  if (selectedEmail !== "smtp") {
+    for (const key of [
+      "EMAIL_FROM",
+      "SMTP_HOST",
+      "SMTP_PORT",
+      "SMTP_SECURE",
+      "SMTP_USER",
+      "SMTP_PASSWORD",
+    ]) {
+      delete normalized[key];
+    }
+  }
+
+  if (selectedPayment !== "xorpay") {
+    for (const key of [
+      "XORPAY_AID",
+      "XORPAY_APP_SECRET",
+      "XORPAY_NOTIFY_URL",
+    ]) {
+      delete normalized[key];
+    }
+  }
+
+  if (selectedObservability !== "webhook") {
+    for (const key of [
+      "OBSERVABILITY_WEBHOOK_URL",
+      "OBSERVABILITY_WEBHOOK_SECRET",
+    ]) {
+      delete normalized[key];
+    }
+  }
+
+  return envSchema.parse(normalized);
 }
 
 export function getServerEnv(): ServerEnv {
@@ -273,25 +323,21 @@ export function getPublicRuntimeConfig(): PublicRuntimeConfig {
 export function getConfigWarnings(env: ServerEnv): string[] {
   const warnings: string[] = [];
 
-  if (
-    !env.AUTH_SECRET ||
-    env.AUTH_SECRET.length < 32 ||
-    env.AUTH_SECRET.includes("replace-with")
-  ) {
+  if (!isAuthSecretConfigured(env)) {
     warnings.push(
       "AUTH_SECRET 未设置。页面可浏览，但身份、会话和邀请码功能不可用。",
     );
   }
 
-  if (env.STORAGE_PROVIDER === "s3") {
+  if (env.NODE_ENV === "production" && !isInitialSetupTokenConfigured(env)) {
     warnings.push(
-      "s3 Storage Provider 尚未实现，请使用 local 或 oss。",
+      "INITIAL_SETUP_TOKEN 未设置；仅当首个管理员已经创建并激活后才可安全移除，否则 /admin 初始化入口不可用。",
     );
   }
 
   if (env.NODE_ENV === "production" && env.STORAGE_PROVIDER === "local") {
     warnings.push(
-      "生产环境正在使用 Local Storage；Vercel 等无持久磁盘平台必须改用 OSS。",
+      "视频和资料能力当前使用 Local Storage；仅适合同一台有持久磁盘的服务器，Serverless 部署需按需启用 OSS。",
     );
   }
 
@@ -306,7 +352,7 @@ export function getConfigWarnings(env: ServerEnv): string[] {
 
   if (env.NODE_ENV === "production" && env.EMAIL_PROVIDER === "console") {
     warnings.push(
-      "生产环境正在使用 Console Email，用户无法收到验证和找回密码邮件。",
+      "真实邮件能力未启用：自助注册、重发验证和找回密码已停用；已有账号仍可登录，启用 SMTP 后恢复。",
     );
   }
 
@@ -314,19 +360,33 @@ export function getConfigWarnings(env: ServerEnv): string[] {
     warnings.push("当前使用 Mock Payment，不会产生真实扣款。");
   }
 
-  if (env.TRANSCODE_PROVIDER !== "none") {
-    warnings.push(
-      `${env.TRANSCODE_PROVIDER} Transcode Provider 尚未实现。`,
-    );
-  }
-
-  if (env.OBSERVABILITY_PROVIDER === "sentry") {
-    warnings.push(
-      "sentry Observability Provider 尚未实现，当前会降级为结构化 Console 日志。",
-    );
-  }
-
   return warnings;
+}
+
+export function isSelfServiceEmailAvailable(
+  env: ServerEnv = getServerEnv(),
+): boolean {
+  return env.NODE_ENV !== "production" || env.EMAIL_PROVIDER === "smtp";
+}
+
+export function isAuthSecretConfigured(
+  env: ServerEnv = getServerEnv(),
+): boolean {
+  return Boolean(
+    env.AUTH_SECRET &&
+      env.AUTH_SECRET.length >= 32 &&
+      !env.AUTH_SECRET.includes("replace-with"),
+  );
+}
+
+export function isInitialSetupTokenConfigured(
+  env: ServerEnv = getServerEnv(),
+): boolean {
+  return Boolean(
+    env.INITIAL_SETUP_TOKEN &&
+      env.INITIAL_SETUP_TOKEN.length >= 16 &&
+      !env.INITIAL_SETUP_TOKEN.includes("replace-with"),
+  );
 }
 
 export function requireAuthSecret(): string {

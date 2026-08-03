@@ -1,148 +1,309 @@
 import Link from "next/link";
+import type { Types } from "mongoose";
 
-import { RuntimePanel } from "@/components/runtime-panel";
+import { requirePublicSiteAccess } from "@/app/lib/site-launch-guard";
+import { getResolvedSiteSettings } from "@/app/lib/site-settings-service";
+import {
+  MdldmAccessBadge,
+  MdldmActionLink,
+  MdldmCourseCover,
+  MdldmFooter,
+  MdldmPanel,
+  MdldmSectionHeading,
+  MdldmSeriesCard,
+} from "@/components/mdldm-ui";
 import { SiteHeader } from "@/components/site-header";
-import { getPublicRuntimeConfig } from "@/config/env";
-import { getFeaturesConfig } from "@/config/features.config";
-import { productsConfig } from "@/config/products.config";
-import { getSiteConfig } from "@/config/site.config";
-
-const domains = [
-  "Site",
-  "Identity",
-  "Catalog",
-  "Entitlement",
-  "Commerce",
-  "Media",
-  "Learning",
-  "Operations",
-];
+import type { SiteConfig } from "@/modules/site";
+import { connectMongo } from "@/providers/database/mongodb/connection";
+import {
+  CourseModel,
+  type CourseRecord,
+  SeriesModel,
+  type SeriesRecord,
+} from "@/providers/database/mongodb/models/series";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const site = getSiteConfig();
-  const runtime = getPublicRuntimeConfig();
-  const features = getFeaturesConfig();
-  const enabledFeatureCount = Object.values(features).filter(Boolean).length;
+type SeriesDocument = SeriesRecord & { _id: Types.ObjectId };
+type CourseDocument = CourseRecord & { _id: Types.ObjectId };
+
+const accessLabels: Record<CourseRecord["accessLevel"], string> = {
+  public: "公开",
+  registered: "注册可学",
+  member: "会员",
+  course: "单课",
+  series: "系列权益",
+};
+
+function toSiteConfig(
+  settings: Awaited<ReturnType<typeof getResolvedSiteSettings>>,
+): SiteConfig {
+  return {
+    name: settings.siteName,
+    description: settings.description,
+    url: settings.url,
+    locale: settings.locale,
+    creator: {
+      name: settings.creatorName,
+      supportEmail: settings.supportEmail,
+    },
+  };
+}
+
+export default async function HomePage() {
+  await requirePublicSiteAccess();
+  const settings = await getResolvedSiteSettings();
+  const site = toSiteConfig(settings);
+  let featuredSeries: SeriesDocument[] = [];
+  let latestCourses: CourseDocument[] = [];
+  let latestCourseSeries: SeriesDocument[] = [];
+
+  try {
+    await connectMongo();
+    [featuredSeries, latestCourses] = await Promise.all([
+      SeriesModel.find({ status: "published" })
+        .sort({ updatedAt: -1 })
+        .limit(3)
+        .lean(),
+      CourseModel.find({ status: "published" })
+        .sort({ publishedAt: -1, updatedAt: -1 })
+        .limit(4)
+        .lean(),
+    ]);
+    latestCourseSeries = await SeriesModel.find({
+      _id: { $in: latestCourses.map((course) => course.seriesId) },
+      status: "published",
+    }).lean();
+  } catch {
+    featuredSeries = [];
+    latestCourses = [];
+    latestCourseSeries = [];
+  }
+
+  const seriesById = new Map(
+    [...featuredSeries, ...latestCourseSeries].map((series) => [
+      series._id.toString(),
+      series,
+    ]),
+  );
+  const heroSeries = featuredSeries[0];
 
   return (
     <>
       <SiteHeader site={site} />
       <main>
-        <section className="page-shell grid min-h-[calc(100dvh-4.5rem)] items-center gap-12 py-16 lg:grid-cols-[1.08fr_0.92fr] lg:py-20">
-          <div className="max-w-3xl">
-            <p className="mb-5 font-mono text-xs font-semibold uppercase tracking-[0.16em] text-[var(--accent)]">
-              Self-hosted knowledge delivery
-            </p>
-            <h1 className="max-w-[11em] text-5xl font-semibold leading-[0.98] tracking-[-0.055em] sm:text-6xl lg:text-7xl">
-              知识产品，自己交付
-            </h1>
-            <p className="mt-7 max-w-[42rem] text-lg leading-8 text-[var(--muted)]">
-              一套可自托管的课程、会员、单课购买与学习运营底座。
-            </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link
-                className="focus-ring whitespace-nowrap rounded-lg bg-[var(--accent)] px-5 py-3 text-sm font-semibold text-[var(--accent-ink)] transition-transform hover:bg-[var(--accent-strong)] active:translate-y-px"
-                href="/courses"
-              >
-                浏览课程
-              </Link>
-              <a
-                className="focus-ring whitespace-nowrap rounded-lg border border-[var(--line)] bg-[var(--surface)] px-5 py-3 text-sm font-semibold transition-transform active:translate-y-px"
-                href="#architecture"
-              >
-                阅读架构
-              </a>
-            </div>
-          </div>
-
-          <RuntimePanel runtime={runtime} />
-        </section>
-
-        <section
-          className="border-y border-[var(--line)] bg-[var(--surface)] py-20"
-          id="architecture"
-        >
-          <div className="page-shell grid gap-12 lg:grid-cols-[0.82fr_1.18fr]">
-            <div>
-              <h2 className="max-w-[12ch] text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
-                领域规则和外部服务彻底分开
-              </h2>
-              <p className="mt-5 max-w-[36rem] leading-7 text-[var(--muted)]">
-                核心模块只描述业务规则，支付、存储、邮件、转码和监控通过 Provider 接入。
+        <section className="bg-dot-pattern border-b-2 border-[var(--ink)]">
+          <div className="page-shell grid min-h-[calc(100dvh-4.25rem)] items-center gap-10 py-10 md:grid-cols-[0.9fr_1.1fr] md:py-14 lg:gap-14">
+            <div className="max-w-2xl">
+              <h1 className="max-w-[12ch] text-4xl font-black leading-[1.02] tracking-[-0.06em] sm:text-5xl lg:text-6xl">
+                {settings.homeTitle}
+              </h1>
+              <p className="mt-6 max-w-[36rem] text-lg font-medium leading-8 text-[var(--muted)]">
+                {settings.homeSubtitle}
               </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {domains.map((domain) => (
-                <div
-                  className="grid min-h-24 place-items-end rounded-xl border border-[var(--line)] bg-[var(--page)] p-4 text-left font-mono text-sm font-semibold"
-                  key={domain}
-                >
-                  <span className="w-full">{domain}</span>
-                </div>
-              ))}
-              <div className="col-span-2 rounded-xl bg-[var(--accent)] p-5 text-[var(--accent-ink)] sm:col-span-4">
-                <p className="font-mono text-xs opacity-80">FEATURE FLAGS</p>
-                <p className="mt-3 text-2xl font-semibold tracking-[-0.03em]">
-                  {enabledFeatureCount} 项 Demo 能力已启用
-                </p>
+              <div className="mt-8 flex flex-wrap gap-4">
+                <MdldmActionLink href="/courses" variant="accent">
+                  开始学习
+                </MdldmActionLink>
+                <MdldmActionLink href="/pricing" variant="secondary">
+                  查看学习方案
+                </MdldmActionLink>
               </div>
             </div>
+
+            <MdldmPanel className="relative overflow-hidden bg-[var(--surface)]">
+              <div
+                aria-hidden="true"
+                className="absolute -right-5 -top-5 size-20 rounded-full border-2 border-[var(--ink)] bg-[var(--brand-blue)] shadow-[4px_4px_0_var(--hard-shadow)]"
+              />
+              <div className="border-b-2 border-[var(--ink)] bg-[var(--ink)] px-5 py-3 text-sm font-black text-[var(--surface)]">
+                {heroSeries ? "本期推荐" : "知识站从这里开始"}
+              </div>
+              <MdldmCourseCover
+                compact
+                eager
+                imageUrl={
+                  heroSeries?.coverImageUrl || settings.heroImageUrl || null
+                }
+                title={heroSeries?.title || settings.siteName}
+              />
+              <div className="grid gap-4 border-t-2 border-[var(--ink)] p-6 sm:grid-cols-[1fr_auto] sm:items-end">
+                <div>
+                  <h2 className="text-2xl font-black tracking-[-0.035em]">
+                    {heroSeries?.title || "把内容整理成可学习的路径"}
+                  </h2>
+                  <p className="mt-2 max-w-xl font-medium leading-7 text-[var(--muted)]">
+                    {heroSeries?.description ||
+                      "发布系列、课程与资料，让读者从浏览进入持续学习。"}
+                  </p>
+                </div>
+                <MdldmActionLink
+                  href={heroSeries ? `/series/${heroSeries.slug}` : "/courses"}
+                  variant="primary"
+                >
+                  {heroSeries ? "查看系列" : "浏览课程"}
+                </MdldmActionLink>
+              </div>
+            </MdldmPanel>
           </div>
         </section>
 
-        <section className="page-shell py-20" id="commerce">
-          <div className="max-w-2xl">
-            <h2 className="text-4xl font-semibold tracking-[-0.045em] sm:text-5xl">
-              两套付费路径，一套权益事实源
-            </h2>
-            <p className="mt-5 leading-7 text-[var(--muted)]">
-              商品由服务端定义，支付成功后统一授予可审计的 Entitlement。
-            </p>
+        <section className="border-b-2 border-[var(--ink)] bg-[var(--accent)] py-6">
+          <div className="page-shell grid gap-4 font-black sm:grid-cols-3">
+            <p>公开内容建立信任</p>
+            <p>会员与单课两种权益</p>
+            <p>学习进度持续保存</p>
           </div>
+        </section>
 
-          <div className="mt-12 grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-            {productsConfig.map((product, index) => (
-              <article
-                className={
-                  index === 0
-                    ? "rounded-2xl bg-[var(--accent)] p-7 text-[var(--accent-ink)]"
-                    : "rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-7"
-                }
-                key={product.id}
+        <section className="page-shell py-16 sm:py-20">
+          <MdldmSectionHeading
+            action={
+              <MdldmActionLink href="/courses" variant="quiet">
+                浏览全部课程
+              </MdldmActionLink>
+            }
+            description="先理解完整路径，再进入单节课程动手。"
+            title="从一个完整系列开始"
+          />
+
+          {featuredSeries.length === 0 ? (
+            <MdldmPanel className="mt-9 p-8">
+              <h3 className="text-xl font-black">课程正在准备中</h3>
+              <p className="mt-2 font-medium text-[var(--muted)]">
+                新的课程系列会陆续发布在这里。
+              </p>
+            </MdldmPanel>
+          ) : (
+            <div className="mt-10 grid gap-6 lg:grid-cols-2">
+              {featuredSeries.map((series, index) => (
+                <MdldmSeriesCard
+                  accessLevel={series.accessLevel}
+                  category={series.category}
+                  coverImageUrl={series.coverImageUrl}
+                  description={series.description}
+                  featured={index === 0}
+                  href={`/series/${series.slug}`}
+                  key={series._id.toString()}
+                  tags={series.tags}
+                  title={series.title}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section className="border-y-2 border-[var(--ink)] bg-[var(--surface-strong)] py-16 sm:py-20">
+          <div className="page-shell grid gap-10 lg:grid-cols-[0.72fr_1.28fr]">
+            <div className="max-w-xl">
+              <h2 className="text-3xl font-black tracking-[-0.04em] sm:text-4xl">
+                最近更新
+              </h2>
+              <p className="mt-4 font-medium leading-7 text-[var(--muted)]">
+                回来看新课程，也可以从学习中心继续上次的进度。
+              </p>
+              <MdldmActionLink
+                className="mt-6"
+                href="/account"
+                variant="secondary"
               >
-                <p className="font-mono text-xs opacity-70">
-                  {product.entitlement.type}
+                进入学习中心
+              </MdldmActionLink>
+            </div>
+
+            {latestCourses.length === 0 ? (
+              <MdldmPanel className="p-8">
+                <p className="font-bold text-[var(--muted)]">
+                  暂时没有已发布课程。
                 </p>
-                <h3 className="mt-5 text-3xl font-semibold tracking-[-0.04em]">
-                  {product.title}
-                </h3>
-                <p className="mt-3 max-w-[32rem] leading-7 opacity-75">
-                  {product.description}
-                </p>
-                <p className="mt-10 font-mono text-sm">
-                  服务端 SKU：{product.id}
-                </p>
-                <Link
-                  className="mt-5 inline-block rounded-lg border border-current px-4 py-2 text-sm font-semibold"
-                  href="/pricing"
-                >
-                  查看价格与购买
-                </Link>
-              </article>
-            ))}
+              </MdldmPanel>
+            ) : (
+              <div className="grid gap-4">
+                {latestCourses.map((course) => {
+                  const series = seriesById.get(course.seriesId.toString());
+                  return (
+                    <Link
+                      className="focus-ring md-pressable grid gap-4 rounded-2xl border-2 border-[var(--ink)] bg-[var(--surface)] p-5 shadow-[4px_4px_0_var(--hard-shadow)] sm:grid-cols-[1fr_auto] sm:items-center"
+                      href={`/learn/${course._id.toString()}`}
+                      key={course._id.toString()}
+                    >
+                      <span>
+                        <span className="flex flex-wrap items-center gap-2">
+                          <MdldmAccessBadge level={course.accessLevel} />
+                          <span className="text-sm font-bold text-[var(--muted)]">
+                            {series?.title ?? "课程"}
+                          </span>
+                        </span>
+                        <span className="mt-3 block text-xl font-black tracking-[-0.025em]">
+                          {course.title}
+                        </span>
+                        <span className="mt-2 line-clamp-2 block text-sm font-medium leading-6 text-[var(--muted)]">
+                          {course.summary}
+                        </span>
+                      </span>
+                      <span className="font-black underline decoration-2 underline-offset-4">
+                        {accessLabels[course.accessLevel]}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </div>
+        </section>
+
+        <section className="page-shell py-16 sm:py-20">
+          <MdldmPanel className="grid gap-8 overflow-hidden bg-[var(--accent)] p-7 md:grid-cols-[0.8fr_1.2fr] md:p-10">
+            <div>
+              <p className="md-badge bg-[var(--surface)]">关于创作者</p>
+              <div className="mt-5 flex items-center gap-4">
+                {settings.avatarUrl ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    alt={settings.creatorName}
+                    className="size-16 rounded-2xl border-2 border-[var(--ink)] object-cover shadow-[4px_4px_0_var(--hard-shadow)]"
+                    height={64}
+                    loading="lazy"
+                    src={settings.avatarUrl}
+                    width={64}
+                  />
+                ) : null}
+                <h2 className="text-3xl font-black tracking-[-0.04em]">
+                  {settings.creatorName}
+                </h2>
+              </div>
+            </div>
+            <div className="max-w-3xl">
+              <p className="text-lg font-bold leading-8 text-[var(--accent-ink)]">
+                {settings.creatorBio || settings.description}
+              </p>
+              {settings.socialLinks.length > 0 ? (
+                <nav
+                  aria-label="创作者链接"
+                  className="mt-6 flex flex-wrap gap-3"
+                >
+                  {settings.socialLinks.map((link) => (
+                    <a
+                      className="md-action md-action-secondary"
+                      href={link.url}
+                      key={`${link.label}-${link.url}`}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </nav>
+              ) : null}
+            </div>
+          </MdldmPanel>
         </section>
       </main>
 
-      <footer className="border-t border-[var(--line)] py-8">
-        <div className="page-shell flex flex-col gap-2 text-sm text-[var(--muted)] sm:flex-row sm:items-center sm:justify-between">
-          <p>{site.name}</p>
-          <p>Apache-2.0 licensed</p>
-        </div>
-      </footer>
+      <MdldmFooter
+        siteName={settings.siteName}
+        supportEmail={settings.supportEmail}
+      />
     </>
   );
 }

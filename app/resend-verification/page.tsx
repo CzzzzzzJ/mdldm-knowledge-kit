@@ -1,5 +1,7 @@
+import { EmailCapabilityNotice } from "@/components/email-capability-notice";
 import { ResendVerificationForm } from "@/components/identity-forms";
 import { SiteHeader } from "@/components/site-header";
+import { isSelfServiceEmailAvailable } from "@/config/env";
 import { getSiteConfig } from "@/config/site.config";
 
 export default function ResendVerificationPage() {
@@ -15,7 +17,11 @@ export default function ResendVerificationPage() {
           <p className="mt-3 text-[var(--muted)]">
             为避免泄露账号状态，无论邮箱是否存在都会返回相同提示。
           </p>
-          <ResendVerificationForm />
+          {isSelfServiceEmailAvailable() ? (
+            <ResendVerificationForm />
+          ) : (
+            <EmailCapabilityNotice />
+          )}
         </div>
       </main>
     </>
