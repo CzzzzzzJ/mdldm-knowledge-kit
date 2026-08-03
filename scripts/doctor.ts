@@ -91,7 +91,7 @@ function assertPrivacyScan(value: string): void {
 }
 
 function issueDraftFilename(now = new Date()): string {
-  const timestamp = now.toISOString().replace(/[-:.]/g, "").replace("Z", "Z");
+  const timestamp = now.toISOString().replace(/[-:.]/g, "");
   return `agent-report-${timestamp}.md`;
 }
 
