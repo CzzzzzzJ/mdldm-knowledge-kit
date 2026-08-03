@@ -160,6 +160,15 @@ pnpm run doctor --issue
 - 课程合作、品牌合作、企业 AI 培训与技术咨询：通过 [X / Twitter](https://x.com/czzzzzzJ_) 或 [个人联系页](https://www.mdldm.club/about) 联系；
 - 想继续看 AI Agent、Vibe Coding 和知识产品实战内容：访问 [麦当的知识站](https://www.mdldm.club/)，或在 B 站、小红书、抖音、掘金等中文平台搜索 **麦当mdldm**。
 
+### 微信联系
+
+| 个人微信 | `mdldm-kit` 开源交流群 |
+| --- | --- |
+| <img src="docs/assets/wechat-personal.jpg" width="320" alt="麦当mdldm 个人微信二维码" /> | <img src="docs/assets/wechat-group-mdldm-kit-2026-08-10.jpg" width="320" alt="mdldm-kit 微信交流群二维码" /> |
+| 扫码添加麦当mdldm，建议备注来意 | 群二维码在 **2026 年 8 月 10 日前**有效 |
+
+交流群二维码失效后，请先添加个人微信并备注 `mdldm-kit`，我会发送最新入群方式。
+
 安全漏洞不要通过社交媒体或公开 Issue 发送，请使用 [GitHub Private Security Advisory](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new)。
 
 ## 文档主线

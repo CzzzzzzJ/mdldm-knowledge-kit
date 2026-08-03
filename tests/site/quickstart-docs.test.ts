@@ -123,6 +123,11 @@ describe("Agent-first quickstart contract", () => {
     expect(readme).toContain("https://x.com/czzzzzzJ_");
     expect(readme).toContain("https://www.mdldm.club/about");
     expect(readme).toContain("搜索 **麦当mdldm**");
+    expect(readme).toContain("docs/assets/wechat-personal.jpg");
+    expect(readme).toContain(
+      "docs/assets/wechat-group-mdldm-kit-2026-08-10.jpg",
+    );
+    expect(readme).toContain("2026 年 8 月 10 日前");
     expect(readme).not.toContain("VIBE_CODING_CREATOR_PLAN");
     expect(readme).not.toContain("OPERATOR_READY_JOURNEY");
     expect(docsIndex).toContain("第一次使用");
