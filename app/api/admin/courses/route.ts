@@ -7,21 +7,32 @@ import {
   CatalogAdminError,
   createCourse,
 } from "@/app/lib/catalog-admin-service";
-import { accessLevels } from "@/modules/catalog";
+import {
+  accessLevels,
+  courseContentLimits,
+  courseContentTypes,
+} from "@/modules/catalog";
 
-const courseInput = z.object({
-  seriesId: z.string().refine(isValidObjectId),
-  title: z.string().trim().min(1).max(120),
-  slug: z
-    .string()
-    .trim()
-    .min(1)
-    .max(120)
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
-  summary: z.string().trim().min(1).max(1_000),
-  accessLevel: z.enum(accessLevels),
-  position: z.number().int().min(0).max(10_000),
-});
+const courseInput = z
+  .object({
+    seriesId: z.string().refine(isValidObjectId),
+    title: z.string().trim().min(1).max(120),
+    slug: z
+      .string()
+      .trim()
+      .min(1)
+      .max(120)
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+    summary: z.string().trim().min(1).max(1_000),
+    contentType: z.enum(courseContentTypes).default("video"),
+    articleBody: z
+      .string()
+      .max(courseContentLimits.articleBody)
+      .default(""),
+    accessLevel: z.enum(accessLevels),
+    position: z.number().int().min(0).max(10_000),
+  })
+  .strict();
 
 export async function POST(request: NextRequest) {
   const authorization = await authorizeAdminMutation(request);

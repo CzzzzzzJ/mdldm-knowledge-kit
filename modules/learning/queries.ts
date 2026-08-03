@@ -1,4 +1,4 @@
-import type { AccessLevel } from "@/modules/catalog";
+import type { AccessLevel, CourseContentType } from "@/modules/catalog";
 import type { EntitlementType } from "@/modules/entitlement";
 
 export interface ActiveEntitlementDto {
@@ -30,6 +30,8 @@ export interface LessonQueryRecord {
     title: string;
     summary: string;
     accessLevel: AccessLevel;
+    contentType: CourseContentType;
+    articleBody: string;
     videoAssetId: string | null;
   };
   series: { id: string; title: string; slug: string } | null;
@@ -38,7 +40,11 @@ export interface LessonQueryRecord {
   videoAsset: { id: string; status: string } | null;
 }
 
-export interface LearningLessonDto extends LessonQueryRecord {
+export interface LearningLessonDto
+  extends Omit<LessonQueryRecord, "course"> {
+  course: Omit<LessonQueryRecord["course"], "articleBody"> & {
+    articleBody: string | null;
+  };
   allowed: boolean;
 }
 

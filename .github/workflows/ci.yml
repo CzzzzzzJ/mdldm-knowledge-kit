@@ -31,7 +31,15 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check-config
       - run: pnpm check:serverless
-      - run: pnpm check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - name: L1 schema and domain rules
+        run: pnpm test:l1
+      - name: L2 services and provider contracts
+        run: pnpm test:l2
+      - name: L3 API and security contracts
+        run: pnpm test:l3
+      - run: pnpm build
       - run: pnpm release:audit
       - run: pnpm audit --audit-level=moderate
 
@@ -64,4 +72,5 @@ jobs:
       - run: pnpm create-admin --name "Demo Admin" --email admin@example.com --password local-demo-admin-password-2026
       - run: pnpm seed-demo
       - run: pnpm exec playwright install --with-deps chromium
-      - run: pnpm test:e2e
+      - name: L4 user journeys
+        run: pnpm test:l4

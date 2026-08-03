@@ -41,6 +41,7 @@ function toCourseDto(course: CourseDocument): CatalogCourseDto {
     id: course._id.toString(),
     seriesId: course.seriesId.toString(),
     videoAssetId: course.videoAssetId?.toString() ?? null,
+    contentType: course.contentType ?? "video",
     title: course.title,
     slug: course.slug,
     summary: course.summary,
@@ -204,7 +205,10 @@ export function createMongoCatalogQueryRepository(): CatalogQueryRepository {
       ]);
       return {
         series: series.map((item) => toSeriesDto(item as SeriesDocument)),
-        courses: courses.map((item) => toCourseDto(item as CourseDocument)),
+        courses: courses.map((item) => ({
+          ...toCourseDto(item as CourseDocument),
+          hasArticleBody: Boolean(item.articleBody?.trim()),
+        })),
       };
     },
   };

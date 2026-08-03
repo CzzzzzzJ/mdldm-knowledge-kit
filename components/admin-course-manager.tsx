@@ -14,6 +14,8 @@ interface CourseOption {
   title: string;
   status: string;
   accessLevel: string;
+  contentType: "video" | "article";
+  hasArticleBody: boolean;
   videoAssetId: string | null;
 }
 
@@ -153,6 +155,8 @@ export function AdminCourseManager({
           title: form.get("title"),
           slug: form.get("slug"),
           summary: form.get("summary"),
+          contentType: form.get("contentType"),
+          articleBody: form.get("articleBody"),
           accessLevel: form.get("accessLevel"),
           position: Number(form.get("position")),
         }),
@@ -231,6 +235,9 @@ export function AdminCourseManager({
     "focus-ring w-full rounded-lg border border-[var(--line)] bg-[var(--page)] px-3.5 py-2.5";
   const fieldClass = "grid gap-2 text-sm font-medium";
   const helpClass = "text-xs font-normal leading-5 text-[var(--muted)]";
+  const videoCourses = courses.filter(
+    (course) => course.contentType === "video",
+  );
 
   return (
     <div className="mt-10 grid gap-8">
@@ -399,6 +406,33 @@ export function AdminCourseManager({
               rows={3}
             />
           </label>
+          <label className={fieldClass}>
+            内容类型
+            <select
+              className={inputClass}
+              defaultValue="video"
+              name="contentType"
+            >
+              <option value="video">视频课：发布前上传 MP4</option>
+              <option value="article">图文课：直接填写正文</option>
+            </select>
+            <span className={helpClass}>
+              不想录视频时选择图文课。内容类型会决定发布前检查什么。
+            </span>
+          </label>
+          <label className={fieldClass}>
+            图文正文（仅图文课必填）
+            <textarea
+              className={inputClass}
+              maxLength={100000}
+              name="articleBody"
+              placeholder="写下完整教程正文。当前按安全纯文本展示，可使用空行组织段落。"
+              rows={10}
+            />
+            <span className={helpClass}>
+              正文只会在服务端权益检查通过后返回；视频课可以留空。
+            </span>
+          </label>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className={fieldClass}>
               课时访问等级
@@ -441,10 +475,10 @@ export function AdminCourseManager({
       <section className="grid gap-4">
         <div>
           <p className="eyebrow">添加学习内容</p>
-          <h2 className="mt-2 text-2xl font-semibold">为课时上传视频和配套资料</h2>
+          <h2 className="mt-2 text-2xl font-semibold">为课时添加视频和配套资料</h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--muted)]">
-            视频是发布课程的必要内容；PDF、ZIP、Markdown 等资料为选填。上传完成后，
-            系统会自动把文件绑定到所选课时。
+            视频课发布前必须绑定 MP4；图文课直接使用创建时填写的正文。PDF、ZIP、Markdown
+            等资料为选填，上传完成后会自动绑定到所选课时。
           </p>
         </div>
         <div className="grid gap-5 lg:grid-cols-2">
@@ -456,14 +490,14 @@ export function AdminCourseManager({
             <label className={fieldClass}>
               视频所属课时
               <select className={inputClass} name="courseId" required>
-                {courses.map((course) => (
+                {videoCourses.map((course) => (
                   <option key={course.id} value={course.id}>
                     {course.title}
                   </option>
                 ))}
               </select>
-              {courses.length === 0 ? (
-                <span className={helpClass}>请先创建至少一节课。</span>
+              {videoCourses.length === 0 ? (
+                <span className={helpClass}>请先创建至少一节视频课。</span>
               ) : null}
             </label>
             <label className={fieldClass}>
@@ -481,7 +515,7 @@ export function AdminCourseManager({
             </label>
             <button
               className="rounded-lg bg-[var(--accent)] px-4 py-2.5 font-semibold text-[var(--accent-ink)]"
-              disabled={busy || courses.length === 0}
+              disabled={busy || videoCourses.length === 0}
               type="submit"
             >
               上传视频
@@ -566,7 +600,8 @@ export function AdminCourseManager({
         <p className="eyebrow">上线前确认</p>
         <h2 className="mt-2 text-xl font-semibold">发布课程</h2>
         <p className="mt-2 text-sm leading-6 text-[var(--muted)]">
-          请先确认标题、权限和视频都正确。发布后，符合访问条件的学员就能在前台看到并学习课程。
+          请先确认标题、权限和课程内容都正确。视频课需要可用视频，图文课需要正文；发布后，
+          符合访问条件的学员才能读取对应内容。
         </p>
         <div className="mt-5 grid gap-3">
           {courses.length === 0 ? (
@@ -593,11 +628,23 @@ export function AdminCourseManager({
                     series: "系列购买",
                   }[course.accessLevel] ?? course.accessLevel}
                   {" · "}
-                  视频：{course.videoAssetId ? "已绑定" : "未绑定"}
+                  内容：
+                  {course.contentType === "article"
+                    ? course.hasArticleBody
+                      ? "图文正文已填写"
+                      : "图文正文未填写"
+                    : course.videoAssetId
+                      ? "视频已绑定"
+                      : "视频未绑定"}
                 </p>
-                {!course.videoAssetId ? (
+                {course.contentType === "video" && !course.videoAssetId ? (
                   <p className="mt-1 text-xs text-[var(--muted)]">
                     发布前请先上传视频。
+                  </p>
+                ) : course.contentType === "article" &&
+                  !course.hasArticleBody ? (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    发布前请先填写图文正文。
                   </p>
                 ) : null}
               </div>

@@ -111,7 +111,10 @@ pnpm check
 pnpm release:audit
 ```
 
-`pnpm check` 会依次执行 Lint、类型检查、单测与生产构建。构建步骤使用隔离的 HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产配置；真实部署变量仍必须单独通过 `pnpm check-config`。
+`pnpm check` 会依次执行 Lint、类型检查、L1-L3 分层测试与生产构建。构建步骤使用隔离的
+HTTPS、Manual Payment 测试配置，避免把本地 Demo 的 HTTP 与 Mock Payment 误当成生产
+配置；真实部署变量仍必须单独通过 `pnpm check-config`。分层定义和按改动选择命令见
+[测试分层](TESTING.md)。
 
 ## Agent 修改数据查询时的边界
 
@@ -126,12 +129,16 @@ pnpm release:audit
 
 ```bash
 pnpm exec playwright install chromium
-pnpm test:e2e
+pnpm test:l4
 ```
+
+`test:l4` 顺序执行 Mock 自动支付和 Manual 人工确认两套隔离数据库；可用
+`pnpm test:l4:auto` 或 `pnpm test:l4:manual` 单独定位。上线前还必须完成人工
+[L5 发布验收](L5_RELEASE_ACCEPTANCE.md)。
 
 ## 当前限制
 
-- 注册验证、密码恢复、邀请码权益、课程交付和学习进度已经可运行；
+- 注册验证、密码恢复、邀请码权益、图文/视频课程交付和视频学习进度已经可运行；
 - Local / OSS Storage 与 Console / SMTP Email 已实现；
 - Vercel、MongoDB Atlas、阿里云 OSS 和邮件推送配置见 `docs/DEPLOYMENT.md`；
 - Product、订单、支付回调、Manual/Mock/XorPay 与签名 Webhook 已实现；

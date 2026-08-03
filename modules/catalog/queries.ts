@@ -1,4 +1,8 @@
-import type { AccessLevel, PublishStatus } from "@/modules/catalog";
+import type {
+  AccessLevel,
+  CourseContentType,
+  PublishStatus,
+} from "@/modules/catalog";
 
 export interface CatalogSeriesDto {
   id: string;
@@ -16,6 +20,7 @@ export interface CatalogCourseDto {
   id: string;
   seriesId: string;
   videoAssetId: string | null;
+  contentType: CourseContentType;
   title: string;
   slug: string;
   summary: string;
@@ -47,7 +52,7 @@ export interface CatalogSeriesDetailDto {
 
 export interface AdminCatalogDto {
   series: CatalogSeriesDto[];
-  courses: CatalogCourseDto[];
+  courses: Array<CatalogCourseDto & { hasArticleBody: boolean }>;
 }
 
 export interface CatalogQueryRepository {

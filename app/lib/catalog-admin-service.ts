@@ -1,6 +1,11 @@
 import { isValidObjectId } from "mongoose";
 
-import type { AccessLevel, SeriesDiscoveryMetadata } from "@/modules/catalog";
+import {
+  getCoursePublicationBlocker,
+  type AccessLevel,
+  type CourseContentType,
+  type SeriesDiscoveryMetadata,
+} from "@/modules/catalog";
 import { connectMongo } from "@/providers/database/mongodb/connection";
 import { CourseMaterialModel } from "@/providers/database/mongodb/models/learning";
 import { MediaAssetModel } from "@/providers/database/mongodb/models/media";
@@ -18,6 +23,7 @@ export class CatalogAdminError extends Error {
       | "COURSE_NOT_FOUND"
       | "COURSE_SLUG_EXISTS"
       | "MEDIA_NOT_READY"
+      | "CONTENT_NOT_READY"
       | "MATERIAL_TARGET_NOT_FOUND",
     message: string,
   ) {
@@ -57,6 +63,8 @@ export async function createCourse(input: {
   title: string;
   slug: string;
   summary: string;
+  contentType: CourseContentType;
+  articleBody: string;
   accessLevel: AccessLevel;
   position: number;
 }) {
@@ -135,12 +143,36 @@ export async function publishCourse(courseId: string) {
   if (!course) {
     throw new CatalogAdminError("COURSE_NOT_FOUND", "课时不存在");
   }
-  if (!course.videoAssetId) {
+  const contentType = course.contentType ?? "video";
+  const initialBlocker = getCoursePublicationBlocker({
+    contentType,
+    hasReadyVideo: Boolean(course.videoAssetId),
+    articleBody: course.articleBody ?? "",
+  });
+  if (initialBlocker === "ARTICLE_BODY_REQUIRED") {
+    throw new CatalogAdminError(
+      "CONTENT_NOT_READY",
+      "发布图文课前必须填写正文",
+    );
+  }
+  if (initialBlocker === "VIDEO_REQUIRED") {
     throw new CatalogAdminError(
       "MEDIA_NOT_READY",
       "发布前必须上传并绑定视频",
     );
   }
+
+  if (contentType === "article") {
+    course.status = "published";
+    course.publishedAt = new Date();
+    await course.save();
+    return {
+      id: course._id.toString(),
+      status: course.status,
+      publishedAt: course.publishedAt.toISOString(),
+    };
+  }
+
   const asset = await MediaAssetModel.findOne({
     _id: course.videoAssetId,
     kind: "video",

@@ -56,7 +56,8 @@ describe("Agent-first quickstart contract", () => {
     expect(agentTasks).toContain("敏感信息禁区");
     expect(agentTasks).toContain("必须由用户确认的外部动作");
     expect(agentTasks).toContain("质量命令与回滚点");
-    expect(agentTasks).toContain("当前 v0.1 基线可能");
+    expect(agentTasks).toContain("当前仓库已支持");
+    expect(agentTasks).toContain("Markdown、富文本、Mixed");
     expect(agentTasks).toContain("返回 BLOCKED");
   });
 
@@ -96,6 +97,39 @@ describe("Agent-first quickstart contract", () => {
     expect(issueConfig).toContain("security/advisories/new");
     expect(gitignore).toContain(".mdldm/");
     expect(releaseAudit).toContain(".mdldm");
+  });
+
+  it("keeps the public README adopter-first and routes advanced documentation", async () => {
+    const [readme, docsIndex, paidGuide, trademarks, releaseAudit] =
+      await Promise.all([
+        readProjectFile("README.md"),
+        readProjectFile("docs/README.md"),
+        readProjectFile("docs/PAID_PRACTICE_GUIDE.md"),
+        readProjectFile("TRADEMARKS.md"),
+        readProjectFile("scripts/release-audit.mjs"),
+      ]);
+
+    for (const entry of [
+      "START_HERE.md",
+      "AGENT_QUICKSTART.md",
+      "AGENT_SERVERLESS_DEPLOY.md",
+      "/admin/setup",
+    ]) {
+      expect(readme).toContain(entry);
+    }
+    expect(readme).toContain("生产最低核心配置只有");
+    expect(readme).toContain("不录视频，也可以");
+    expect(readme).toContain("docs/PAID_PRACTICE_GUIDE.md");
+    expect(readme).toContain("https://x.com/czzzzzzJ_");
+    expect(readme).toContain("https://www.mdldm.club/about");
+    expect(readme).toContain("搜索 **麦当mdldm**");
+    expect(readme).not.toContain("VIBE_CODING_CREATOR_PLAN");
+    expect(readme).not.toContain("OPERATOR_READY_JOURNEY");
+    expect(docsIndex).toContain("第一次使用");
+    expect(docsIndex).toContain("经营时按需查看");
+    expect(paidGuide).toContain("不默认继承本仓库的 Apache-2.0 授权");
+    expect(trademarks).toContain("不授予");
+    expect(releaseAudit).toContain("docs/assets/README.md");
   });
 
   it("keeps the minimum capability contract aligned across env and docs", async () => {

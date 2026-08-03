@@ -35,4 +35,6 @@ NNNN-short-title.md
 16. [Agent-first 任务与脱敏状态接口](0016-agent-first-task-and-status-interface.md)（Accepted）；
 17. [Agent Doctor 与人工确认的 Issue 流程](0017-agent-doctor-and-human-reviewed-issues.md)（Accepted）；
 18. [两套白名单主题与语义 Token](0018-two-theme-token-system.md)（Accepted）；
-19. [Query Service、安全 DTO 与渐进式工程边界](0019-query-services-and-safe-dtos.md)（Accepted）。
+19. [Query Service、安全 DTO 与渐进式工程边界](0019-query-services-and-safe-dtos.md)（Accepted）；
+20. [图文课内容与正文权限边界](0020-article-course-content.md)（Accepted）；
+21. [L1-L5 测试分层与发布证据](0021-five-layer-test-strategy.md)（Accepted）。

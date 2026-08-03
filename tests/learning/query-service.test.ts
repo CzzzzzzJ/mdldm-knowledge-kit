@@ -13,6 +13,8 @@ function createRepository(): LearningQueryRepository {
         title: "权益课程",
         summary: "测试课程",
         accessLevel: "course",
+        contentType: "video",
+        articleBody: "未授权时不能返回的正文",
         videoAssetId: "asset-1",
       },
       series: { id: "series-1", title: "系列", slug: "series" },
@@ -36,6 +38,7 @@ describe("learning query service", () => {
 
     expect(lesson).toMatchObject({
       allowed: false,
+      course: { articleBody: null },
       materials: [],
       videoAsset: null,
     });
@@ -70,6 +73,7 @@ describe("learning query service", () => {
 
     expect(lesson).toMatchObject({
       allowed: true,
+      course: { articleBody: "未授权时不能返回的正文" },
       materials: [{ id: "material-1", title: "讲义" }],
       videoAsset: { id: "asset-1", status: "ready" },
     });

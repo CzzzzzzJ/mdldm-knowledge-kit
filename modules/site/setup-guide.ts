@@ -449,7 +449,7 @@ export const setupLessons: readonly SetupLesson[] = [
     prompt: `${sharedPromptRules}
 
 任务：
-请作为未参与开发的测试者，按真实学员旅程验收当前知识站。先读取 docs/OPERATOR_READY_JOURNEY.md 和 docs/PROVIDER_VALIDATION.md，生成不包含任何敏感值的验收记录。依次验证注册、邮件、会员购买、单课购买、回调幂等、权益、播放、资料下载、学习进度和管理员故障处置。涉及真实发信、低价支付、远端写入和清理时逐项向我确认。发现问题只记录可复现步骤和脱敏错误，不直接扩大修改范围。`,
+请作为未参与开发的测试者，按真实学员旅程验收当前知识站。先读取 docs/L5_RELEASE_ACCEPTANCE.md 和 docs/PROVIDER_VALIDATION.md，生成不包含任何敏感值的验收记录。依次验证注册、邮件、会员购买、单课购买、回调幂等、权益、播放、资料下载、学习进度和管理员故障处置。涉及真实发信、低价支付、远端写入和清理时逐项向我确认。发现问题只记录可复现步骤和脱敏错误，不直接扩大修改范围。`,
     links: [
       { label: "打开注册页", href: "/register" },
       { label: "打开订单页", href: "/account/orders" },

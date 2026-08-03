@@ -82,6 +82,19 @@ export default async function LearnPage({
                 description="登录后系统会检查全站会员、系列权益或单课购买记录。"
                 title="这节课需要有效权益"
               />
+            ) : course.contentType === "article" ? (
+              <MdldmPanel className="p-6 sm:p-8">
+                <div className="border-b-2 border-[var(--ink)] pb-4">
+                  <p className="eyebrow">图文课程</p>
+                  <h2 className="mt-2 text-2xl font-black">{course.title}</h2>
+                </div>
+                <div
+                  className="mt-6 whitespace-pre-wrap text-base font-medium leading-8 text-[var(--ink)]"
+                  data-testid="article-body"
+                >
+                  {course.articleBody}
+                </div>
+              </MdldmPanel>
             ) : asset?.status === "ready" ? (
               <MdldmPanel className="overflow-hidden bg-[var(--ink)]">
                 <div className="border-b-2 border-[var(--ink)] bg-[var(--accent)] px-5 py-3 font-black text-[var(--accent-ink)]">

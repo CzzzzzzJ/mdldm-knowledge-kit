@@ -136,7 +136,21 @@
   不再直接导入 MongoDB Model，建立 Catalog、User、Learning 和 Commerce Query
   Service、Repository Port、安全 DTO 与架构回归测试，认证、支付查询、内容发布、
   学习权限和媒体交付优先迁入服务端用例；
-- TODO：在最后的 README P0 重构中只暴露 AF-02 这一条推荐启动旅程；
+- DONE：实现 Article 图文课纯文本正文、无视频发布检查、后台创建与学习页阅读，并确保
+  未授权 DTO 不返回正文、媒体或资料；
+- IN PROGRESS：完成 AF-12 测试分层；L1-L3 独立命令和 CI 门禁、Mock/Manual 隔离 L4、
+  图文/视频/会员/单课/Doctor/Explore 契约已通过；当前为 36 个 Vitest 文件 / 133 项测试、
+  12 项自动支付主旅程 E2E 和 1 项 Manual E2E，L5 真实 Provider、备份恢复和国内网络仍待
+  站长在隔离环境验收；
+- DONE：完成 AF-13 公开入口治理：README 只面向采用者，收口为本地启动、Agent 协议、
+  Serverless 部署和后台开站四步主线；删除重复路线图、内部阶段分析、历史安装报告与
+  重复许可证说明，保留稳定 ADR，并补齐商标、素材许可和付费实践授权边界；历史对象
+  扫描未发现密钥、真实邮箱或带凭据 MongoDB URI，但能看到早期 `docs/analysis` 路径和
+  一条本机绝对路径；README 已补充作者联系方式、联系事项分流、X 与中文平台统一搜索入口；
+  因共享历史重写需要维护者明确确认，本阶段未自动改写 Git 历史；
+- TODO：公开下一版本前由维护者决定是否重写已共享的 Git 历史以彻底移除早期
+  `docs/analysis` 对象；若执行，需要单独备份、重写标签并协调所有 Fork/Clone，不能在
+  常规功能提交中顺手 force-push；
 - IN PROGRESS：补齐课程和系列的编辑、排序、预览、安全删除与 Demo 清理；
 - IN PROGRESS：补齐用户、权益和分析后台；
 - TODO：创建开源版独立 Preview 的 Vercel、Atlas、OSS、SMTP 配置，并按需验证 XorPay；

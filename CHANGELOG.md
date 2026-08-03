@@ -2,6 +2,18 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/)。公开版本的用户可见变化记录在这里。
 
+## [Unreleased]
+
+### Added
+
+- Article 图文课纯文本正文、无视频发布和服务端 Entitlement 正文脱敏；
+- L1-L5 测试分层、L1-L3 独立 CI 门禁和 L5 人工发布验收清单；
+- Mock 自动支付与 Manual 人工确认两套隔离 L4 E2E。
+- 采用者优先的 README、四步文档主线和按任务分类的文档中心；
+- 商标与品牌说明、公开截图素材清单，以及只保留入口和授权边界的进阶实践指南；
+- 移除重复路线图、内部阶段分析、历史安装报告和重复许可证说明；
+- README 作者联系方式、事项分流、X/Twitter 与中文社交平台入口。
+
 ## [0.1.0] - 2026-07-24
 
 首个公开版本，提供个人创作者知识产品交付的完整基础闭环。
@@ -36,3 +48,4 @@
 - 数据库模型尚无独立迁移框架，升级前必须备份并阅读升级说明。
 
 [0.1.0]: https://github.com/CzzzzzzJ/mdldm-knowledge-kit/releases/tag/v0.1.0
+[Unreleased]: https://github.com/CzzzzzzJ/mdldm-knowledge-kit/compare/v0.1.0...HEAD

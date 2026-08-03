@@ -9,7 +9,7 @@ const buildEnv = {
   PAYMENT_PROVIDER: "manual",
 };
 
-for (const script of ["lint", "typecheck", "test", "build"]) {
+for (const script of ["lint", "typecheck", "test:layers", "build"]) {
   const result = spawnSync(packageManagerCommand, [script], {
     env: script === "build" ? buildEnv : process.env,
     stdio: "inherit",

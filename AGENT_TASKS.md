@@ -67,9 +67,9 @@ Agent 不得读取后再输出、复制、总结或提交以下内容：
 | --- | --- |
 | 文档或 Prompt | 相关文档契约测试、`pnpm release:audit` |
 | 配置或 Provider | `pnpm check-config`、相关单测、`pnpm check` |
-| 页面或后台 | 相关单测、`pnpm check`；主旅程变化增加 `pnpm test:e2e` |
-| 认证、权益、支付 | 相关集成测试、`pnpm check`、`pnpm test:e2e` |
-| 上线前验收 | `pnpm check:serverless`、`pnpm check`、`pnpm test:e2e`、`pnpm release:audit` |
+| 页面或后台 | 相关分层测试、`pnpm check`；主旅程变化增加 `pnpm test:l4` |
+| 认证、权益、支付 | L1-L3、`pnpm check`、`pnpm test:l4` |
+| 上线前验收 | `pnpm check:serverless`、`pnpm check`、`pnpm test:l4`、`pnpm release:audit` 和人工 L5 |
 
 回滚只撤销本任务创建的文件或提交。外部平台使用 Preview、平台历史部署或已验证备份回滚；
 没有备份和恢复证据时，不执行生产迁移。
@@ -155,16 +155,17 @@ Entitlement、服务端商品价格和 Provider 边界。
 请把我提供的非敏感内容整理为当前知识站可交付的图文知识产品。内容来源是：[本地文件或
 已授权材料路径]，目标权益是：[公开 / 登录 / 会员 / 单课 / 系列]。
 
-先遵守 AGENTS.md，阅读 AGENT_TASKS.md，并运行 pnpm agent:status。先检查当前分支是否已经
-实现 article 或 mixed 内容类型、安全 Markdown、预览、发布和阅读进度。当前 v0.1 基线可能
-尚未具备这些能力；若缺失，必须返回 BLOCKED 和缺失项，不得把 Markdown 塞进视频字段、
-直接写 MongoDB、绕过 Entitlement，或声称已经发布。
+先遵守 AGENTS.md，阅读 AGENT_TASKS.md，并运行 pnpm agent:status。当前仓库已支持
+`article` 纯文本正文与 `video` 两种课时类型；Markdown、富文本、Mixed 和图文阅读进度尚未
+实现。默认把已授权内容整理成安全纯文本，不得直接渲染 HTML、把 Markdown 塞进视频字段、
+直接写 MongoDB 或绕过 Entitlement。若任务必须依赖尚未实现的格式，返回 BLOCKED 和缺失项。
 
-只有能力真实存在时，才通过后台或正式应用服务创建草稿。正文必须做 XSS 与危险链接过滤，
-付费正文必须由服务端权益保护；发布、通知学员和任何远端资料上传前先让我确认。
+只有能力真实存在时，才通过后台或正式应用服务创建草稿。正文保持纯文本并由 React 转义，
+不得注入 HTML 或危险链接；付费正文必须由服务端权益保护。发布、通知学员和任何远端资料
+上传前先让我确认。
 
 完成后验证访客、无权益用户和有权益用户三种读取结果，运行相关单测、pnpm check，并在
-权限或主旅程改变时运行 pnpm test:e2e。报告草稿/已发布状态和回滚方法。
+权限或主旅程改变时运行 `pnpm test:l4`。报告草稿/已发布状态和回滚方法。
 ```
 
 ## 7. 上线验收 Prompt
@@ -174,7 +175,7 @@ Entitlement、服务端商品价格和 Provider 边界。
 
 遵守 AGENTS.md，阅读 AGENT_TASKS.md、AGENT_SERVERLESS_DEPLOY.md、
 docs/PROVIDER_VALIDATION.md、docs/BACKUP_AND_RECOVERY.md 和 docs/RELEASE.md。运行
-pnpm agent:status、pnpm check:serverless、pnpm check、pnpm test:e2e、
+pnpm agent:status、pnpm check:serverless、pnpm check、pnpm test:l4、
 pnpm release:audit，并只记录脱敏证据。
 
 把结果分成：仓库质量、生命周期、Preview 健康、Provider L0/L1、隔离 L2/L3、备份恢复、

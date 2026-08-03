@@ -37,6 +37,10 @@ export function createLearningQueryService(repository: LearningQueryRepository) 
 
       return {
         ...lesson,
+        course: {
+          ...lesson.course,
+          articleBody: allowed ? lesson.course.articleBody : null,
+        },
         allowed,
         materials: allowed ? lesson.materials : [],
         videoAsset: allowed ? lesson.videoAsset : null,

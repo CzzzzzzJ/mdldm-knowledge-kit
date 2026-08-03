@@ -1,132 +1,140 @@
+<div align="center">
+
 # mdldm Knowledge Kit
 
-[![CI](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/codeql.yml/badge.svg)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/codeql.yml)
+**把项目交给你的 Agent，搭建一个支持图文、视频、会员订阅和单课购买的独立知识站。**
+
+面向有 Vibe Coding 能力、希望经营自己知识产品的创作者。
+
 [![Release](https://img.shields.io/github/v/release/CzzzzzzJ/mdldm-knowledge-kit)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/releases/latest)
+[![CI](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/actions/workflows/ci.yml)
+[![pnpm](https://img.shields.io/badge/pnpm-10.14.0-f69220.svg)](package.json)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 
-一套由个人创作者自行部署和控制的知识产品交付与会员运营底座。当前重点是把它交到一名
-稍懂 Git、环境变量和 Vibe Coding 的 AI 博主手中，让他通过后台配置和少量 Agent
-协作，把项目改造成自己的知识站。
+[15 分钟启动](START_HERE.md) · [交给 Agent](AGENT_QUICKSTART.md) · [部署上线](AGENT_SERVERLESS_DEPLOY.md) · [查看 Demo](docs/DEMO.md)
 
-项目由麦当 mdldm 发起，来自一个已经稳定运行的真实知识站实践。这里不会公开复制原站，而是重新提炼其中可复用的课程交付闭环，并将个人 IP、真实业务数据和私有服务隔离在公共核心之外。
+[麦当的知识站](https://www.mdldm.club/) · [X / Twitter](https://x.com/czzzzzzJ_) · [联系作者](#联系作者)
 
-> 当前版本：`v0.1.0 / Phase 7 operator-ready in progress`
->
-> 课程交付、身份权益、全站会员与单课购买、运营总览、统一失败队列、签名告警、本地/OSS 存储与 Console/SMTP 邮件已经可运行。
-> SiteSetting、内容发现、系列详情、学习中心、后台分区、两套主题、Agent 诊断、
-> Query Service 工程边界和一次性管理员初始化已经整合；
-> 独立第三方账号 L2/L3 与中国大陆多网络验收尚未完成。因此当前版本仍是可运行的开发底座，
-> 不是已经通过目标用户验收的开箱即营成品。
+</div>
 
-![虚构 Demo 首页](docs/assets/home.png)
+![只含虚构数据的 mdldm Knowledge Kit 首页](docs/assets/home.png)
 
-所有截图、账号、商品和课程内容均为虚构数据。完整演示路径见 [Demo 指南](docs/DEMO.md)。
+> 这个项目不是把麦当原站原样公开，而是把真实知识站里可复用的内容、交易、权益、学习和运营闭环重新做成公共核心。真实用户、订单、课程、密钥和私有服务从未进入 Demo。
 
-## 要解决的问题
+## 你最终会得到什么
 
-帮助已经拥有内容或知识产品的创作者，搭建一个支持以下能力的独立知识站：
+| 能力 | 可以做什么 |
+| --- | --- |
+| 内容 | 发布图文课、视频课、混合系列和下载资料 |
+| 付费 | 同时经营全站会员和单课购买 |
+| 学习 | 按权益阅读、播放、下载并保存学习进度 |
+| 后台 | 管理品牌、主题、内容、商品、用户、订单和故障 |
+| 部署 | 让 Coding Agent 按一条 Serverless 路线完成配置与检查 |
+| 反馈 | 生成脱敏 Agent Report，再由你确认是否提交 Issue |
 
-- 邮箱注册、登录、验证与找回密码；
-- 系列、课时、视频、资料和发布管理；
-- 免费、登录可看、会员、单课等通用权益；
-- 邀请码、订单、支付回调和幂等授权；
-- 安全播放、资料下载、断点续播和学习进度；
-- 课程、用户、权益、订单、媒体与系统状态后台；
-- 可替换的支付、存储、邮件、转码和监控 Provider。
-- 可在后台切换的麦当 mdldm 与极简知识库主题。
+**不录视频，也可以在这里发布和销售文档型教程。** Article 图文课与 Video 视频课使用同一套商品、订单和权益系统。
 
-目标站长可以借助 Codex 或其他 Agent 完成 Fork、部署、第三方密钥配置、视觉改造和
-故障排查；站点品牌、课程、商品、用户权益和订单等日常经营事实必须由后台管理，不应
-长期依赖修改 TypeScript。当前差距、实施 Wave 和验收门槛见
-[Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)。
+## 它适不适合你
 
-## v0.1 边界
+| 适合 | 暂不适合 |
+| --- | --- |
+| 有内容、课程或知识产品 | 希望零配置获得官方托管 SaaS |
+| 会使用 Codex、Claude Code 等 Coding Agent | 完全不使用 Agent，也不准备接触 Git 和环境变量 |
+| 想持有自己的代码、数据库和第三方账号 | 第一版就需要完整生产 Docker、多租户或复杂营销系统 |
+| 愿意先跑通最小闭环，再逐项开启外部能力 | 需要微信小程序、返佣、提现或麦当私有业务插件 |
 
-第一版只聚焦“创作者发布知识产品，用户获得权益并完成学习”的核心闭环。
+第一版只维护 **Agent + Serverless** 这一条线上路径。Docker Compose 只负责本地 MongoDB，不是生产部署方案。
 
-第一版明确不包含：
+## 交给 Agent 开始
 
-- 麦当个人页面、真实用户数据和个人营销素材；
-- 麦子、AI 网关和 sub2api；
-- 返佣、提现和复杂营销自动化；
-- 固定飞书知识库、VIP 群和个人 Webhook；
-- 微信小程序、MDTI、M-Agent；
-- 多租户 SaaS。
+在 Codex、Claude Code 或其他 Coding Agent 中打开仓库，然后直接发送：
 
-## 核心原则
+```text
+你正在 mdldm Knowledge Kit 仓库中工作。
 
-1. 新仓白名单开发，不复制私有仓库历史。
-2. 领域模块决定业务规则，Provider 只调用外部服务。
-3. 没有第三方服务配置时，Demo 站仍应可运行。
-4. 商品价格只能由服务端 SKU 决定。
-5. 权限统一由 Entitlement 判定。
-6. 所有媒体统一进入 MediaAsset。
-7. 公共仓库只使用虚构 Demo 数据。
+目标：使用项目唯一官方 Agent + Serverless 路径，帮我建立一个可以发布图文、视频，
+并支持会员订阅和单课购买的知识站。
 
-## 文档入口
+请先读取 AGENTS.md 和 AGENT_QUICKSTART.md，然后：
+1. 检查 Node.js、pnpm、Docker 和当前工作区；
+2. 先完成本地启动，只要求我提供当前启用能力真正需要的信息；
+3. 不读取、输出、记录或提交任何密钥；
+4. 外部登录、资源创建、付费、真实写入和 Production 发布前先向我确认；
+5. 引导我在 /admin 两次输入自己的邮箱，创建管理员 1 号并设置正式密码；
+6. 完成后运行与改动相称的质量检查；
+7. 最后汇报已完成、需要我处理、尚未真实验证和回滚方式。
+```
 
-- [15 分钟唯一启动入口](START_HERE.md)
-- [交给 Agent 的本地启动协议](AGENT_QUICKSTART.md)
-- [Agent + Serverless 唯一线上协议](AGENT_SERVERLESS_DEPLOY.md)
-- [六类 Agent 任务 Prompt 与安全边界](AGENT_TASKS.md)
-- [项目定义](PROJECT.md)
-- [开发任务](TASKS.md)
-- [架构总览](ARCHITECTURE.md)
-- [开发路线图](docs/ROADMAP.md)
-- [Vibe Coding AI 博主交付计划](docs/VIBE_CODING_CREATOR_PLAN.md)
-- [Phase 7 小白可运营用户旅程](docs/OPERATOR_READY_JOURNEY.md)
-- [第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)
-- [本地开发](docs/DEVELOPMENT.md)
-- [生产部署与第三方 Provider](docs/DEPLOYMENT.md)
-- [虚构 Demo 与验收路径](docs/DEMO.md)
-- [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)
-- [升级与回滚](docs/UPGRADING.md)
-- [Release 流程](docs/RELEASE.md)
-- [更新日志](CHANGELOG.md)
-- [第三方许可证说明](THIRD_PARTY_NOTICES.md)
-- [安全基线](docs/SECURITY_BASELINE.md)
-- [架构决策](docs/decisions/README.md)
-- [贡献指南](CONTRIBUTING.md)
+本地启动的完整执行状态机、安全边界和汇报格式见 [Agent Quickstart](AGENT_QUICKSTART.md)。部署、Provider、品牌改造、图文发布和上线验收则从 [Agent 任务接口](AGENT_TASKS.md) 选择对应 Prompt。
 
-## 技术基线
+## 15 分钟先跑起来
 
-- Next.js 15.5
-- React 19.2
-- TypeScript 5.9
-- MongoDB / Mongoose 8
-- Tailwind CSS 4
-- 单仓模块化架构
-- Local / 阿里云 OSS Storage
-- Console / SMTP Email
-- Manual / Mock / XorPay Payment
-- Structured Console / signed Webhook Observability
+准备 Git、Node.js 20+、Corepack 和已经启动的 Docker Desktop，然后执行：
 
-当前可以运行“注册验证 → 会员或单课下单 → 显式 Mock 测试支付 → 幂等获得权益 → 观看受控课程 → 后台查看指标与故障”的完整 Demo。`v0.1.0` 是首个公开版本，升级前请同时阅读 [已知限制](CHANGELOG.md#已知限制)。
+```bash
+git clone https://github.com/CzzzzzzJ/mdldm-knowledge-kit.git
+cd mdldm-knowledge-kit
+corepack enable
+pnpm install --frozen-lockfile
+pnpm quickstart:prepare
+docker compose up -d mongodb
+pnpm check-config
+pnpm dev
+```
 
-## 快速启动
+打开 `http://localhost:3000/admin`，两次输入你自己的邮箱。它会成为管理员 1 号；项目没有公共默认管理员或默认密码。请自行保存只展示一次的随机临时密码，再设置正式密码并进入 `/admin/setup`。
 
-本地第一次运行只走 [`START_HERE.md`](START_HERE.md)，不要从文档索引中拼装步骤。要把
-启动工作交给 Coding Agent，直接发送 [`AGENT_QUICKSTART.md`](AGENT_QUICKSTART.md)
-中的 Prompt。系统会让站长两次确认自己的邮箱，将其作为管理员 1 号，并强制轮换只展示
-一次的随机临时密码。
+需要虚构课程和商品时，在完成管理员初始化后运行：
 
-本地启动以外的部署、Provider、品牌改造、图文发布和上线验收任务统一从
-[`AGENT_TASKS.md`](AGENT_TASKS.md) 选择。Agent 可先运行 `pnpm agent:status` 获取不含
-域名、邮箱、URI、Token、Bucket 和环境变量值的生命周期与能力状态。
+```bash
+pnpm seed-demo
+```
 
-Docker Compose 只用于启动本地 MongoDB，不是生产部署方案。
+每一步的意义、预期结果和失败处理都在 [15 分钟启动指南](START_HERE.md)。项目只支持 pnpm；如果系统里的 `pnpm` 不可用，请先按该指南修复 Corepack，不要改用 npm 生成第二份锁文件。
 
-站长可以在 `/admin/site` 选择 `麦当 mdldm` 或 `极简知识库`。两套主题共享页面与业务
-组件，只切换经过审核的语义 Token；主题不会改变支付价格、Entitlement、课程权限或后台
-数据。默认继续使用麦当 mdldm 风格，旧站点设置无需迁移即可安全回落到默认主题。
+## 从内容到交付
 
-## 反馈、Agent 报告与 Explore
+```text
+站长初始化
+  → 设置品牌、主题和能力
+  → 发布图文或视频内容
+  → 创建会员或单课商品
+  → 学员注册并完成购买
+  → 服务端发放权益
+  → 阅读、观看、下载并保存进度
+```
 
-遇到问题时，先运行 `pnpm run doctor` 获取版本、能力、Provider 名称和检查结果。需要交给
-维护者复现时运行 `pnpm run doctor --issue`；该命令只在被 Git 忽略的 `.mdldm/` 目录生成
-脱敏 Markdown 草稿，**不会登录 GitHub，也不会创建或提交 Issue**。请先人工检查草稿，
-再由你本人决定是否提交：
+默认使用 Manual Payment，所以没有自动支付账号也能先经营和人工确认订单；OSS、SMTP、XorPay 和外部告警只在需要时开启。未启用的能力不会要求你填写对应密钥。
+
+当前内置“麦当 mdldm”和“极简知识库”两套主题，站长可在 `/admin/site` 切换；主题只改变视觉 Token，不改变价格、内容和权限规则。
+
+## 官方部署路径
+
+```text
+Coding Agent
+  → Vercel / Next.js Serverless
+  → MongoDB Atlas
+  → 按需：阿里云 OSS、SMTP、XorPay、Webhook
+```
+
+生产最低核心配置只有 `APP_URL`、`MONGODB_URI`、`AUTH_SECRET` 和 `INITIAL_SETUP_TOKEN`。媒体、邮件、自动支付和外部告警按能力开启；完整变量、平台步骤、验证与回滚统一见 [Agent + Serverless 部署协议](AGENT_SERVERLESS_DEPLOY.md)。
+
+Vercel 是否适合你的中国大陆用户，必须用正式域名和目标网络实测，不能由部署成功推断。当前 Docker Compose 仅用于本地数据库；完整自维护 Docker 不属于第一版免费官方路线。
+
+## 当前状态
+
+| 已自动验证 | 仍需站长真实验收 |
+| --- | --- |
+| L1 领域、L2 服务/Provider Contract、L3 API 安全 | 全新 Atlas、OSS、SMTP 与可选 XorPay 账号 |
+| Mock 自动支付和 Manual 人工确认两套 L4 | 备份恢复演练与真实邮件/支付链路 |
+| 图文、视频、会员、单课与主要拒绝路径 | 至少两个中国大陆网络点的正式域名体验 |
+| 生产构建、依赖许可证和公开仓库扫描 | Preview 与 Production 的最终发布确认 |
+
+因此，当前仓库是可以运行和继续改造的公共核心，但还不能把“代码测试通过”写成“你的生产环境已经验收通过”。正式发布前按 [L5 发布验收](docs/L5_RELEASE_ACCEPTANCE.md) 留下脱敏证据。
+
+## Explore 与反馈
+
+Explore Guide 正在征集首批基于本项目搭建的知识站，不虚构案例数量。提交时只提供公开首页和简短介绍，不要提交后台地址、测试账号或第三方配置。
 
 - [报告可复现错误](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=01-bug.yml)
 - [提出功能建议](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=02-feature.yml)
@@ -134,199 +142,41 @@ Docker Compose 只用于启动本地 MongoDB，不是生产部署方案。
 - [申请加入 Explore Guide](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/issues/new?template=04-explore-submission.yml)
 - [私密报告安全漏洞](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new)
 
-Doctor 不输出 URI、Token、邮箱、Bucket、域名、环境变量值、真实用户或订单数据；
-安全漏洞不得走公开 Issue，继续使用 Private Security Advisory。
-
-这里必须写 `pnpm run doctor`：pnpm 10 自带同名内置命令，直接执行 `pnpm doctor` 不会
-调用本项目脚本。
-
-## 生产部署与第三方平台
-
-第一版只维护 [`Agent + Vercel Serverless`](AGENT_SERVERLESS_DEPLOY.md) 这一条线上路径。
-当前视频知识站公开运营组合是 `Vercel + Atlas + OSS + SMTP + Manual`；需要自动支付时
-才把 Manual 替换为 XorPay。完整生产 Docker 和其他 Web 平台不在第一版支持范围。
-
-当前推荐组合：
-
-| 能力 | 本地开发 | Vercel 推荐 |
-| --- | --- | --- |
-| Web | `pnpm dev` | Vercel Next.js / Node.js 22 / `hkg1` |
-| 数据库 | Docker MongoDB | MongoDB Atlas |
-| 媒体 | Local Storage | 阿里云 OSS 私有 Bucket |
-| 邮件 | Console Email | SMTP / 阿里云邮件推送 |
-| 支付 | Manual / 显式 Mock | Manual 或 XorPay |
-| 监控 | Structured Console | 签名 Webhook |
-
-### 1. Vercel
-
-1. 从 Git 仓库导入项目，Framework 使用 Next.js，Node.js 选择 22；
-2. 在 Project Settings → Environment Variables 分别配置 Preview 与 Production；
-3. Production 的 `APP_URL` 必须是最终 HTTPS 域名；
-4. 配置下面的 Atlas、OSS、SMTP 变量后重新部署；
-5. 先部署 Preview，再运行 `pnpm check:serverless --url <Preview HTTPS 根地址>`；
-6. 完成 L2/L3 与国内多网络验收后，另行确认 Production 发布。
-
-Vercel Functions 存在请求和响应体限制，不能使用 Local Storage 持久保存课程视频。本项目在 OSS 模式下使用浏览器直传和鉴权后的 5 分钟签名读取，媒体字节不会穿过 Vercel Function。
-
-仓库默认函数区域为香港 `hkg1`，但 Vercel 官方明确其没有中国大陆基础设施，自定义域名
-也不能保证大陆可用性和性能。正式发布前必须用自定义域名，从至少两个中国大陆网络点
-验收首页、登录、后台、学习页与媒体；没有证据时不得写成“国内生产可用”。
-
-### 2. MongoDB Atlas
-
-1. 创建 Cluster 和专用 Database User；
-2. 在 Network Access 配置应用来源；
-3. 从 Connect → Drivers 复制 SRV URI 到 `MONGODB_URI`；
-4. Preview 与 Production 使用不同数据库和账号；
-5. 开启备份、成本告警并使用强随机密码。
-
-Vercel 使用动态出口 IP。Atlas 的 Vercel 集成可能使用 `0.0.0.0/0`；采用时务必依赖 TLS、最小数据库权限和独立强密码，不能把 Atlas 登录账号当作数据库账号。
-
-### 3. 阿里云 OSS
-
-Bucket 必须设为私有并开启 Block Public Access。使用专用 RAM 身份，只授予目标 Bucket 前缀所需的 `GetObject`、`PutObject` 和 `DeleteObject` 权限：
-
-```dotenv
-STORAGE_PROVIDER=oss
-OSS_REGION=oss-cn-hangzhou
-OSS_BUCKET=replace-with-private-bucket
-OSS_ENDPOINT=
-OSS_ACCESS_KEY_ID=replace-with-ram-or-sts-key
-OSS_ACCESS_KEY_SECRET=replace-with-secret
-OSS_SESSION_TOKEN=
-```
-
-后台直传需要为正式域名配置 OSS CORS：
-
-```text
-Origins: https://你的正式域名
-Methods: PUT, GET, HEAD
-Allowed Headers: Content-Type
-Expose Headers: ETag, Content-Length
-```
-
-Preview 域名应单独加入，不建议使用 `*`。从 Local 切换 OSS 不会自动迁移已有媒体，生产上传前先冻结 Provider 选择。
-
-### 4. SMTP / 阿里云邮件推送
-
-```dotenv
-EMAIL_PROVIDER=smtp
-EMAIL_FROM=Knowledge Kit <sender@example.com>
-SMTP_HOST=smtpdm.aliyun.com
-SMTP_PORT=465
-SMTP_SECURE=true
-SMTP_USER=sender@example.com
-SMTP_PASSWORD=replace-with-smtp-password
-```
-
-阿里云 SMTP 用户名必须与已配置发信地址一致；SMTP 密码不是阿里云账号密码。上线前完成发信域名、DNS 和发信地址验证。
-
-### 5. Manual、Mock 与 XorPay
-
-安全默认使用 Manual：
-
-```dotenv
-PAYMENT_PROVIDER=manual
-```
-
-Mock 只有显式设置 `PAYMENT_PROVIDER=mock` 时才用于非生产测试，生产配置校验会直接拒绝。
-Manual 由管理员在订单后台核对并确认：
-
-```dotenv
-PAYMENT_PROVIDER=manual
-MANUAL_PAYMENT_INSTRUCTIONS=请转账后联系管理员，并提供订单号。
-```
-
-接入 XorPay：
-
-```dotenv
-PAYMENT_PROVIDER=xorpay
-XORPAY_AID=replace-with-xorpay-aid
-XORPAY_APP_SECRET=replace-with-xorpay-app-secret
-# 留空时自动使用 APP_URL/api/payments/webhooks/xorpay
-XORPAY_NOTIFY_URL=https://your-domain.example/api/payments/webhooks/xorpay
-```
-
-1. 在 XorPay 后台取得 AID 与 App Secret；
-2. 在 Vercel Production 环境配置以上变量，不能添加 `NEXT_PUBLIC_` 前缀；
-3. 确保回调地址是公网 HTTPS，并允许 XorPay 无登录 POST；
-4. 重新部署后运行 `pnpm check-config`；
-5. 用隔离的低价测试商品完成一次支付宝或微信 Native 支付；
-6. 在 `/admin` 确认订单为 `fulfilled / fulfilled`，再恢复正式商品价格并重新同步。
-
-XorPay 回调会先验签，再核对订单 Provider、服务端金额和币种。`PaymentEvent` 以 Provider 事件 ID 幂等留痕；重复通知不会重复创建 Entitlement。授权失败会保留支付成功事实，并在后台提供重试入口。
-
-切换支付 Provider 前应先处理完旧 Provider 的待支付订单，并保留旧回调密钥一段时间。Preview 应使用独立 XorPay 测试配置或 Manual，不要与 Production 共用订单和数据库。
-
-### 6. 结构化日志与通用 Webhook 告警
-
-默认配置会向服务端输出单行 JSON 结构化日志：
-
-```dotenv
-OBSERVABILITY_PROVIDER=console
-```
-
-生产环境建议把主要故障同步到自建 Vercel Function、自动化平台或告警中继：
-
-```dotenv
-OBSERVABILITY_PROVIDER=webhook
-OBSERVABILITY_WEBHOOK_URL=https://alerts.example.com/hooks/mdldm
-OBSERVABILITY_WEBHOOK_SECRET=replace-with-at-least-32-random-characters
-```
-
-Webhook 请求包含 `X-MDLDm-Timestamp` 与 `X-MDLDm-Signature`。接收方应使用原始请求体计算 `HMAC-SHA256(secret, timestamp + "." + rawBody)`，并拒绝超过 5 分钟的时间戳。不要把 Secret 放进 URL 或 `NEXT_PUBLIC_` 变量。
-
-Slack、飞书、Teams 等平台通常有自己的消息格式和签名协议，不建议把平台机器人地址直接填入本项目。用一层 Vercel Function/Serverless 中继先校验本项目签名，再转换为目标平台格式；这样可以轮换目标平台 Webhook 而不改业务站配置。
-
-支付、邮件和存储错误会聚合到 `/admin` 的统一失败队列。公共第一版不接受 Sentry 与
-转码 Provider 配置值，也不会静默降级为 Console。
-
-### 7. 必填生产变量
-
-```dotenv
-NODE_ENV=production
-APP_URL=https://your-domain.example
-APP_NAME=mdldm Knowledge Kit
-MONGODB_URI=mongodb+srv://...
-AUTH_SECRET=replace-with-at-least-32-random-characters
-INITIAL_SETUP_TOKEN=replace-with-one-time-setup-token
-```
-
-这是生产最低核心。当前视频站若要公开运营，还需 OSS 与 SMTP；Manual 无需支付密钥，
-XorPay 和 Webhook 按需启用。运行 `pnpm check-config` 会拒绝生产环境中的 Mock Payment、
-HTTP `APP_URL`、不完整的已启用 Provider 和弱 `AUTH_SECRET`；`pnpm check:serverless` 检查
-唯一线上路径，但不能替代真实账号 L2/L3 与国内网络验收。完整步骤见
-[生产部署与第三方 Provider](docs/DEPLOYMENT.md)。
-
-生产上线前同时配置 Atlas 与 OSS 备份，并实际做一次隔离恢复演练；管理员 JSON 导出不包含凭据，也不能替代完整备份。操作步骤见 [数据备份与恢复](docs/BACKUP_AND_RECOVERY.md)。
-
-## 质量检查
+排障先运行：
 
 ```bash
-pnpm check
-pnpm release:audit
-pnpm test:e2e
-pnpm validate:providers
+pnpm run doctor
+pnpm run doctor --issue
 ```
 
-`release:audit` 会检查公开仓库必需文件、本机绝对路径、疑似密钥、非示例邮箱、带凭据的 MongoDB URI、误提交运行数据与依赖许可证。CI 还会执行 `pnpm audit`，GitHub 仓库启用了 Dependabot、Secret Scanning、Push Protection、CodeQL 与私密漏洞报告。
+第二条命令只会在被 Git 忽略的 `.mdldm/` 中生成脱敏草稿，**不会登录 GitHub，也不会创建或提交 Issue**。请人工检查后再决定是否公开。这里必须写 `pnpm run doctor`：pnpm 10 自带同名内置命令，直接运行 `pnpm doctor` 不会调用本项目脚本。
 
-`pnpm check` 的生产构建使用隔离的 HTTPS 与 Manual Payment 测试配置；正式部署仍须用真实环境变量单独运行 `pnpm check-config`。
+## 联系作者
 
-`pnpm validate:providers --live` 执行 MongoDB、Storage 和 Email 的无副作用
-连接检查，不发送邮件、不创建支付订单，也不写入 OSS。验证分级和当前记录见
-[第三方 Provider 配置提取与验证](docs/PROVIDER_VALIDATION.md)。
+本项目由 **麦当mdldm** 发起。你可以按下面的方向联系我：
 
-## 开发准备
+- 项目 Bug、功能建议和 Agent 诊断：优先使用上面的 GitHub Issue；
+- 基于本项目搭建的知识站：提交 Explore，也欢迎分享真实使用反馈；
+- 课程合作、品牌合作、企业 AI 培训与技术咨询：通过 [X / Twitter](https://x.com/czzzzzzJ_) 或 [个人联系页](https://www.mdldm.club/about) 联系；
+- 想继续看 AI Agent、Vibe Coding 和知识产品实战内容：访问 [麦当的知识站](https://www.mdldm.club/)，或在 B 站、小红书、抖音、掘金等中文平台搜索 **麦当mdldm**。
 
-开始实现前先阅读：
+安全漏洞不要通过社交媒体或公开 Issue 发送，请使用 [GitHub Private Security Advisory](https://github.com/CzzzzzzJ/mdldm-knowledge-kit/security/advisories/new)。
 
-1. `PROJECT.md`
-2. `ARCHITECTURE.md`
-3. `TASKS.md`
-4. `docs/SECURITY_BASELINE.md`
-5. `AGENTS.md`
+## 文档主线
 
-## License
+第一次使用只走这四步：
 
-本项目公共核心采用 [Apache License 2.0](LICENSE)。该许可证不授予 `mdldm`、麦当相关名称、Logo 或其他商标的额外使用权。
+1. [15 分钟启动](START_HERE.md)：在本地得到可创建管理员的知识站；
+2. [Agent Quickstart](AGENT_QUICKSTART.md)：让 Agent 按安全协议执行；
+3. [Agent + Serverless 部署](AGENT_SERVERLESS_DEPLOY.md)：配置唯一官方线上路径；
+4. `/admin/setup`：在站长后台完成开站配置并正式上线。
+
+备份、升级、安全、测试、Provider 和贡献文档不再平铺在 README；需要时从 [文档中心](docs/README.md) 进入。进阶 Docker、多平台迁移、规模化运维和知识产品运营见 [《麦当知识站实战》入口与授权边界](docs/PAID_PRACTICE_GUIDE.md)，免费核心不依赖该教程才能启动和经营基础站点。
+
+## License 与品牌边界
+
+公共核心采用 [Apache License 2.0](LICENSE)：允许使用、修改和商业部署，但需要遵守许可证与必要声明。依赖许可证见 [Third-party notices](THIRD_PARTY_NOTICES.md)，仓库截图来源与分发结论见 [素材清单](docs/assets/README.md)。
+
+Apache-2.0 不授予 `mdldm`、麦当名称、Logo 或其他品牌标识的商标权。公开运营自己的 Fork 前，请按 [商标与品牌使用说明](TRADEMARKS.md) 更换站点品牌；付费教程和外部商业内容使用独立版权与授权条款。
+
+参与开发前请阅读 [贡献指南](CONTRIBUTING.md)。

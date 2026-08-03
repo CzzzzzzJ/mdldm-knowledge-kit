@@ -132,11 +132,14 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    Draft["创建系列和草稿课时"] --> Upload["上传封面、视频和资料"]
+    Draft["创建系列和草稿课时"] --> Type{"内容类型"}
+    Type -->|"Article"| Article["填写纯文本正文"]
+    Type -->|"Video"| Upload["上传视频和资料"]
     Upload --> Asset["生成 MediaAsset"]
-    Asset --> Transcode["可选转码"]
-    Transcode --> Verify["验证可播放"]
-    Verify --> Publish["发布课程"]
+    Asset --> Verify["验证可播放"]
+    Article --> Gate["发布要求与权益检查"]
+    Verify --> Gate
+    Gate --> Publish["发布课程"]
     Publish --> Notify["可选通知会员"]
 ```
 
@@ -274,4 +277,6 @@ Page / Route Handler / Client Component
   `providers/database/mongodb/repositories/`；
 - Page 只接收字符串 ID、ISO 日期和必要业务字段，不接收 Mongoose Document；
 - 学习权限由 Learning Query Service 与 Entitlement 领域规则计算，页面不自行判断；
+- Course 使用 `video / article` 白名单内容类型；Article 正文只在 Learning Query Service
+  完成 Entitlement 判断后进入 DTO，未授权响应使用 `articleBody: null`，见 ADR 0020；
 - 新增功能按真实需求渐进收紧命令侧 Port，不做一次性全仓重写，见 ADR 0019。

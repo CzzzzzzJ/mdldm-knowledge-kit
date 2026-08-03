@@ -108,6 +108,8 @@ export function createMongoLearningQueryRepository(): LearningQueryRepository {
           title: course.title,
           summary: course.summary,
           accessLevel: course.accessLevel,
+          contentType: course.contentType ?? "video",
+          articleBody: course.articleBody ?? "",
           videoAssetId: course.videoAssetId?.toString() ?? null,
         },
         series: series

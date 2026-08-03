@@ -26,6 +26,8 @@ export default async function AdminCatalogPage() {
           title: course.title,
           status: course.status,
           accessLevel: course.accessLevel,
+          contentType: course.contentType,
+          hasArticleBody: course.hasArticleBody,
           videoAssetId: course.videoAssetId?.toString() ?? null,
         }))}
         series={catalog.series.map((item) => ({

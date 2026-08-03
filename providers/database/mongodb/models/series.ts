@@ -2,12 +2,15 @@ import { model, models, Schema, type Model, type Types } from "mongoose";
 
 import {
   accessLevels,
+  courseContentLimits,
+  courseContentTypes,
   discoveryLimits,
   normalizeCategory,
   normalizeCoverImageUrl,
   normalizeSeriesTags,
   publishStatuses,
   type AccessLevel,
+  type CourseContentType,
   type PublishStatus,
 } from "@/modules/catalog";
 
@@ -81,6 +84,8 @@ export const SeriesModel =
 export interface CourseRecord {
   seriesId: Types.ObjectId;
   videoAssetId: Types.ObjectId | null;
+  contentType: CourseContentType;
+  articleBody: string;
   title: string;
   slug: string;
   summary: string;
@@ -104,6 +109,17 @@ const courseSchema = new Schema<CourseRecord>(
       type: Schema.Types.ObjectId,
       ref: "MediaAsset",
       default: null,
+    },
+    contentType: {
+      type: String,
+      enum: courseContentTypes,
+      required: true,
+      default: "video",
+    },
+    articleBody: {
+      type: String,
+      default: "",
+      maxlength: courseContentLimits.articleBody,
     },
     title: { type: String, required: true, trim: true, maxlength: 120 },
     slug: { type: String, required: true, trim: true, maxlength: 120 },
