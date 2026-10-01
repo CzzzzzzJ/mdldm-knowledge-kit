@@ -40,7 +40,7 @@
     "geist": "1.7.2",
     "mongoose": "8.24.1",
     "next": "15.5.21",
-    "nodemailer": "^9.0.3",
+    "nodemailer": "^10.0.9",
     "qrcode.react": "4.2.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
